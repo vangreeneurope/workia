@@ -1,6 +1,7 @@
 /**
  * Qué áreas de administración ve cada usuario en la empresa activa. Se basa en
- * los permisos reales que devuelve la base de datos (my_company_permissions),
+ * los permisos reales que devuelve la base de datos (my_company_permissions y,
+ * para horarios, my_schedule_access como "schedule.read" / "schedule.manage"),
  * así que no duplica la matriz de roles. La autorización definitiva es RLS.
  */
 
@@ -12,7 +13,16 @@ export type CompanyPermission = {
 };
 
 export type AdminArea =
-  "empresas" | "centros" | "equipos" | "personas" | "membresias" | "aprobadores" | "importar";
+  | "empresas"
+  | "centros"
+  | "equipos"
+  | "personas"
+  | "membresias"
+  | "aprobadores"
+  | "importar"
+  | "plantillas"
+  | "horarios"
+  | "calendarios";
 
 export const ADMIN_AREAS: { key: AdminArea; label: string; href: string; description: string }[] = [
   {
@@ -52,6 +62,24 @@ export const ADMIN_AREAS: { key: AdminArea; label: string; href: string; descrip
     href: "/admin/importar",
     description: "Alta masiva de personas con validación previa.",
   },
+  {
+    key: "plantillas",
+    label: "Plantillas de turno",
+    href: "/admin/plantillas",
+    description: "Tramos, pausas y horas objetivo, con versiones y fecha de efecto.",
+  },
+  {
+    key: "horarios",
+    label: "Asignación de horarios",
+    href: "/admin/horarios",
+    description: "Turnos por persona, equipo o contrato; conflictos y publicación.",
+  },
+  {
+    key: "calendarios",
+    label: "Calendarios laborales",
+    href: "/admin/calendarios",
+    description: "Festivos con su fuente y centros a los que aplican.",
+  },
 ];
 
 export function hasPermission(
@@ -83,6 +111,12 @@ export function canUseArea(
       return hasPermission(permissions, "assignments.manage");
     case "importar":
       return hasPermission(permissions, "employees.manage");
+    case "plantillas":
+    case "calendarios":
+      // Plantillas y calendarios son de toda la empresa.
+      return hasPermission(permissions, "schedule.manage", "company");
+    case "horarios":
+      return hasPermission(permissions, "schedule.manage");
   }
 }
 

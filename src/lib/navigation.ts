@@ -1,5 +1,6 @@
 import {
   Building2,
+  CalendarClock,
   Clock,
   History,
   House,
@@ -23,6 +24,7 @@ export type NavItem = {
 
 export const NAV_ITEMS: readonly NavItem[] = [
   { key: "panel", label: "Inicio", href: "/panel", icon: House, mobilePrimary: true },
+  { key: "horario", label: "Horario", href: "/horario", icon: CalendarClock },
   { key: "fichajes", label: "Fichajes", href: "/fichajes", icon: Clock, mobilePrimary: true },
   {
     key: "ausencias",

@@ -151,3 +151,8 @@ insert into storage.objects (bucket_id, name) values
   ('company-logos', 'aaaaaaaa-0000-0000-0000-000000000001/logo.png'),
   ('company-logos', 'bbbbbbbb-0000-0000-0000-000000000002/logo.png'),
   ('company-logos', 'cccccccc-0000-0000-0000-000000000003/logo.png');
+
+-- Horarios: una plantilla sin versiones en A (la usan las pruebas de reversión
+-- para comprobar que no se pierden datos sin autorización).
+insert into public.shift_templates (id, company_id, code, name) values
+  ('5f000000-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'FX', 'Plantilla de pruebas');

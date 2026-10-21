@@ -1,8 +1,10 @@
 # Estado del proyecto
 
-**Última actualización**: 2026-10-23 · **Fase actual**: 1 en curso. Administración implementada y
-probada en local; control horario pendiente. Nada se ha validado aún contra un proyecto Supabase
-real.
+**Última actualización**: 2026-10-24 · **Fase actual**: 1 en curso. Administración y horarios
+planificados (calendarios, plantillas de turno y asignaciones) implementados y probados en local;
+fichajes pendientes. Nada se ha validado aún contra un proyecto Supabase real: el módulo de
+administración sigue sin verificarse con sesión real, y este módulo se ha construido igualmente por
+petición expresa (excepción a la regla de CLAUDE.md, registrada aquí).
 
 ## 1. Qué está hecho
 
@@ -57,29 +59,55 @@ real.
 - Migración `20261023100000_administracion` con reversión verificada; reglas documentadas en
   `docs/VIGENCIA_Y_BAJAS.md`; ADR-023 a ADR-029.
 
-## 2. Resultados de verificación (2026-10-23)
+### Calendarios, plantillas de turno y asignaciones (2026-10-24)
+
+- Migración `20261024100000_calendarios_turnos` con reversión verificada: calendarios laborales con
+  fuente obligatoria, festivos, aplicación a centros con vigencia, plantillas con versiones
+  inmutables, tramos en minutos enteros (continua, partida, nocturna con cruce de medianoche y
+  flexible, pausas retribuidas o no, tolerancias, horas objetivo), asignaciones por excepción,
+  persona, equipo o contrato con ciclos de 1 a 56 días, ausencias aprobadas como punto de
+  integración y eventos de aviso por persona.
+- Nada con efecto en el pasado: versiones, asignaciones, festivos y calendarios solo cambian desde
+  hoy (zona de la empresa) y lo publicado es inmutable.
+- Conflictos explicados antes de publicar (solapes y plantillas sin versión bloquean; ausencias,
+  bajas y falta de contrato exigen confirmación); se registra quién publica y se crea un evento por
+  persona afectada.
+- Resolvedor determinista `resolvePlannedShift(employeeId, localDate, foto)` con precedencia
+  excepción › festivo › persona › equipo › contrato y conversión de zona horaria con reglas
+  explícitas para el cambio de hora (`getPlannedShift` lo usa con los datos visibles por RLS).
+- Pantallas: "Horario" (semana y mes, móvil y escritorio, selector de persona para managers y
+  RR. HH., cambios recientes) y en Administración: plantillas (editor con validación en vivo y
+  publicación con fecha de efecto), asignaciones (borrador, conflictos, publicación, cierre) y
+  calendarios (festivos, importación de todo o nada, centros).
+- Zonas horarias de empresas y centros validadas en la base de datos.
+- Documentación: docs/HORARIOS.md, ADR-030 a ADR-034, BASE_DATOS, PERMISOS, plan y README.
+
+## 2. Resultados de verificación (2026-10-24)
 
 | Verificación               | Comando                                           | Resultado                                                                                                              |
 | -------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | Tipos                      | `npm run typecheck`                               | Sin errores                                                                                                            |
 | Lint                       | `npm run lint`                                    | 0 errores, 0 avisos                                                                                                    |
 | Formato                    | `npm run format:check`                            | Correcto                                                                                                               |
-| Unitarias                  | `npm test`                                        | 10 archivos, 83 pruebas superadas                                                                                      |
+| Unitarias                  | `npm test`                                        | 15 archivos, 142 pruebas superadas (incluye zona horaria, cambio de hora, precedencia y plantillas)                    |
 | Aislamiento multiempresa   | `npm run test:db` → `10_aislamiento_multiempresa` | 134 aserciones superadas                                                                                               |
 | Integridad y escalada      | `npm run test:db` → `20_integridad_y_escalada`    | 26 aserciones superadas                                                                                                |
-| Semillas sintéticas        | `npm run test:db` → `30_seed_sintetico`           | 15 aserciones superadas                                                                                                |
+| Semillas sintéticas        | `npm run test:db` → `30_seed_sintetico`           | 19 aserciones superadas                                                                                                |
 | Administración             | `npm run test:db` → `40_administracion`           | 81 aserciones superadas                                                                                                |
-| Reversibilidad             | `npm run test:db`                                 | 3 reversiones restauran el esquema exacto, reaplicar lo reproduce, 3 reversiones exigen autorización para perder datos |
+| Horarios                   | `npm run test:db` → `50_horarios`                 | 101 aserciones superadas                                                                                               |
+| Reversibilidad             | `npm run test:db`                                 | 4 reversiones restauran el esquema exacto, reaplicar lo reproduce, 4 reversiones exigen autorización para perder datos |
 | Tipos frente a esquema     | `npm run db:types:check`                          | Al día (incluye las funciones RPC)                                                                                     |
-| Build de producción        | `npm run build`                                   | Correcto, 33 rutas                                                                                                     |
-| E2E                        | `npm run test:e2e`                                | 20 pruebas superadas (móvil y escritorio)                                                                              |
+| Build de producción        | `npm run build`                                   | Correcto, 40 rutas                                                                                                     |
+| E2E                        | `npm run test:e2e`                                | 22 pruebas superadas (móvil y escritorio)                                                                              |
 | Dependencias de producción | `npm audit --omit=dev`                            | 0 vulnerabilidades                                                                                                     |
 
-Comprobaciones adicionales: revisión visual en móvil (iPhone 13) de los formularios de asignación,
-baja e importación mediante una página temporal ya eliminada; prueba unitaria de que el interruptor
-optimista revierte cuando el servidor rechaza el cambio.
+Comprobaciones adicionales: revisión visual a 360 px y en escritorio del calendario mensual, la
+semana y el editor de plantillas mediante una página temporal ya eliminada (sin desbordamiento
+horizontal); en el módulo anterior, revisión visual de formularios y prueba del interruptor
+optimista.
 
-**Lo que no se ha podido verificar**: las pantallas de administración con una sesión y datos reales
+**Lo que no se ha podido verificar**: las pantallas de administración y de horarios con una sesión y
+datos reales
 (requiere un proyecto Supabase), la invitación por correo (requiere `SUPABASE_SECRET_KEY` y Auth
 real) y la ejecución del workflow de CI en GitHub (el repositorio no tiene remoto). La lógica de
 cada operación está cubierta por las pruebas SQL contra PostgreSQL 16 con la emulación de Supabase.
@@ -93,7 +121,11 @@ cada operación está cubierta por las pruebas SQL contra PostgreSQL 16 con la e
 4. **Cambio de centro o equipo con fecha futura**: no se programa todavía (ADR-029).
 5. **Dos auditorías** (`audit_log` completa y `audit_events` minimizada): fijar con la asesoría el
    plazo de conservación de `audit_log` (ADR-026).
-6. Riesgos heredados: CSP con `'unsafe-inline'`, componentes shadcn escritos a mano,
+6. **Horarios**: el equipo de una asignación por equipo es el actual de la persona; cambiar un
+   festivo no genera avisos todavía; `leave_periods` no tiene aún quien la rellene (módulo de
+   ausencias); el manager solo consulta horarios (ADR-030). Los festivos reales deben registrarse
+   desde una fuente aprobada por la empresa.
+7. Riesgos heredados: CSP con `'unsafe-inline'`, componentes shadcn escritos a mano,
    vulnerabilidades en herramientas de lint, revisión normativa pendiente.
 
 ## 4. Próximos pasos
@@ -101,4 +133,6 @@ cada operación está cubierta por las pruebas SQL contra PostgreSQL 16 con la e
 1. Subir el repositorio a GitHub y comprobar CI.
 2. Proyecto Supabase de pruebas: `supabase db push`, configurar `SUPABASE_SECRET_KEY` y SMTP, probar
    el módulo con las cuentas sintéticas y añadir E2E con sesión.
-3. Visor de auditoría sobre `audit_events` y control horario (resto de la fase 1).
+3. Probar el horario con las semillas sintéticas (`supabase db reset`) y sesión real.
+4. Fichajes sobre el horario planificado y visor de auditoría (resto de la fase 1), con las reglas
+   de clasificación de excesos de jornada aprobadas por la asesoría.

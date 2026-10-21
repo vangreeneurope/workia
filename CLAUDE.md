@@ -9,7 +9,8 @@ Plataforma web multiempresa de control horario, vacaciones y ausencias, y gastos
 
 1. Lee `docs/ESTADO_PROYECTO.md` para saber en qué fase estamos y qué está pendiente.
 2. Si la tarea toca datos o permisos, lee `docs/BASE_DATOS.md` y `docs/PERMISOS.md`.
-3. Si toca jornada, ausencias, gastos o datos personales, lee `docs/NORMATIVA.md`.
+3. Si toca jornada, ausencias, gastos o datos personales, lee `docs/NORMATIVA.md`; si toca
+   horarios, turnos o festivos, `docs/HORARIOS.md` (nunca horas decimales ni horas locales sin zona).
 4. Esta versión de Next.js (16.4) cambia APIs respecto a versiones anteriores: consulta la guía en
    `node_modules/next/dist/docs/` antes de usar una API que no hayas visto en este código.
 5. Al terminar, actualiza `docs/ESTADO_PROYECTO.md` y, si tomaste una decisión de arquitectura,
@@ -122,6 +123,7 @@ docs/               Documentación funcional y técnica
 - `docs/BASE_DATOS.md`: esquema actual y previsto, convenciones SQL.
 - `docs/PERMISOS.md`: matriz de roles y cómo se aplica en cada capa.
 - `docs/VIGENCIA_Y_BAJAS.md`: fechas de efecto, bajas, aprobadores y suplencias.
+- `docs/HORARIOS.md`: calendarios, plantillas de turno, precedencia, zonas horarias y cambios de hora.
 - `docs/NORMATIVA.md`: registro de jornada, RGPD/LOPDGDD, conservación.
 - `docs/PLAN_DESARROLLO.md`: fases y criterios de salida.
 - `docs/DECISIONES.md`: registro de decisiones de arquitectura (ADR).

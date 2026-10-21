@@ -13,6 +13,7 @@ import { companyA, companyB, makeContext } from "./fixtures";
 
 const ALL: SectionKey[] = [
   "panel",
+  "horario",
   "fichajes",
   "ausencias",
   "gastos",
@@ -29,7 +30,7 @@ function allowed(ctx: Parameters<typeof canAccessSection>[0]) {
 describe("canAccessSection", () => {
   it("empleado: solo sus secciones personales", () => {
     const ctx = makeContext([[companyA, ["employee"]]]);
-    expect(allowed(ctx)).toEqual(["panel", "fichajes", "ausencias", "gastos", "perfil"]);
+    expect(allowed(ctx)).toEqual(["panel", "horario", "fichajes", "ausencias", "gastos", "perfil"]);
   });
 
   it("contabilidad: gastos pero no fichajes ni equipo", () => {
@@ -68,6 +69,7 @@ describe("canAccessSection", () => {
     const ctx = makeContext([[companyA, ["hr"]]]);
     expect(allowed(ctx)).toEqual([
       "panel",
+      "horario",
       "fichajes",
       "ausencias",
       "gastos",
@@ -77,9 +79,19 @@ describe("canAccessSection", () => {
     ]);
   });
 
-  it("auditor: solo Auditoría además de lo común", () => {
+  it("auditor: Auditoría y consulta de horarios además de lo común", () => {
     const ctx = makeContext([[companyA, ["auditor"]]]);
-    expect(allowed(ctx)).toEqual(["panel", "auditoria", "perfil"]);
+    expect(allowed(ctx)).toEqual(["panel", "horario", "auditoria", "perfil"]);
+  });
+
+  it("horario: quien supervisa a alguien lo ve aunque no tenga rol en la empresa activa", () => {
+    expect(canAccessSection(makeContext([[companyA, ["accounting"]]]), "horario")).toBe(false);
+    expect(
+      canAccessSection(
+        makeContext([[companyA, ["accounting"]]], { supervisedCount: 1 }),
+        "horario",
+      ),
+    ).toBe(true);
   });
 
   it("administrador de grupo: Administración, Equipo y Auditoría solo en empresas de su grupo", () => {

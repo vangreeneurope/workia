@@ -17,7 +17,9 @@ Pendiente externo: validar migraciones y flujo de acceso en un proyecto Supabase
 
 Estado (2026-10-23): **administración implementada** (empresas, centros, equipos, personas,
 condiciones con fecha de efecto, bajas, cuentas y roles, aprobadores, suplencias, importación CSV,
-auditoría minimizada). Pendiente: control horario y visor de auditoría.
+auditoría minimizada). Calendarios laborales, plantillas de turno versionadas y asignaciones
+implementados (2026-10-24, docs/HORARIOS.md). Pendiente: fichajes, visor de auditoría y validación
+de ambos módulos en un proyecto Supabase real.
 
 1. Proyecto Supabase de pruebas y de producción (región UE); migraciones aplicadas; tipos
    regenerados.
@@ -33,7 +35,7 @@ real en un proyecto de pruebas, revisión de NORMATIVA con la asesoría.
 
 ## Fase 2 · Vacaciones y ausencias
 
-Calendarios laborales y festivos, tipos de ausencia y políticas por empresa, saldos, solicitudes y
+Tipos de ausencia (los calendarios laborales ya existen y las aprobadas alimentarán `leave_periods`) y políticas por empresa, saldos, solicitudes y
 aprobaciones (incluido el responsable de otra empresa), justificantes privados, calendario de
 equipo.
 

@@ -27,13 +27,24 @@ export const getAdminContext = cache(async (): Promise<AdminContext | null> => {
   const companyId = user.activeCompanyId;
   if (!companyId) return null;
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("my_company_permissions", { p_company: companyId });
-  if (error) throw new Error("No se pudieron cargar tus permisos.");
+  const [permissionsRes, scheduleRes] = await Promise.all([
+    supabase.rpc("my_company_permissions", { p_company: companyId }),
+    supabase.rpc("my_schedule_access", { p_company: companyId }),
+  ]);
+  if (permissionsRes.error || scheduleRes.error) {
+    throw new Error("No se pudieron cargar tus permisos.");
+  }
+  const schedule: CompanyPermission[] = (scheduleRes.data ?? []).map((s) => ({
+    permission: `schedule.${s.action}`,
+    scope_type: s.scope_type,
+    work_center_id: s.work_center_id,
+    team_id: s.team_id,
+  }));
   return {
     user,
     companyId,
     companyName: user.companies.find((c) => c.id === companyId)?.name ?? "",
-    permissions: data ?? [],
+    permissions: [...(permissionsRes.data ?? []), ...schedule],
     groupAdmin: administersCompany(user, companyId),
   };
 });

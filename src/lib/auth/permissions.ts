@@ -66,7 +66,15 @@ export type UserContext = {
 };
 
 export type SectionKey =
-  "panel" | "fichajes" | "ausencias" | "gastos" | "equipo" | "auditoria" | "admin" | "perfil";
+  | "panel"
+  | "horario"
+  | "fichajes"
+  | "ausencias"
+  | "gastos"
+  | "equipo"
+  | "auditoria"
+  | "admin"
+  | "perfil";
 
 export function rolesInCompany(ctx: UserContext, companyId: string | null): CompanyRole[] {
   if (!companyId) return [];
@@ -94,6 +102,13 @@ export function canAccessSection(ctx: UserContext, section: SectionKey): boolean
     case "panel":
     case "perfil":
       return true;
+    case "horario":
+      // Su propio horario y, según permisos, el de quien supervisa o gestiona (RLS decide qué ve).
+      return (
+        admin ||
+        ctx.supervisedCount > 0 ||
+        hasAnyRole(roles, ["employee", "manager", "company_admin", "hr", "auditor"])
+      );
     case "fichajes":
     case "ausencias":
       // Toda persona contratada ficha y solicita ausencias, incluidos managers y RR. HH.

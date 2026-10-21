@@ -71,3 +71,15 @@ test("la administración y la exportación exigen sesión", async ({ page, reque
   expect(response.status()).toBe(307);
   expect(response.headers()["location"]).toContain("/acceder");
 });
+
+test("el horario y su administración exigen sesión", async ({ page }) => {
+  for (const path of [
+    "/horario?vista=mes",
+    "/admin/horarios",
+    "/admin/plantillas",
+    "/admin/calendarios",
+  ]) {
+    await page.goto(path);
+    await expect(page).toHaveURL(/\/acceder\?siguiente=/);
+  }
+});

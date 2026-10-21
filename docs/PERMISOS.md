@@ -81,6 +81,10 @@ aplica).
 | `approver_substitutions`           | ausente, suplente, `members.read`                                                           | `assignments.manage`; suplente elegible del grupo; ni ausente ni suplente puede ser quien la registra       | ídem                                                     | `status`, `valid_to`                                     |
 | `audit_log`                        | admin del grupo (su grupo), `audit.read` (su empresa); plataforma solo filas sin empresa    | — (triggers)                                                                                                | — (inmutable)                                            | —                                                        |
 | `audit_events`                     | `audit.read` (su empresa), admin del grupo                                                  | — (triggers y `log_admin_event`)                                                                            | — (inmutable)                                            | —                                                        |
+| Calendarios, festivos, plantillas  | miembros vigentes, managers con supervisados, lectura de horarios                           | gestión de horarios (ámbito empresa)                                                                        | ídem; festivos pasados y versiones publicadas inmutables | nombre, fuente, estado…                                  |
+| `shift_template_versions`/tramos   | publicadas: como las plantillas; borradores: gestión                                        | — (RPC `save_shift_template_draft`)                                                                         | — (RPC `publish_shift_template_version`)                 | —                                                        |
+| `shift_assignments` (+ días)       | publicadas: la persona, su manager, lectura en su ámbito; borradores: gestión en su ámbito  | — (RPC `save_shift_assignment`)                                                                             | — (RPC de publicación y cierre)                          | —                                                        |
+| `leave_periods`, `schedule_events` | la persona; manager y lectura en su ámbito (eventos: solo la persona y lectura)             | — (integración / funciones)                                                                                 | —                                                        | —                                                        |
 | `storage: company-logos`           | plataforma, admin del grupo, miembros vigentes, managers con supervisados                   | `company.manage`                                                                                            | `company.manage`                                         | —                                                        |
 
 `anon` no tiene ningún privilegio sobre estas tablas.
@@ -105,26 +109,33 @@ plataforma o del grupo de la empresa activa.
 | Sección             | employee | manager | hr  | company_admin | accounting | auditor |        Admin        |
 | ------------------- | :------: | :-----: | :-: | :-----------: | :--------: | :-----: | :-----------------: |
 | Inicio, Mi perfil   |    ✓     |    ✓    |  ✓  |       ✓       |     ✓      |    ✓    |          ✓          |
+| Horario             |    ✓     |    ✓    |  ✓  |       ✓       |    (*)     |    ✓    |          ✓          |
 | Fichajes, Ausencias |    ✓     |    ✓    |  ✓  |       ✓       |            |         | si además tiene rol |
 | Gastos              |    ✓     |    ✓    |  ✓  |       ✓       |     ✓      |         | si además tiene rol |
 | Equipo              |   (*)    |    ✓    |  ✓  |       ✓       |            |         |          ✓          |
 | Auditoría           |          |         |     |       ✓       |            |    ✓    |          ✓          |
 | Administración      |          |         |  ✓  |       ✓       |            |         |          ✓          |
 
-(*) Quien supervisa al menos a una persona con asignación vigente ve "Equipo".
+(*) Quien supervisa al menos a una persona con asignación vigente ve "Equipo" y "Horario".
 
 ### Áreas de administración (`src/lib/admin/access.ts`)
 
 Se calculan con los permisos reales de la base de datos (`my_company_permissions`):
 
-| Área               | Requiere                                                                 |
-| ------------------ | ------------------------------------------------------------------------ |
-| Empresas del grupo | Administración del grupo                                                 |
-| Centros y equipos  | `org.manage` (ámbito empresa)                                            |
-| Personas           | `employees.read` (cualquier ámbito; RR. HH. de centro ve solo su centro) |
-| Cuentas y roles    | `members.read` (ámbito empresa); invitar exige `members.manage`          |
-| Aprobadores        | `assignments.manage`                                                     |
-| Importar CSV       | `employees.manage` (RLS valida el ámbito de cada fila)                   |
+| Área                                       | Requiere                                                                 |
+| ------------------------------------------ | ------------------------------------------------------------------------ |
+| Empresas del grupo                         | Administración del grupo                                                 |
+| Centros y equipos                          | `org.manage` (ámbito empresa)                                            |
+| Personas                                   | `employees.read` (cualquier ámbito; RR. HH. de centro ve solo su centro) |
+| Cuentas y roles                            | `members.read` (ámbito empresa); invitar exige `members.manage`          |
+| Aprobadores                                | `assignments.manage`                                                     |
+| Importar CSV                               | `employees.manage` (RLS valida el ámbito de cada fila)                   |
+| Plantillas de turno, Calendarios laborales | `schedule.manage` (ámbito empresa)                                       |
+| Asignación de horarios                     | `schedule.manage` (cualquier ámbito; RLS limita a su centro o equipo)    |
+
+Permisos de horarios (`my_schedule_access`, ADR-030): administración de empresa y RR. HH.
+gestionan (`schedule.manage`) y leen; auditoría solo lee; el manager ve los horarios publicados de
+quien supervisa sin permiso de gestión. Detalle en [HORARIOS.md](HORARIOS.md).
 
 ## 7. Cómo se aplica
 

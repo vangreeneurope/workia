@@ -336,3 +336,57 @@ correos; el nombre del archivo exportado tampoco.
 asignaciones, suplencias y bajas. El cambio de centro o equipo de una ficha se aplica al guardarlo
 (con auditoría): programarlo exigiría un historial de ubicación y un proceso que lo aplique en su
 fecha, que se abordará con el módulo de turnos si se necesita.
+
+## ADR-030 · Permisos de horarios en una matriz propia
+
+**Fecha**: 2026-10-24 · **Estado**: aceptada
+
+**Contexto**: añadir permisos al enum `private.app_permission` obliga a reescribir funciones y
+complica la reversión. **Decisión**: `private.role_has_schedule_permission(rol, 'read'|'manage')`
+(administración de empresa y RR. HH. gestionan; auditoría lee) y `has_schedule_permission(empresa,
+acción, centro, equipo)` con el mismo cálculo de vigencias y ámbitos que `has_permission`. El
+manager no gestiona horarios: ve los publicados de quien supervisa (`manages_employee`). Plantillas
+y calendarios exigen ámbito empresa; las asignaciones, el ámbito de la persona o del equipo. La
+interfaz los recibe como `schedule.read`/`schedule.manage` (`my_schedule_access`).
+**Consecuencia**: si se quiere que un manager publique excepciones, se añadirá con su ADR.
+
+## ADR-031 · Minutos enteros, zona del centro y reglas de cambio de hora
+
+**Fecha**: 2026-10-24 · **Estado**: aceptada
+
+**Decisión**: los tramos son minutos enteros desde la medianoche local del día del turno (0–2880),
+nunca horas decimales ni instantes fijos. La zona es la del centro (o la de la empresa), validada
+contra `pg_timezone_names`. La conversión a instantes la hace un resolvedor puro en TypeScript con
+dos reglas: hora inexistente → desfase anterior al cambio (se desplaza hacia delante); hora repetida
+→ primera ocurrencia. Se devuelven horas de reloj, reales y objetivo, sin clasificar diferencias.
+Detalle en docs/HORARIOS.md.
+
+## ADR-032 · Versionado sin efecto retroactivo
+
+**Fecha**: 2026-10-24 · **Estado**: aceptada
+
+**Decisión**: las plantillas tienen versiones; una versión publicada es inmutable (trigger) y la
+siguiente cierra su vigencia en su fecha de efecto, que debe ser hoy o futura. Las asignaciones
+publicadas solo se finalizan (nunca hacia el pasado) o se anulan antes de empezar; los festivos
+pasados son inmutables. Versiones, tramos, asignaciones y eventos se escriben solo mediante
+funciones RPC con comprobación de permisos (sin `grant` de escritura directa), porque la operación
+afecta a varias filas a la vez y debe ser atómica.
+
+## ADR-033 · Precedencia del horario y festivos
+
+**Fecha**: 2026-10-24 · **Estado**: aceptada
+
+**Decisión**: excepción individual › festivo › persona › equipo › patrón del contrato. Un festivo
+anula los niveles ordinarios, pero una excepción individual permite planificar trabajo ese día.
+Un único horario publicado por nivel y día (exclusión). Una ausencia aprobada se muestra sin borrar
+el plan. Las ausencias llegan por `leave_periods`, tabla de integración que rellenará el módulo de
+ausencias (hoy no tiene escritura desde la API).
+
+## ADR-034 · Avisos de cambio como bandeja de salida
+
+**Fecha**: 2026-10-24 · **Estado**: aceptada
+
+**Decisión**: no hay proveedor de correo. Cada publicación o cambio crea filas en
+`schedule_events` (una por persona afectada, sin datos personales) dentro de la misma transacción.
+La persona las ve en su horario; el futuro proveedor las leerá con `service_role` y marcará
+`delivered_at`. Nadie más puede modificarlas.

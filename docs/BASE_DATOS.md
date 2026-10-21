@@ -120,6 +120,28 @@ propio usuario:
 | `log_admin_event(...)`                                                          | definer       | Registrar exportaciones e importaciones sin datos personales |
 | `find_group_user_by_email(empresa, correo)` · `group_user_labels(empresa, ids)` | definer       | Elegir y mostrar managers y suplentes del mismo grupo        |
 
+### Calendarios y horarios (migración `20261024100000_calendarios_turnos`)
+
+Modelo, precedencia y zonas horarias en [HORARIOS.md](HORARIOS.md).
+
+| Tabla / cambio                      | Propósito                                                   | Claves y restricciones relevantes                                                                                   |
+| ----------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `holiday_calendars`                 | Calendario laboral con fuente obligatoria                   | nombre único por empresa; región ISO `ES-XX`                                                                        |
+| `work_center_holiday_calendars`     | Calendario aplicado a un centro con vigencia                | claves compuestas; exclusión de solapes; inicio no pasado                                                           |
+| `holidays`                          | Festivos                                                    | único (empresa, calendario, fecha); pasados inmutables                                                              |
+| `shift_templates`                   | Plantilla de turno                                          | código único por empresa                                                                                            |
+| `shift_template_versions`           | Versión con tipo, horas objetivo, tolerancias, vigencia     | publicada inmutable; una publicada por día y plantilla (exclusión)                                                  |
+| `shift_template_segments`           | Tramos en minutos enteros (0–2880)                          | fin > inicio; inmutables si la versión está publicada                                                               |
+| `shift_assignments` + `_days`       | Asignación por excepción, persona, equipo o contrato; ciclo | coherencia de ámbito; excepción ≤ 31 días; una publicada por nivel y sujeto (exclusión); FK compuesta a condiciones |
+| `leave_periods`                     | Ausencias aprobadas (integración)                           | solo lectura desde la API                                                                                           |
+| `schedule_events`                   | Avisos por persona                                          | inmutables salvo para `service_role`                                                                                |
+| `companies`/`work_centers.timezone` | Zona horaria                                                | solo nombres IANA conocidos (`private.is_valid_time_zone`)                                                          |
+
+RPC nuevas (definer, con comprobación explícita de permisos y empresa derivada de los datos):
+`save_shift_template_draft`, `publish_shift_template_version`, `save_shift_assignment`,
+`shift_assignment_conflicts`, `publish_shift_assignment`, `close_shift_assignment` y
+`my_schedule_access`. `audit_events` admite la acción `publish`.
+
 ### Auditoría y almacenamiento
 
 - `audit_log`: append-only. Columnas `actor_id` (`auth.uid()`), `company_id`, `group_id`,
@@ -182,6 +204,7 @@ orden inverso con `psql` y borrar la fila correspondiente de
 | `20261022100000_modelo_multiempresa`    | Sí                                                     | grupos, administradores de grupo, centros, equipos, roles `hr`/`auditor` y roles de ámbito centro/equipo; estados `invited`/`suspended` |
 | `20261022100100_empleados`              | Sí                                                     | fichas de empleado y condiciones; asignaciones de manager de empleados sin cuenta                                                       |
 | `20261023100000_administracion`         | Sí (generada desde el texto literal de las anteriores) | suplencias, `audit_events`, fechas de baja, asignaciones por equipo o por tipo                                                          |
+| `20261024100000_calendarios_turnos`     | Sí                                                     | calendarios, festivos, plantillas, asignaciones, ausencias integradas y eventos (la auditoría se conserva siempre)                      |
 
 Protecciones:
 
@@ -202,7 +225,8 @@ Protecciones:
    `10_aislamiento_multiempresa` (qué ve y hace cada actor), `20_integridad_y_escalada`
    (inmutabilidad, restricciones, falsificaciones, metadatos y claims), `30_seed_sintetico` y
    `40_administracion` (aprobadores, solapes, suplencias, bajas, auditoría, importación y separación
-   plataforma / empresa).
+   plataforma / empresa) y `50_horarios` (permisos por ámbito, versionado sin efecto retroactivo,
+   validación de plantillas, conflictos, publicación y eventos).
 3. Comprueba reversibilidad y protección de datos de las reversiones.
 
 Cada prueba actúa como un usuario concreto (`set role authenticated` + claims del JWT). Limitación:
@@ -225,8 +249,8 @@ npx supabase gen types typescript --local --schema public > src/types/database.t
 - **Control horario (fase 1)**: `time_entries` (fichaje original, hora del servidor, sin `update`
   ni `delete`, trigger `prevent_mutation()`) y `time_entry_corrections` (solicitud enlazada con
   motivo y aprobación). Ambas con `company_id`, `employee_id` y claves compuestas.
-- **Ausencias (fase 2)**: `work_calendars`, `calendar_holidays`, `leave_types`, `leave_balances`,
-  `leave_requests` (justificantes en bucket privado `leave-attachments`).
+- **Ausencias (fase 2)**: `leave_types`, `leave_balances`, `leave_requests` (las aprobadas
+  alimentarán `leave_periods`; los calendarios laborales ya existen) (justificantes en bucket privado `leave-attachments`).
 - **Gastos (fase 3)**: `expense_policies`, `expense_reports`, `expenses`, `expense_receipts`
   (bucket privado `expense-receipts`, resultado OCR y campos confirmados por la persona).
 

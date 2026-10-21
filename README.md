@@ -111,6 +111,16 @@ fechas están en [docs/VIGENCIA_Y_BAJAS.md](docs/VIGENCIA_Y_BAJAS.md).
 Para invitar personas por correo hace falta `SUPABASE_SECRET_KEY` en el servidor (ver
 `.env.example` y ADR-025). Sin ella, todo lo demás funciona.
 
+## Horarios y calendarios laborales
+
+**Horario** (`/horario`) muestra el horario planificado en vista semanal o mensual: la propia
+persona ve el suyo y, según sus permisos, el de quien supervisa o gestiona. En Administración,
+RR. HH. y la administración de empresa gestionan **plantillas de turno** versionadas (continua,
+partida, nocturna y flexible), **asignaciones** por persona, equipo, contrato o excepción con
+revisión de conflictos antes de publicar, y **calendarios laborales** con su fuente. No se
+precarga ningún festivo. Precedencia, zonas horarias y cambios de hora en
+[docs/HORARIOS.md](docs/HORARIOS.md).
+
 ## Integración continua
 
 `.github/workflows/ci.yml` ejecuta en cada push y Pull Request: tipos, lint, formato y unitarias;
@@ -132,6 +142,7 @@ desplegarse en cualquier plataforma compatible con Next.js. Requisitos:
 [CLAUDE.md](CLAUDE.md) (convenciones y reglas) · [PRD](docs/PRD.md) ·
 [Arquitectura](docs/ARQUITECTURA.md) · [Base de datos](docs/BASE_DATOS.md) ·
 [Permisos](docs/PERMISOS.md) · [Vigencia y bajas](docs/VIGENCIA_Y_BAJAS.md) ·
+[Horarios](docs/HORARIOS.md) ·
 [Normativa](docs/NORMATIVA.md) ·
 [Plan de desarrollo](docs/PLAN_DESARROLLO.md) · [Decisiones](docs/DECISIONES.md) ·
 [Estado del proyecto](docs/ESTADO_PROYECTO.md)

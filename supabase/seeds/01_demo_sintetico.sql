@@ -119,3 +119,63 @@ join public.employees e on e.id = t.employee_id::uuid;
 insert into public.manager_assignments (company_id, employee_id, manager_user_id, valid_from) values
   ('5eed2000-0000-4000-8000-00000000000a', '5eed6000-0000-4000-8000-000000000005', '5eed0000-0000-4000-8000-000000000004', now() - interval '6 months'),
   ('5eed2000-0000-4000-8000-00000000000b', '5eed6000-0000-4000-8000-000000000010', '5eed0000-0000-4000-8000-000000000004', now() - interval '6 months');
+
+-- -----------------------------------------------------------------------------
+-- Horarios sintéticos (fechas relativas a hoy para que siempre haya datos)
+-- El festivo es INVENTADO para pruebas: en entornos reales los festivos se
+-- registran o importan desde una fuente validada (docs/HORARIOS.md).
+-- -----------------------------------------------------------------------------
+insert into public.shift_templates (id, company_id, code, name) values
+  ('5eed7000-0000-4000-8000-000000000001', '5eed2000-0000-4000-8000-00000000000a', 'M', 'Mañana'),
+  ('5eed7000-0000-4000-8000-000000000002', '5eed2000-0000-4000-8000-00000000000a', 'N', 'Noche'),
+  ('5eed7000-0000-4000-8000-000000000003', '5eed2000-0000-4000-8000-00000000000a', 'MJ', 'Media jornada');
+
+insert into public.shift_template_versions (id, company_id, template_id, version, kind, target_minutes,
+  tolerance_early_minutes, tolerance_late_minutes) values
+  ('5eed7100-0000-4000-8000-000000000001', '5eed2000-0000-4000-8000-00000000000a', '5eed7000-0000-4000-8000-000000000001', 1, 'continuous', 450, 5, 10),
+  ('5eed7100-0000-4000-8000-000000000002', '5eed2000-0000-4000-8000-00000000000a', '5eed7000-0000-4000-8000-000000000002', 1, 'night', 480, 5, 10),
+  ('5eed7100-0000-4000-8000-000000000003', '5eed2000-0000-4000-8000-00000000000a', '5eed7000-0000-4000-8000-000000000003', 1, 'continuous', 240, 0, 0);
+
+insert into public.shift_template_segments (company_id, version_id, position, start_minute, end_minute, kind, paid) values
+  ('5eed2000-0000-4000-8000-00000000000a', '5eed7100-0000-4000-8000-000000000001', 1, 480, 720, 'work', true),
+  ('5eed2000-0000-4000-8000-00000000000a', '5eed7100-0000-4000-8000-000000000001', 2, 720, 750, 'break', false),
+  ('5eed2000-0000-4000-8000-00000000000a', '5eed7100-0000-4000-8000-000000000001', 3, 750, 990, 'work', true),
+  ('5eed2000-0000-4000-8000-00000000000a', '5eed7100-0000-4000-8000-000000000002', 1, 1320, 1800, 'work', true),
+  ('5eed2000-0000-4000-8000-00000000000a', '5eed7100-0000-4000-8000-000000000003', 1, 540, 780, 'work', true);
+
+update public.shift_template_versions
+set status = 'published', valid_from = current_date - 60, published_at = now() - interval '60 days'
+where company_id = '5eed2000-0000-4000-8000-00000000000a';
+
+insert into public.holiday_calendars (id, company_id, name, scope, applies_to_all_centers, source_reference)
+values ('5eed7200-0000-4000-8000-000000000001', '5eed2000-0000-4000-8000-00000000000a',
+  'Calendario sintético de pruebas', 'company', true, 'Datos sintéticos de desarrollo: no son festivos reales');
+insert into public.holidays (company_id, calendar_id, holiday_date, name)
+values ('5eed2000-0000-4000-8000-00000000000a', '5eed7200-0000-4000-8000-000000000001', current_date + 10,
+  'Festivo sintético de prueba');
+
+-- Equipo comercial de Alfa: mañana de lunes a viernes desde hace cuatro semanas.
+-- Enzo: media jornada de lunes a viernes. Elena: excepción de noche dentro de 3 días.
+insert into public.shift_assignments (id, company_id, scope_type, team_id, employee_id, valid_from,
+  valid_to, cycle_days, anchor_date) values
+  ('5eed7300-0000-4000-8000-000000000001', '5eed2000-0000-4000-8000-00000000000a', 'team', '5eed4000-0000-4000-8000-0000000000a1', null,
+    current_date - 28, null, 7, current_date - extract(isodow from current_date)::int + 1 - 28),
+  ('5eed7300-0000-4000-8000-000000000002', '5eed2000-0000-4000-8000-00000000000a', 'employee', null, '5eed6000-0000-4000-8000-000000000006',
+    current_date - 28, null, 7, current_date - extract(isodow from current_date)::int + 1 - 28),
+  ('5eed7300-0000-4000-8000-000000000003', '5eed2000-0000-4000-8000-00000000000a', 'exception', null, '5eed6000-0000-4000-8000-000000000005',
+    current_date + 3, current_date + 5, 1, current_date + 3);
+
+insert into public.shift_assignment_days (assignment_id, company_id, day_index, template_id)
+select a.id, a.company_id, d.i, case when d.i < 5 then t.template_id end
+from (values
+  ('5eed7300-0000-4000-8000-000000000001'::uuid, '5eed7000-0000-4000-8000-000000000001'::uuid),
+  ('5eed7300-0000-4000-8000-000000000002'::uuid, '5eed7000-0000-4000-8000-000000000003'::uuid)
+) as t(assignment_id, template_id)
+join public.shift_assignments a on a.id = t.assignment_id
+cross join generate_series(0, 6) as d(i);
+insert into public.shift_assignment_days (assignment_id, company_id, day_index, template_id) values
+  ('5eed7300-0000-4000-8000-000000000003', '5eed2000-0000-4000-8000-00000000000a', 0, '5eed7000-0000-4000-8000-000000000002');
+
+update public.shift_assignments
+set status = 'published', published_at = now(), published_by = '5eed0000-0000-4000-8000-000000000003'
+where company_id = '5eed2000-0000-4000-8000-00000000000a';

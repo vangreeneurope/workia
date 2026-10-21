@@ -50,6 +50,20 @@ describe("áreas de administración", () => {
     expect(canUseArea("centros", scoped, { groupAdmin: false })).toBe(false);
   });
 
+  it("horarios: plantillas y calendarios exigen ámbito empresa; asignar, cualquier ámbito", () => {
+    const company = [perm("schedule.read"), perm("schedule.manage")];
+    expect(visibleAdminAreas(company, { groupAdmin: false }).map((a) => a.key)).toEqual([
+      "plantillas",
+      "horarios",
+      "calendarios",
+    ]);
+    const center = [perm("schedule.manage", "work_center")];
+    expect(canUseArea("horarios", center, { groupAdmin: false })).toBe(true);
+    expect(canUseArea("plantillas", center, { groupAdmin: false })).toBe(false);
+    expect(canUseArea("calendarios", center, { groupAdmin: false })).toBe(false);
+    expect(canUseArea("horarios", [perm("schedule.read")], { groupAdmin: false })).toBe(false);
+  });
+
   it("contabilidad solo consulta personas", () => {
     const areas = visibleAdminAreas([perm("employees.read")], { groupAdmin: false }).map(
       (a) => a.key,

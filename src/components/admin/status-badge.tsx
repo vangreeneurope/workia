@@ -11,6 +11,7 @@ const LABELS: Record<
   invited: { label: "Invitado", variant: "outline" },
   suspended: { label: "Suspendido", variant: "destructive" },
   draft: { label: "Borrador", variant: "outline" },
+  published: { label: "Publicado", variant: "secondary" },
   scheduled: { label: "Programado", variant: "outline" },
   terminated: { label: "Baja", variant: "destructive" },
   leaving: { label: "Baja programada", variant: "outline" },
