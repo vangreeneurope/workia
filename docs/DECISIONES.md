@@ -260,3 +260,79 @@ aplican a un entorno real. Una prueba automática comprueba estas condiciones.
 grupo, solo por SQL o por un administrador de plataforma). El administrador de grupo
 (`group_admins`) administra las empresas de su grupo, puede crearlas y desactivarlas, pero no
 nombra administradores de grupo ni actúa fuera de su grupo. Nadie se nombra a sí mismo.
+
+## ADR-023 · Aprobadores por persona o equipo, sin ambigüedad por construcción
+
+**Fecha**: 2026-10-23 · **Estado**: aceptada
+
+**Contexto**: las aprobaciones deben resolverse a una única persona; el mismo aprobador puede
+trabajar en varias empresas y hay suplencias temporales.
+
+**Decisión**: `manager_assignments` admite ámbito persona o equipo y tipo de solicitud. Precedencia
+fija (persona+tipo › persona+todas › equipo+tipo › equipo+todas) y restricciones de exclusión que
+impiden dos asignaciones vigentes del mismo nivel. `resolve_approver` aplica después la suplencia
+vigente y devuelve errores con código (`APROBADOR_*`) y pista. Detalle en
+[VIGENCIA_Y_BAJAS.md](VIGENCIA_Y_BAJAS.md).
+
+**Alternativa descartada**: detectar conflictos solo al resolver (los usuarios se encontrarían el
+problema al pedir vacaciones, no al configurar).
+
+## ADR-024 · La administración de plataforma no administra empresas
+
+**Fecha**: 2026-10-23 · **Estado**: aceptada · Matiza ADR-022
+
+**Decisión**: `has_permission` y `can_grant_role` dejan de conceder a `platform_admins`; las
+empresas las crea la administración de grupo; la plataforma no ve auditoría con datos de empresa.
+La plataforma conserva grupos, administradores de grupo y el listado de empresas.
+
+**Consecuencias**: un administrador de plataforma que necesite operar en una empresa debe tener un
+rol explícito (y auditado) en ella o ser administrador de su grupo.
+
+## ADR-025 · Clave secreta solo para invitaciones
+
+**Fecha**: 2026-10-23 · **Estado**: aceptada · Concreta ADR-011
+
+**Decisión**: `SUPABASE_SECRET_KEY` (solo servidor, `src/lib/supabase/admin.ts`, `server-only`) se usa
+exclusivamente para `auth.admin.inviteUserByEmail` y para localizar una cuenta por correo, después
+de autorizar al usuario con su sesión (`members.manage`). La membresía se crea con el cliente del
+usuario, de modo que RLS decide. Sin la variable, la invitación muestra un aviso y el resto funciona.
+
+## ADR-026 · Auditoría minimizada en `audit_events`
+
+**Fecha**: 2026-10-23 · **Estado**: aceptada
+
+**Decisión**: nueva tabla inmutable con solo los campos cambiados y los datos personales sustituidos
+por `[dato personal]`, escrita por triggers en las tablas sensibles y por `log_admin_event`
+(exportaciones e importaciones, sin el texto buscado). `audit_log` se mantiene como traza técnica
+completa e inmutable (no se puede reducir sin reescribir historia) y queda limitada a quien tiene
+`audit.read` o administra el grupo.
+
+**Consecuencias**: dos registros de auditoría. La interfaz mostrará `audit_events`; `audit_log` se
+revisará con la asesoría para fijar su plazo de conservación.
+
+## ADR-027 · Importación CSV de todo o nada
+
+**Fecha**: 2026-10-23 · **Estado**: aceptada
+
+**Decisión**: validar todo el archivo antes de escribir (en el servidor, con las mismas reglas que la
+interfaz) y, solo si no hay errores, importar en una única transacción con `import_employees`
+(SECURITY INVOKER, de modo que RLS valida cada fila). No se ofrece "importar solo las válidas" para no
+dejar altas a medias.
+
+## ADR-028 · Datos personales fuera de URLs y registros
+
+**Fecha**: 2026-10-23 · **Estado**: aceptada
+
+**Decisión**: la búsqueda de personas se envía por POST y se guarda en una cookie `httpOnly`
+limitada a `/admin/personas` durante 15 minutos; las URLs solo llevan filtros sin datos personales
+(situación, ids de centro o equipo, página). Los mensajes de las acciones no incluyen nombres ni
+correos; el nombre del archivo exportado tampoco.
+
+## ADR-029 · Fechas de efecto: qué se programa y qué no
+
+**Fecha**: 2026-10-23 · **Estado**: aceptada (temporal)
+
+**Decisión**: se programan con fecha de efecto las condiciones de empleo, roles, membresías,
+asignaciones, suplencias y bajas. El cambio de centro o equipo de una ficha se aplica al guardarlo
+(con auditoría): programarlo exigiría un historial de ubicación y un proceso que lo aplique en su
+fecha, que se abordará con el módulo de turnos si se necesita.

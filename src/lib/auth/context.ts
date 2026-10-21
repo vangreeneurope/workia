@@ -37,7 +37,7 @@ export type ContextInput = {
   groupAdmins: (Validity & { group_id: string })[];
   memberships: MembershipRow[];
   managerAssignments: Validity[];
-  /** Empresas visibles por administración de plataforma o de grupo. */
+  /** Empresas de los grupos que administra (filas de companies). */
   administeredCompanies: CompanyRow[];
   requestedCompanyId: string | null | undefined;
   now: Date;
@@ -60,8 +60,9 @@ export function assembleUserContext(input: ContextInput): UserContext {
     ...new Set(input.groupAdmins.filter((g) => isCurrent(g, now)).map((g) => g.group_id)),
   ];
 
-  const administeredCompanies = input.administeredCompanies.filter(
-    (c) => input.isPlatformAdmin || administeredGroupIds.includes(c.group_id),
+  // La administración de plataforma no administra empresas (ADR-024).
+  const administeredCompanies = input.administeredCompanies.filter((c) =>
+    administeredGroupIds.includes(c.group_id),
   );
 
   const memberships: Membership[] = input.memberships.flatMap((row) => {

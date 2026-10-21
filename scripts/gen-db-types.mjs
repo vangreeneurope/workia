@@ -73,6 +73,29 @@ select json_build_object(
       where n.nspname = 'public' and c.relkind in ('r', 'p')
     ) x
   ),
+  'functions', (
+    select coalesce(json_agg(f order by f.name), '[]'::json) from (
+      select p.proname as name, p.pronargdefaults as n_defaults,
+        rt.typname as ret_type, rt.typtype as ret_kind, rtn.nspname as ret_schema,
+        p.proretset as returns_set,
+        (select coalesce(json_agg(json_build_object(
+            'name', a.name, 'mode', a.mode::text, 'type', t.typname, 'kind', t.typtype,
+            'schema', tn.nspname, 'isArray', false
+          ) order by a.ord), '[]'::json)
+         from unnest(
+           coalesce(p.proallargtypes, p.proargtypes::oid[]),
+           coalesce(p.proargmodes, array_fill('i'::"char", array[p.pronargs])),
+           p.proargnames
+         ) with ordinality as a(typ, mode, name, ord)
+         join pg_type t on t.oid = a.typ
+         join pg_namespace tn on tn.oid = t.typnamespace) as args
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+      join pg_type rt on rt.oid = p.prorettype
+      join pg_namespace rtn on rtn.oid = rt.typnamespace
+      where n.nspname = 'public' and p.prokind = 'f'
+    ) f
+  ),
   'enums', (
     select coalesce(json_object_agg(t.typname,
       (select json_agg(e.enumlabel order by e.enumsortorder) from pg_enum e where e.enumtypid = t.oid)
@@ -158,11 +181,30 @@ function render(schema) {
       "      };",
     );
   }
-  out.push(
-    "    };",
-    "    Views: { [_ in never]: never };",
-    "    Functions: { [_ in never]: never };",
-  );
+  out.push("    };", "    Views: { [_ in never]: never };");
+  if (schema.functions.length === 0) {
+    out.push("    Functions: { [_ in never]: never };");
+  } else {
+    out.push("    Functions: {");
+    for (const fn of schema.functions) {
+      const inputs = fn.args.filter((a) => a.mode === "i" || a.mode === "b");
+      const outputs = fn.args.filter((a) => a.mode === "t" || a.mode === "o");
+      const firstOptional = inputs.length - fn.n_defaults;
+      const args = inputs.map((a, i) => `${a.name}${i >= firstOptional ? "?" : ""}: ${tsType(a)};`);
+      let returns;
+      if (outputs.length > 0) {
+        returns = `{ ${outputs.map((a) => `${a.name}: ${tsType(a)};`).join(" ")} }[]`;
+      } else if (fn.ret_type === "void") {
+        returns = "undefined";
+      } else {
+        const scalar = tsType({ type: fn.ret_type, kind: fn.ret_kind, schema: fn.ret_schema });
+        returns = fn.returns_set ? `${scalar}[]` : scalar;
+      }
+      const argsType = args.length > 0 ? `{ ${args.join(" ")} }` : "Record<PropertyKey, never>";
+      out.push(`      ${fn.name}: { Args: ${argsType}; Returns: ${returns} };`);
+    }
+    out.push("    };");
+  }
   out.push("    Enums: {");
   for (const [name, labels] of Object.entries(schema.enums)) {
     out.push(`      ${name}: ${labels.map((l) => JSON.stringify(l)).join(" | ")};`);

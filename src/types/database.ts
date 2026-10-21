@@ -8,6 +8,122 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      approver_substitutions: {
+        Row: {
+          absent_user_id: string;
+          company_id: string;
+          created_at: string;
+          granted_by: string | null;
+          id: string;
+          reason: string;
+          request_type: Database["public"]["Enums"]["approval_type"];
+          status: Database["public"]["Enums"]["grant_status"];
+          substitute_user_id: string;
+          updated_at: string;
+          valid_from: string;
+          valid_to: string;
+        };
+        Insert: {
+          absent_user_id: string;
+          company_id: string;
+          created_at?: string;
+          granted_by?: string | null;
+          id?: string;
+          reason: string;
+          request_type?: Database["public"]["Enums"]["approval_type"];
+          status?: Database["public"]["Enums"]["grant_status"];
+          substitute_user_id: string;
+          updated_at?: string;
+          valid_from?: string;
+          valid_to: string;
+        };
+        Update: {
+          absent_user_id?: string;
+          company_id?: string;
+          created_at?: string;
+          granted_by?: string | null;
+          id?: string;
+          reason?: string;
+          request_type?: Database["public"]["Enums"]["approval_type"];
+          status?: Database["public"]["Enums"]["grant_status"];
+          substitute_user_id?: string;
+          updated_at?: string;
+          valid_from?: string;
+          valid_to?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "approver_substitutions_absent_user_id_fkey";
+            columns: ["absent_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "approver_substitutions_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "approver_substitutions_granted_by_fkey";
+            columns: ["granted_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "approver_substitutions_substitute_user_id_fkey";
+            columns: ["substitute_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      audit_events: {
+        Row: {
+          action: string;
+          actor_id: string | null;
+          after: Json | null;
+          before: Json | null;
+          changed_fields: string[];
+          company_id: string | null;
+          entity: string;
+          entity_id: string | null;
+          group_id: string | null;
+          id: number;
+          occurred_at: string;
+        };
+        Insert: {
+          action: string;
+          actor_id?: string | null;
+          after?: Json | null;
+          before?: Json | null;
+          changed_fields?: string[];
+          company_id?: string | null;
+          entity: string;
+          entity_id?: string | null;
+          group_id?: string | null;
+          id?: never;
+          occurred_at?: string;
+        };
+        Update: {
+          action?: string;
+          actor_id?: string | null;
+          after?: Json | null;
+          before?: Json | null;
+          changed_fields?: string[];
+          company_id?: string | null;
+          entity?: string;
+          entity_id?: string | null;
+          group_id?: string | null;
+          id?: never;
+          occurred_at?: string;
+        };
+        Relationships: [];
+      };
       audit_log: {
         Row: {
           action: string;
@@ -153,6 +269,7 @@ export type Database = {
           company_id: string;
           created_at: string;
           employee_code: string;
+          end_date: string | null;
           first_name: string;
           id: string;
           last_name: string;
@@ -167,6 +284,7 @@ export type Database = {
           company_id: string;
           created_at?: string;
           employee_code: string;
+          end_date?: string | null;
           first_name: string;
           id?: string;
           last_name: string;
@@ -181,6 +299,7 @@ export type Database = {
           company_id?: string;
           created_at?: string;
           employee_code?: string;
+          end_date?: string | null;
           first_name?: string;
           id?: string;
           last_name?: string;
@@ -371,11 +490,14 @@ export type Database = {
         Row: {
           company_id: string;
           created_at: string;
-          employee_id: string;
+          employee_id: string | null;
           granted_by: string | null;
           id: string;
           manager_user_id: string;
+          request_type: Database["public"]["Enums"]["approval_type"];
+          scope_type: Database["public"]["Enums"]["assignment_scope"];
           status: Database["public"]["Enums"]["grant_status"];
+          team_id: string | null;
           updated_at: string;
           valid_from: string;
           valid_to: string | null;
@@ -383,11 +505,14 @@ export type Database = {
         Insert: {
           company_id: string;
           created_at?: string;
-          employee_id: string;
+          employee_id?: string | null;
           granted_by?: string | null;
           id?: string;
           manager_user_id: string;
+          request_type?: Database["public"]["Enums"]["approval_type"];
+          scope_type?: Database["public"]["Enums"]["assignment_scope"];
           status?: Database["public"]["Enums"]["grant_status"];
+          team_id?: string | null;
           updated_at?: string;
           valid_from?: string;
           valid_to?: string | null;
@@ -395,11 +520,14 @@ export type Database = {
         Update: {
           company_id?: string;
           created_at?: string;
-          employee_id?: string;
+          employee_id?: string | null;
           granted_by?: string | null;
           id?: string;
           manager_user_id?: string;
+          request_type?: Database["public"]["Enums"]["approval_type"];
+          scope_type?: Database["public"]["Enums"]["assignment_scope"];
           status?: Database["public"]["Enums"]["grant_status"];
+          team_id?: string | null;
           updated_at?: string;
           valid_from?: string;
           valid_to?: string | null;
@@ -425,6 +553,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "manager_assignments_team_fkey";
+            columns: ["team_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "teams";
+            referencedColumns: ["id", "company_id"];
           },
         ];
       };
@@ -663,9 +798,63 @@ export type Database = {
       };
     };
     Views: { [_ in never]: never };
-    Functions: { [_ in never]: never };
+    Functions: {
+      change_employment_terms: {
+        Args: {
+          p_employee: string;
+          p_effective: string;
+          p_contract_type: Database["public"]["Enums"]["contract_type"];
+          p_working_time: Database["public"]["Enums"]["working_time"];
+          p_weekly_hours: number;
+          p_job_title?: string;
+        };
+        Returns: string;
+      };
+      find_group_user_by_email: { Args: { p_company: string; p_email: string }; Returns: string };
+      group_user_labels: {
+        Args: { p_company: string; p_users: unknown };
+        Returns: { user_id: string; full_name: string }[];
+      };
+      import_employees: { Args: { p_company: string; p_rows: Json }; Returns: number };
+      log_admin_event: {
+        Args: {
+          p_company: string;
+          p_action: string;
+          p_entity: string;
+          p_rows: number;
+          p_filters?: Json;
+        };
+        Returns: undefined;
+      };
+      my_company_permissions: {
+        Args: { p_company: string };
+        Returns: {
+          permission: string;
+          scope_type: string;
+          work_center_id: string;
+          team_id: string;
+        }[];
+      };
+      reactivate_employee: { Args: { p_employee: string }; Returns: undefined };
+      resolve_approver: {
+        Args: {
+          p_employee: string;
+          p_type?: Database["public"]["Enums"]["approval_type"];
+          p_at?: string;
+        };
+        Returns: {
+          approver_user_id: string;
+          manager_user_id: string;
+          assignment_id: string;
+          substitution_id: string;
+        }[];
+      };
+      terminate_employee: { Args: { p_employee: string; p_last_day: string }; Returns: undefined };
+    };
     Enums: {
       app_role: "company_admin" | "hr" | "manager" | "accounting" | "employee" | "auditor";
+      approval_type: "all" | "absences" | "expenses" | "time_corrections";
+      assignment_scope: "employee" | "team";
       contract_type:
         "permanent" | "temporary" | "seasonal_permanent" | "internship" | "training" | "other";
       entity_status: "active" | "inactive";

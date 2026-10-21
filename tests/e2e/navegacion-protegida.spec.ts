@@ -63,3 +63,11 @@ test("el enlace de confirmación inválido vuelve a acceder con aviso", async ({
   await expect(page).toHaveURL(/\/acceder\?error=enlace$/);
   await expect(page.getByText("El enlace no es válido o ha caducado")).toBeVisible();
 });
+
+test("la administración y la exportación exigen sesión", async ({ page, request }) => {
+  await page.goto("/admin/personas");
+  await expect(page).toHaveURL(/\/acceder\?siguiente=%2Fadmin%2Fpersonas$/);
+  const response = await request.get("/admin/personas/exportar", { maxRedirects: 0 });
+  expect(response.status()).toBe(307);
+  expect(response.headers()["location"]).toContain("/acceder");
+});

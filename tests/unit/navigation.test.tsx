@@ -14,7 +14,7 @@ describe("visibleNavKeys", () => {
     const keys = visibleNavKeys(makeContext([[companyA, ["employee"]]]));
     expect(keys).not.toContain("equipo");
     expect(keys).not.toContain("auditoria");
-    expect(keys).not.toContain("empresas");
+    expect(keys).not.toContain("admin");
   });
 });
 

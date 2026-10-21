@@ -18,7 +18,7 @@ const ALL: SectionKey[] = [
   "gastos",
   "equipo",
   "auditoria",
-  "empresas",
+  "admin",
   "perfil",
 ];
 
@@ -52,21 +52,29 @@ describe("canAccessSection", () => {
     const ctx = makeContext([[companyA, ["company_admin"]]]);
     expect(canAccessSection(ctx, "auditoria")).toBe(true);
     expect(canAccessSection(ctx, "equipo")).toBe(true);
-    expect(canAccessSection(ctx, "empresas")).toBe(false);
+    expect(canAccessSection(ctx, "admin")).toBe(true);
   });
 
-  it("administrador global sin membresías: Empresas, Equipo y Auditoría, sin fichar", () => {
+  it("administración de plataforma: no administra empresas (solo inicio y perfil)", () => {
     const ctx = makeContext([], {
       isGlobalAdmin: true,
       companies: [companyA],
       activeCompanyId: companyA.id,
     });
-    expect(allowed(ctx)).toEqual(["panel", "equipo", "auditoria", "empresas", "perfil"]);
+    expect(allowed(ctx)).toEqual(["panel", "perfil"]);
   });
 
   it("RR. HH. (hr): Equipo, fichajes y gastos, pero no Auditoría", () => {
     const ctx = makeContext([[companyA, ["hr"]]]);
-    expect(allowed(ctx)).toEqual(["panel", "fichajes", "ausencias", "gastos", "equipo", "perfil"]);
+    expect(allowed(ctx)).toEqual([
+      "panel",
+      "fichajes",
+      "ausencias",
+      "gastos",
+      "equipo",
+      "admin",
+      "perfil",
+    ]);
   });
 
   it("auditor: solo Auditoría además de lo común", () => {
@@ -74,14 +82,15 @@ describe("canAccessSection", () => {
     expect(allowed(ctx)).toEqual(["panel", "auditoria", "perfil"]);
   });
 
-  it("administrador de grupo: Empresas, y Equipo/Auditoría solo en empresas de su grupo", () => {
+  it("administrador de grupo: Administración, Equipo y Auditoría solo en empresas de su grupo", () => {
     const base = makeContext([], {
       administeredGroupIds: ["g-1"],
       administeredCompanyIds: [companyA.id],
       companies: [companyA, companyB],
     });
     expect(canAccessSection({ ...base, activeCompanyId: companyA.id }, "auditoria")).toBe(true);
-    expect(canAccessSection({ ...base, activeCompanyId: companyA.id }, "empresas")).toBe(true);
+    expect(canAccessSection({ ...base, activeCompanyId: companyA.id }, "admin")).toBe(true);
+    expect(canAccessSection({ ...base, activeCompanyId: companyB.id }, "admin")).toBe(false);
     expect(canAccessSection({ ...base, activeCompanyId: companyB.id }, "auditoria")).toBe(false);
   });
 

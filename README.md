@@ -101,6 +101,16 @@ contraseña?" y el buzón local de Supabase). Nunca uses `--include-seed` contra
 `test:db` y `db:types` levantan un PostgreSQL temporal (necesitan PostgreSQL 15+ instalado). Para
 usar un servidor desechable existente: `TEST_DB_EXTERNAL=1 PGHOST=… PGUSER=… PGPASSWORD=…`.
 
+## Módulo de administración
+
+En **Administración** (`/admin`) cada persona ve solo las áreas de su ámbito: empresas del grupo,
+centros, equipos, personas (fichas, condiciones con fecha de efecto, bajas y reactivaciones),
+cuentas y roles, aprobadores con suplencias, e importación CSV con validación previa. Las reglas de
+fechas están en [docs/VIGENCIA_Y_BAJAS.md](docs/VIGENCIA_Y_BAJAS.md).
+
+Para invitar personas por correo hace falta `SUPABASE_SECRET_KEY` en el servidor (ver
+`.env.example` y ADR-025). Sin ella, todo lo demás funciona.
+
 ## Integración continua
 
 `.github/workflows/ci.yml` ejecuta en cada push y Pull Request: tipos, lint, formato y unitarias;
@@ -121,6 +131,7 @@ desplegarse en cualquier plataforma compatible con Next.js. Requisitos:
 
 [CLAUDE.md](CLAUDE.md) (convenciones y reglas) · [PRD](docs/PRD.md) ·
 [Arquitectura](docs/ARQUITECTURA.md) · [Base de datos](docs/BASE_DATOS.md) ·
-[Permisos](docs/PERMISOS.md) · [Normativa](docs/NORMATIVA.md) ·
+[Permisos](docs/PERMISOS.md) · [Vigencia y bajas](docs/VIGENCIA_Y_BAJAS.md) ·
+[Normativa](docs/NORMATIVA.md) ·
 [Plan de desarrollo](docs/PLAN_DESARROLLO.md) · [Decisiones](docs/DECISIONES.md) ·
 [Estado del proyecto](docs/ESTADO_PROYECTO.md)

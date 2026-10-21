@@ -47,7 +47,9 @@ src/app/            Rutas. (auth) = público, (app) = privado con AppShell, auth
 src/components/ui/  Componentes shadcn/ui (no editar su API; personalizar con className)
 src/components/     Componentes compartidos (layout, formularios, estados vacíos)
 src/features/<x>/   Lógica por dominio: actions.ts (Server Actions), schemas.ts (zod), components/
-src/lib/            Infraestructura: supabase/, auth/ (dal, permisos, rutas), env, navegación
+src/features/admin/ Administración: action-helpers.ts (adminAction), schemas.ts compartidos
+src/lib/            Infraestructura: supabase/, auth/ (dal, permisos, rutas), admin/ (contexto y
+                    áreas), dates (Madrid), csv, forms, db-errors, env, navegación
 src/types/          Tipos (database.ts refleja las migraciones)
 src/proxy.ts        Proxy de Next.js 16 (antes "middleware"): refresco de sesión y redirección
 supabase/migrations Migraciones SQL versionadas (fuente de verdad del esquema)
@@ -93,8 +95,9 @@ docs/               Documentación funcional y técnica
 4. Cada migración nueva lleva su `supabase/rollbacks/<migración>.down.sql`; `npm run test:db`
    verifica que restaura el esquema exacto. Después, `npm run db:types`.
 5. **Cada Server Action y Route Handler** obtiene la identidad con `getUserContext()` /
-   `requireUserId()` / `requireSection()` de `src/lib/auth/dal.ts`. Nunca confíes en ids de
-   usuario o empresa que lleguen del cliente sin comprobarlos.
+   `requireUserId()` / `requireSection()` de `src/lib/auth/dal.ts` (en administración,
+   `adminAction()` o `requireAdminArea()`). El `company_id` de una escritura sale siempre de
+   `ctx.companyId`, nunca del formulario. Nunca confíes en ids que lleguen del cliente.
 6. Usa `getClaims()` (valida el JWT), nunca `getSession()` en servidor para autorizar.
 7. **Sin secretos en el frontend ni en el repositorio.** Solo `NEXT_PUBLIC_SUPABASE_URL`,
    `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` y `NEXT_PUBLIC_SITE_URL` son públicas. La clave secreta
@@ -106,7 +109,9 @@ docs/               Documentación funcional y técnica
 10. **Archivos privados** (logotipos, justificantes, tickets) en buckets privados, ruta
     `<company_id>/…`, y acceso con URL firmada de corta duración. Nunca buckets públicos.
 11. Redirecciones con destino de usuario siempre a través de `safeRedirectPath()`.
-12. Prohibido: reconocimiento facial o biometría, rastreo GPS continuo, datos simulados en
+12. **Datos personales fuera de URLs, avisos y registros**: búsquedas por cookie o POST, mensajes
+    sin nombres ni correos, exportaciones auditadas sin el texto buscado.
+13. Prohibido: reconocimiento facial o biometría, rastreo GPS continuo, datos simulados en
     pantallas productivas o entornos reales (las semillas sintéticas son solo locales), y
     registrar en logs datos personales o tokens.
 
@@ -116,6 +121,7 @@ docs/               Documentación funcional y técnica
 - `docs/ARQUITECTURA.md`: capas, flujo de autenticación, PWA, despliegue.
 - `docs/BASE_DATOS.md`: esquema actual y previsto, convenciones SQL.
 - `docs/PERMISOS.md`: matriz de roles y cómo se aplica en cada capa.
+- `docs/VIGENCIA_Y_BAJAS.md`: fechas de efecto, bajas, aprobadores y suplencias.
 - `docs/NORMATIVA.md`: registro de jornada, RGPD/LOPDGDD, conservación.
 - `docs/PLAN_DESARROLLO.md`: fases y criterios de salida.
 - `docs/DECISIONES.md`: registro de decisiones de arquitectura (ADR).

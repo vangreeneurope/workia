@@ -15,6 +15,10 @@ Pendiente externo: validar migraciones y flujo de acceso en un proyecto Supabase
 
 ## Fase 1 · Administración y control horario
 
+Estado (2026-10-23): **administración implementada** (empresas, centros, equipos, personas,
+condiciones con fecha de efecto, bajas, cuentas y roles, aprobadores, suplencias, importación CSV,
+auditoría minimizada). Pendiente: control horario y visor de auditoría.
+
 1. Proyecto Supabase de pruebas y de producción (región UE); migraciones aplicadas; tipos
    regenerados.
 2. Gestión de empresas (admin. global): alta, edición, logotipo y color.

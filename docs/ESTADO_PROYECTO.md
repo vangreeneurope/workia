@@ -1,7 +1,7 @@
 # Estado del proyecto
 
-**Última actualización**: 2026-10-22 · **Fase actual**: 0 completada y modelo de autorización
-multiempresa implementado y probado en local. Pendiente de validación contra un proyecto Supabase
+**Última actualización**: 2026-10-23 · **Fase actual**: 1 en curso. Administración implementada y
+probada en local; control horario pendiente. Nada se ha validado aún contra un proyecto Supabase
 real.
 
 ## 1. Qué está hecho
@@ -37,55 +37,68 @@ real.
 - Documentación: BASE_DATOS (diagrama de relaciones, reversibilidad), PERMISOS (matrices por tabla
   y rol), ADR-017 a ADR-022, README y CLAUDE.md.
 
-## 2. Resultados de verificación (2026-10-22)
+### Módulo de administración (2026-10-23)
 
-| Verificación               | Comando                                           | Resultado                                                                                                                      |
-| -------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| Tipos                      | `npm run typecheck`                               | Sin errores                                                                                                                    |
-| Lint                       | `npm run lint`                                    | 0 errores, 0 avisos                                                                                                            |
-| Formato                    | `npm run format:check`                            | Correcto                                                                                                                       |
-| Unitarias                  | `npm test`                                        | 5 archivos, 45 pruebas superadas                                                                                               |
-| Aislamiento multiempresa   | `npm run test:db` → `10_aislamiento_multiempresa` | 134 aserciones superadas                                                                                                       |
-| Integridad y escalada      | `npm run test:db` → `20_integridad_y_escalada`    | 26 aserciones superadas                                                                                                        |
-| Semillas sintéticas        | `npm run test:db` → `30_seed_sintetico`           | 15 aserciones superadas                                                                                                        |
-| Reversibilidad             | `npm run test:db`                                 | 2 reversiones restauran el esquema exacto, reaplicar reproduce el esquema, 2 reversiones exigen autorización para perder datos |
-| Tipos frente a esquema     | `npm run db:types:check`                          | Al día                                                                                                                         |
-| Build de producción        | `npm run build`                                   | Correcto                                                                                                                       |
-| E2E                        | `npm run test:e2e`                                | 18 pruebas superadas (móvil y escritorio)                                                                                      |
-| Dependencias de producción | `npm audit --omit=dev`                            | 0 vulnerabilidades                                                                                                             |
-| Dependencias de desarrollo | `npm audit`                                       | 5 altas en la cadena de `eslint-config-next` (sin cambios desde la fase 0)                                                     |
+- Pantallas responsive en `/admin` (listas, formularios y fichas): empresas del grupo, centros,
+  equipos, personas, condiciones de empleo, cuentas y roles, aprobadores y suplencias, importación
+  CSV. Cada usuario ve solo las áreas de su ámbito según sus permisos reales.
+- Validación compartida cliente/servidor (zod), Server Actions autorizadas con `adminAction`
+  (empresa siempre del servidor), interfaz optimista solo en activar/desactivar (reversible).
+- Altas, cambios con fecha de efecto (condiciones), desactivación y reactivación (empresas,
+  centros, equipos), bajas atómicas con fecha efectiva y reactivación. Ningún borrado.
+- Aprobadores por persona o equipo y tipo de solicitud, sin ambigüedad por construcción, con
+  errores accionables; suplencias temporales con motivo y auditoría.
+- Importación CSV con previsualización, mapeo de columnas, validación por fila y confirmación de
+  todo o nada.
+- Búsqueda (sin datos personales en la URL), filtros, paginación en servidor y exportación CSV
+  auditada y protegida contra inyección de fórmulas.
+- `audit_events` con antes/después minimizados; separación entre administración de plataforma y de
+  empresa.
+- Migración `20261023100000_administracion` con reversión verificada; reglas documentadas en
+  `docs/VIGENCIA_Y_BAJAS.md`; ADR-023 a ADR-029.
 
-Comprobaciones adicionales realizadas:
+## 2. Resultados de verificación (2026-10-23)
 
-- **Control negativo**: al abrir a propósito la política de lectura de empleados (`true or …`),
-  `npm run test:db` falla en dos pruebas; las pruebas negativas detectan fugas reales.
-- **Modo CI**: `test:db` y `db:types:check` probados contra un servidor PostgreSQL externo
-  (`TEST_DB_EXTERNAL=1`), como el servicio `postgres:16` del workflow.
-- **Hallazgo corregido durante las pruebas**: un índice único sin `company_id` permitía deducir los
-  roles de una persona de otra empresa por el error "clave duplicada" (ADR-018).
+| Verificación               | Comando                                           | Resultado                                                                                                              |
+| -------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Tipos                      | `npm run typecheck`                               | Sin errores                                                                                                            |
+| Lint                       | `npm run lint`                                    | 0 errores, 0 avisos                                                                                                    |
+| Formato                    | `npm run format:check`                            | Correcto                                                                                                               |
+| Unitarias                  | `npm test`                                        | 10 archivos, 83 pruebas superadas                                                                                      |
+| Aislamiento multiempresa   | `npm run test:db` → `10_aislamiento_multiempresa` | 134 aserciones superadas                                                                                               |
+| Integridad y escalada      | `npm run test:db` → `20_integridad_y_escalada`    | 26 aserciones superadas                                                                                                |
+| Semillas sintéticas        | `npm run test:db` → `30_seed_sintetico`           | 15 aserciones superadas                                                                                                |
+| Administración             | `npm run test:db` → `40_administracion`           | 81 aserciones superadas                                                                                                |
+| Reversibilidad             | `npm run test:db`                                 | 3 reversiones restauran el esquema exacto, reaplicar lo reproduce, 3 reversiones exigen autorización para perder datos |
+| Tipos frente a esquema     | `npm run db:types:check`                          | Al día (incluye las funciones RPC)                                                                                     |
+| Build de producción        | `npm run build`                                   | Correcto, 33 rutas                                                                                                     |
+| E2E                        | `npm run test:e2e`                                | 20 pruebas superadas (móvil y escritorio)                                                                              |
+| Dependencias de producción | `npm audit --omit=dev`                            | 0 vulnerabilidades                                                                                                     |
 
-El workflow de CI está escrito y validado como YAML, pero **aún no se ha ejecutado en GitHub**
-porque el repositorio no tiene remoto.
+Comprobaciones adicionales: revisión visual en móvil (iPhone 13) de los formularios de asignación,
+baja e importación mediante una página temporal ya eliminada; prueba unitaria de que el interruptor
+optimista revierte cuando el servidor rechaza el cambio.
+
+**Lo que no se ha podido verificar**: las pantallas de administración con una sesión y datos reales
+(requiere un proyecto Supabase), la invitación por correo (requiere `SUPABASE_SECRET_KEY` y Auth
+real) y la ejecución del workflow de CI en GitHub (el repositorio no tiene remoto). La lógica de
+cada operación está cubierta por las pruebas SQL contra PostgreSQL 16 con la emulación de Supabase.
 
 ## 3. Bloqueantes y riesgos
 
-1. **Sin repositorio remoto en GitHub**: el código está en git local en un contenedor temporal, y
-   CI no se puede ejecutar hasta subirlo.
-2. **Sin proyecto Supabase**: las migraciones y las pruebas de RLS se han ejecutado sobre
-   PostgreSQL 16 con una emulación mínima de Supabase (ADR-012). Falta aplicarlas en un proyecto
-   real (Supabase usa PostgreSQL 17 en `config.toml`) y validar las semillas con
-   `supabase db reset` (columnas reales de `auth.users`/`auth.identities` y acceso con GoTrue).
-3. **Altas de personas**: crear membresías para usuarios que aún no existen en Auth requiere un flujo
-   de invitación con privilegios de servidor (ADR-011, pendiente para la fase 1).
-4. **Rendimiento de RLS**: las políticas llaman a funciones por fila; correcto para el volumen
-   previsto, pero habrá que medir con datos reales (ADR-017).
-5. Riesgos heredados: CSP con `'unsafe-inline'` (ADR-009), componentes shadcn escritos a mano
-   (ADR-010), vulnerabilidades en herramientas de lint, revisión normativa pendiente.
+1. **Sin repositorio remoto en GitHub**: CI no se puede ejecutar y el trabajo solo está en git local
+   dentro de un contenedor temporal.
+2. **Sin proyecto Supabase**: falta aplicar las migraciones y probar las pantallas con sesión real.
+3. **Invitaciones**: necesitan `SUPABASE_SECRET_KEY` en el servidor y SMTP configurado.
+4. **Cambio de centro o equipo con fecha futura**: no se programa todavía (ADR-029).
+5. **Dos auditorías** (`audit_log` completa y `audit_events` minimizada): fijar con la asesoría el
+   plazo de conservación de `audit_log` (ADR-026).
+6. Riesgos heredados: CSP con `'unsafe-inline'`, componentes shadcn escritos a mano,
+   vulnerabilidades en herramientas de lint, revisión normativa pendiente.
 
 ## 4. Próximos pasos
 
-1. Crear el repositorio en GitHub, subir la rama y comprobar que CI pasa.
-2. Crear un proyecto Supabase de pruebas (región UE), `supabase db push`, ejecutar las pruebas SQL
-   contra él y comparar `supabase gen types` con `src/types/database.ts`.
-3. Fase 1: administración (empresas, centros, equipos, invitaciones, roles, asignaciones) y control
-   horario sobre `employees`, con las mismas reglas de aislamiento y reversión.
+1. Subir el repositorio a GitHub y comprobar CI.
+2. Proyecto Supabase de pruebas: `supabase db push`, configurar `SUPABASE_SECRET_KEY` y SMTP, probar
+   el módulo con las cuentas sintéticas y añadir E2E con sesión.
+3. Visor de auditoría sobre `audit_events` y control horario (resto de la fase 1).

@@ -72,9 +72,12 @@ export const getUserContext = cache(async (): Promise<UserContext> => {
   const groupIds = (groupAdminsRes.data ?? []).map((g) => g.group_id);
 
   let administeredCompanies: CompanyRow[] = [];
-  if (isPlatformAdmin || groupIds.length > 0) {
-    const query = supabase.from("companies").select(COMPANY_COLUMNS).order("name");
-    const { data, error } = isPlatformAdmin ? await query : await query.in("group_id", groupIds);
+  if (groupIds.length > 0) {
+    const { data, error } = await supabase
+      .from("companies")
+      .select(COMPANY_COLUMNS)
+      .in("group_id", groupIds)
+      .order("name");
     if (error) throw new Error("No se pudo cargar la lista de empresas.");
     administeredCompanies = data ?? [];
   }

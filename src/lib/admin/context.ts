@@ -1,0 +1,53 @@
+import "server-only";
+
+import { notFound } from "next/navigation";
+import { cache } from "react";
+
+import { canUseArea, type AdminArea, type CompanyPermission } from "@/lib/admin/access";
+import { getUserContext } from "@/lib/auth/dal";
+import { administersCompany, type UserContext } from "@/lib/auth/permissions";
+import { createClient } from "@/lib/supabase/server";
+
+export type AdminContext = {
+  user: UserContext;
+  /** Empresa activa: toda operación de administración se hace sobre ella. */
+  companyId: string;
+  companyName: string;
+  permissions: CompanyPermission[];
+  groupAdmin: boolean;
+};
+
+/**
+ * Contexto de administración de la empresa activa. Los permisos vienen de la
+ * base de datos (my_company_permissions), que aplica las mismas reglas que RLS.
+ * El company_id de cualquier escritura sale de aquí, nunca del cliente.
+ */
+export const getAdminContext = cache(async (): Promise<AdminContext | null> => {
+  const user = await getUserContext();
+  const companyId = user.activeCompanyId;
+  if (!companyId) return null;
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("my_company_permissions", { p_company: companyId });
+  if (error) throw new Error("No se pudieron cargar tus permisos.");
+  return {
+    user,
+    companyId,
+    companyName: user.companies.find((c) => c.id === companyId)?.name ?? "",
+    permissions: data ?? [],
+    groupAdmin: administersCompany(user, companyId),
+  };
+});
+
+/** Exige acceso a un área de administración; 404 si no lo hay (no revela la ruta). */
+export async function requireAdminArea(area: AdminArea): Promise<AdminContext> {
+  const ctx = await getAdminContext();
+  if (!ctx || !canUseArea(area, ctx.permissions, { groupAdmin: ctx.groupAdmin })) notFound();
+  return ctx;
+}
+
+/** Variante para Server Actions: devuelve null en lugar de lanzar 404. */
+export async function adminAreaOrNull(area: AdminArea): Promise<AdminContext | null> {
+  const ctx = await getAdminContext();
+  if (!ctx || !canUseArea(area, ctx.permissions, { groupAdmin: ctx.groupAdmin })) return null;
+  return ctx;
+}

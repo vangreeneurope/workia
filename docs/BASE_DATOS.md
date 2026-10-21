@@ -95,6 +95,31 @@ Todas las flechas entre tablas de empresa son claves compuestas (id, company_id)
 | `employment_terms`    | Condiciones contractuales            | tipo de contrato, jornada (≤ 40 h semanales), puesto, vigencia en fechas; **sin dos condiciones activas solapadas** (restricción de exclusión con `btree_gist`); se cambian creando filas nuevas |
 | `manager_assignments` | Manager → empleado                   | `status` + vigencia; el manager debe tener membresía vigente en una empresa del mismo grupo; nadie se supervisa a sí mismo                                                                       |
 
+### Administración (migración `20261023100000_administracion`)
+
+| Tabla / cambio                   | Propósito                                                                                                                       | Claves y restricciones relevantes                                                                                               |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `manager_assignments` (ampliada) | Aprobador por **persona o equipo** y **tipo de solicitud** (`approval_type`: `all`, `absences`, `expenses`, `time_corrections`) | `scope_type` coherente con `employee_id`/`team_id`; exclusión: un único aprobador vigente por (empresa, persona o equipo, tipo) |
+| `approver_substitutions`         | Suplencias temporales con motivo                                                                                                | fin obligatorio, máximo un año, sin solapes por (ausente, tipo), suplente distinto del ausente                                  |
+| `employees.end_date`             | Baja con fecha efectiva (último día incluido)                                                                                   | solo se modifica con `terminate_employee` / `reactivate_employee`                                                               |
+| `audit_events`                   | Auditoría minimizada de cambios sensibles                                                                                       | solo campos cambiados, datos personales enmascarados, inmutable                                                                 |
+
+Las reglas completas de vigencia, bajas y aprobadores están en
+[VIGENCIA_Y_BAJAS.md](VIGENCIA_Y_BAJAS.md).
+
+Funciones expuestas por la API (RPC), todas con comprobación explícita de permisos o con RLS del
+propio usuario:
+
+| Función                                                                         | Tipo          | Uso                                                          |
+| ------------------------------------------------------------------------------- | ------------- | ------------------------------------------------------------ |
+| `my_company_permissions(empresa)`                                               | definer       | Permisos del propio usuario (adaptar la interfaz)            |
+| `resolve_approver(empleado, tipo, instante)`                                    | definer       | Aprobador efectivo o error `APROBADOR_*`                     |
+| `terminate_employee(empleado, último_día)` · `reactivate_employee(empleado)`    | definer       | Baja y reactivación atómicas                                 |
+| `change_employment_terms(...)`                                                  | invoker (RLS) | Cambio de condiciones con fecha de efecto                    |
+| `import_employees(empresa, filas)`                                              | invoker (RLS) | Importación de todo o nada                                   |
+| `log_admin_event(...)`                                                          | definer       | Registrar exportaciones e importaciones sin datos personales |
+| `find_group_user_by_email(empresa, correo)` · `group_user_labels(empresa, ids)` | definer       | Elegir y mostrar managers y suplentes del mismo grupo        |
+
 ### Auditoría y almacenamiento
 
 - `audit_log`: append-only. Columnas `actor_id` (`auth.uid()`), `company_id`, `group_id`,
@@ -103,6 +128,11 @@ Todas las flechas entre tablas de empresa son claves compuestas (id, company_id)
   `work_centers`, `teams`, `company_memberships`, `role_assignments`, `employees`,
   `employment_terms`, `manager_assignments` y cambios de `profiles`. Los cambios privilegiados
   (roles, administradores, membresías, asignaciones) quedan con quién, cuándo, antes y después.
+- `audit_events`: auditoría **minimizada** para consultar en la interfaz: acción (`create`,
+  `update`, `deactivate`, `reactivate`, `terminate`, `export`, `import`), campos cambiados y sus
+  valores antes y después, con nombre, apellidos, correos, teléfono, CIF, dirección y motivo de
+  suplencia sustituidos por `[dato personal]`. Las exportaciones guardan solo número de filas y
+  filtros (nunca el texto buscado).
 - Bucket privado `company-logos` (ruta `<company_id>/…`, URL firmada de 1 hora).
 
 ## 4. Funciones de autorización (`private`)
@@ -146,11 +176,12 @@ Supabase no ejecuta migraciones "down", así que cada migración nueva tiene su 
 orden inverso con `psql` y borrar la fila correspondiente de
 `supabase_migrations.schema_migrations` (o `npx supabase migration repair --status reverted <versión>`).
 
-| Migración                               | Reversión                           | Datos que se pierden al revertir                                                                                                        |
-| --------------------------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `20261021090000/090100/090200` (fase 0) | No tienen (anteriores a esta norma) | —                                                                                                                                       |
-| `20261022100000_modelo_multiempresa`    | Sí                                  | grupos, administradores de grupo, centros, equipos, roles `hr`/`auditor` y roles de ámbito centro/equipo; estados `invited`/`suspended` |
-| `20261022100100_empleados`              | Sí                                  | fichas de empleado y condiciones; asignaciones de manager de empleados sin cuenta                                                       |
+| Migración                               | Reversión                                              | Datos que se pierden al revertir                                                                                                        |
+| --------------------------------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `20261021090000/090100/090200` (fase 0) | No tienen (anteriores a esta norma)                    | —                                                                                                                                       |
+| `20261022100000_modelo_multiempresa`    | Sí                                                     | grupos, administradores de grupo, centros, equipos, roles `hr`/`auditor` y roles de ámbito centro/equipo; estados `invited`/`suspended` |
+| `20261022100100_empleados`              | Sí                                                     | fichas de empleado y condiciones; asignaciones de manager de empleados sin cuenta                                                       |
+| `20261023100000_administracion`         | Sí (generada desde el texto literal de las anteriores) | suplencias, `audit_events`, fechas de baja, asignaciones por equipo o por tipo                                                          |
 
 Protecciones:
 
@@ -169,7 +200,9 @@ Protecciones:
    `auth.identities`, `auth.uid()`, `storage`) y todas las migraciones en una base plantilla.
 2. Ejecuta cada `supabase/tests/NN_*.test.sql` en una base nueva clonada de la plantilla:
    `10_aislamiento_multiempresa` (qué ve y hace cada actor), `20_integridad_y_escalada`
-   (inmutabilidad, restricciones, falsificaciones, metadatos y claims) y `30_seed_sintetico`.
+   (inmutabilidad, restricciones, falsificaciones, metadatos y claims), `30_seed_sintetico` y
+   `40_administracion` (aprobadores, solapes, suplencias, bajas, auditoría, importación y separación
+   plataforma / empresa).
 3. Comprueba reversibilidad y protección de datos de las reversiones.
 
 Cada prueba actúa como un usuario concreto (`set role authenticated` + claims del JWT). Limitación:

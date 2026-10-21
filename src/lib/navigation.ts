@@ -34,7 +34,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { key: "gastos", label: "Gastos", href: "/gastos", icon: Receipt, mobilePrimary: true },
   { key: "equipo", label: "Equipo", href: "/equipo", icon: Users },
   { key: "auditoria", label: "Auditoría", href: "/auditoria", icon: History },
-  { key: "empresas", label: "Empresas", href: "/empresas", icon: Building2 },
+  { key: "admin", label: "Administración", href: "/admin", icon: Building2 },
   { key: "perfil", label: "Mi perfil", href: "/perfil", icon: UserRound },
 ] as const;
 

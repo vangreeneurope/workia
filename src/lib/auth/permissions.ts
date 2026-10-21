@@ -55,7 +55,7 @@ export type UserContext = {
   isGlobalAdmin: boolean;
   /** Grupos que administra con una asignación vigente (group_admins). */
   administeredGroupIds: string[];
-  /** Empresas que administra por ser administrador de plataforma o de su grupo. */
+  /** Empresas que administra por ser administrador de su grupo. */
   administeredCompanyIds: string[];
   memberships: Membership[];
   /** Empresas que el usuario puede seleccionar como activas. */
@@ -66,17 +66,20 @@ export type UserContext = {
 };
 
 export type SectionKey =
-  "panel" | "fichajes" | "ausencias" | "gastos" | "equipo" | "auditoria" | "empresas" | "perfil";
+  "panel" | "fichajes" | "ausencias" | "gastos" | "equipo" | "auditoria" | "admin" | "perfil";
 
 export function rolesInCompany(ctx: UserContext, companyId: string | null): CompanyRole[] {
   if (!companyId) return [];
   return ctx.memberships.find((m) => m.company.id === companyId)?.roles ?? [];
 }
 
-/** ¿Administra la empresa por ser administrador de plataforma o de su grupo? */
+/**
+ * ¿Administra la empresa por ser administrador de su grupo? La administración
+ * de plataforma no administra empresas (ADR-024).
+ */
 export function administersCompany(ctx: UserContext, companyId: string | null): boolean {
   if (!companyId) return false;
-  return ctx.isGlobalAdmin || ctx.administeredCompanyIds.includes(companyId);
+  return ctx.administeredCompanyIds.includes(companyId);
 }
 
 function hasAnyRole(roles: CompanyRole[], allowed: CompanyRole[]): boolean {
@@ -103,8 +106,8 @@ export function canAccessSection(ctx: UserContext, section: SectionKey): boolean
       );
     case "auditoria":
       return admin || hasAnyRole(roles, ["company_admin", "auditor"]);
-    case "empresas":
-      return ctx.isGlobalAdmin || ctx.administeredGroupIds.length > 0;
+    case "admin":
+      return admin || hasAnyRole(roles, ["company_admin", "hr"]);
   }
 }
 
