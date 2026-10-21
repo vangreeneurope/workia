@@ -5,14 +5,8 @@ import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 
 import { LOGIN_PATH } from "@/lib/auth/routes";
-import {
-  canAccessSection,
-  resolveActiveCompanyId,
-  type CompanySummary,
-  type Membership,
-  type SectionKey,
-  type UserContext,
-} from "@/lib/auth/permissions";
+import { assembleUserContext, type CompanyRow } from "@/lib/auth/context";
+import { canAccessSection, type SectionKey, type UserContext } from "@/lib/auth/permissions";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -37,84 +31,65 @@ export async function requireUserId(): Promise<string> {
   return userId;
 }
 
-type CompanyRow = {
-  id: string;
-  name: string;
-  slug: string;
-  primary_color: string;
-  logo_path: string | null;
-  active: boolean;
-};
+const COMPANY_COLUMNS = "id, name, slug, primary_color, logo_path, status, group_id";
+const VALIDITY_COLUMNS = "status, valid_from, valid_to";
 
-function toCompanySummary(row: CompanyRow): CompanySummary {
-  return {
-    id: row.id,
-    name: row.name,
-    slug: row.slug,
-    primaryColor: row.primary_color,
-    logoPath: row.logo_path,
-  };
-}
-
-/** Contexto completo del usuario autenticado. Memorizado por petición. */
+/**
+ * Contexto completo del usuario autenticado. Memorizado por petición.
+ * Los permisos salen de tablas controladas por el servidor (platform_admins,
+ * group_admins, role_assignments, manager_assignments) y nunca de los
+ * metadatos editables de Auth. RLS limita cada consulta a lo que el usuario
+ * puede ver; la vigencia se evalúa en assembleUserContext.
+ */
 export const getUserContext = cache(async (): Promise<UserContext> => {
   const userId = await requireUserId();
   const supabase = await createClient();
   const cookieStore = await cookies();
+  const now = new Date();
 
-  const [profileRes, adminRes, membershipsRes, supervisedRes] = await Promise.all([
-    supabase.from("profiles").select("id, email, full_name").eq("id", userId).maybeSingle(),
-    supabase.from("platform_admins").select("user_id").eq("user_id", userId).maybeSingle(),
-    supabase
-      .from("company_memberships")
-      .select("id, roles, companies (id, name, slug, primary_color, logo_path, active)")
-      .eq("user_id", userId)
-      .eq("active", true),
-    supabase
-      .from("manager_assignments")
-      .select("id", { count: "exact", head: true })
-      .eq("manager_user_id", userId),
-  ]);
+  const [profileRes, platformRes, groupAdminsRes, membershipsRes, assignmentsRes] =
+    await Promise.all([
+      supabase.from("profiles").select("email, full_name").eq("id", userId).maybeSingle(),
+      supabase.from("platform_admins").select("user_id").eq("user_id", userId).maybeSingle(),
+      supabase.from("group_admins").select(`group_id, ${VALIDITY_COLUMNS}`).eq("user_id", userId),
+      supabase
+        .from("company_memberships")
+        .select(
+          `id, ${VALIDITY_COLUMNS}, companies (${COMPANY_COLUMNS}), role_assignments (role, ${VALIDITY_COLUMNS})`,
+        )
+        .eq("user_id", userId),
+      supabase.from("manager_assignments").select(VALIDITY_COLUMNS).eq("manager_user_id", userId),
+    ]);
 
-  for (const res of [profileRes, adminRes, membershipsRes, supervisedRes]) {
+  for (const res of [profileRes, platformRes, groupAdminsRes, membershipsRes, assignmentsRes]) {
     if (res.error) {
       console.error("Error cargando el contexto del usuario", res.error.code);
       throw new Error("No se pudo cargar tu información. Inténtalo de nuevo.");
     }
   }
 
-  const isGlobalAdmin = Boolean(adminRes.data);
+  const isPlatformAdmin = Boolean(platformRes.data);
+  const groupIds = (groupAdminsRes.data ?? []).map((g) => g.group_id);
 
-  const memberships: Membership[] = (membershipsRes.data ?? []).flatMap((row) => {
-    const company = row.companies;
-    if (!company || !company.active) return [];
-    return [{ membershipId: row.id, roles: row.roles, company: toCompanySummary(company) }];
-  });
-
-  let companies = memberships.map((m) => m.company);
-  if (isGlobalAdmin) {
-    const { data, error } = await supabase
-      .from("companies")
-      .select("id, name, slug, primary_color, logo_path, active")
-      .eq("active", true)
-      .order("name");
+  let administeredCompanies: CompanyRow[] = [];
+  if (isPlatformAdmin || groupIds.length > 0) {
+    const query = supabase.from("companies").select(COMPANY_COLUMNS).order("name");
+    const { data, error } = isPlatformAdmin ? await query : await query.in("group_id", groupIds);
     if (error) throw new Error("No se pudo cargar la lista de empresas.");
-    companies = (data ?? []).map(toCompanySummary);
+    administeredCompanies = data ?? [];
   }
 
-  return {
+  return assembleUserContext({
     userId,
-    email: profileRes.data?.email ?? "",
-    fullName: profileRes.data?.full_name ?? "",
-    isGlobalAdmin,
-    memberships,
-    companies,
-    activeCompanyId: resolveActiveCompanyId(
-      companies,
-      cookieStore.get(ACTIVE_COMPANY_COOKIE)?.value,
-    ),
-    supervisedCount: supervisedRes.count ?? 0,
-  };
+    profile: profileRes.data,
+    isPlatformAdmin,
+    groupAdmins: groupAdminsRes.data ?? [],
+    memberships: membershipsRes.data ?? [],
+    managerAssignments: assignmentsRes.data ?? [],
+    administeredCompanies,
+    requestedCompanyId: cookieStore.get(ACTIVE_COMPANY_COOKIE)?.value,
+    now,
+  });
 });
 
 /**

@@ -9,23 +9,28 @@ import type { Enums } from "@/types/database";
  * Ver docs/PERMISOS.md.
  */
 
-export type CompanyRole = Enums<"company_role">;
+export type CompanyRole = Enums<"app_role">;
 
 export const COMPANY_ROLES: readonly CompanyRole[] = [
   "company_admin",
+  "hr",
   "manager",
-  "employee",
   "accounting",
+  "employee",
+  "auditor",
 ] as const;
 
 export const ROLE_LABELS: Record<CompanyRole, string> = {
-  company_admin: "Administración / RR. HH.",
+  company_admin: "Administración de empresa",
+  hr: "RR. HH.",
   manager: "Responsable",
-  employee: "Empleado",
   accounting: "Contabilidad",
+  employee: "Empleado",
+  auditor: "Auditoría",
 };
 
-export const GLOBAL_ADMIN_LABEL = "Administrador global";
+export const GLOBAL_ADMIN_LABEL = "Administración de plataforma";
+export const GROUP_ADMIN_LABEL = "Administración de grupo";
 
 export type CompanySummary = {
   id: string;
@@ -38,6 +43,7 @@ export type CompanySummary = {
 export type Membership = {
   membershipId: string;
   company: CompanySummary;
+  /** Roles vigentes (de cualquier ámbito: empresa, centro o equipo). */
   roles: CompanyRole[];
 };
 
@@ -45,12 +51,17 @@ export type UserContext = {
   userId: string;
   email: string;
   fullName: string;
+  /** Administración de plataforma (platform_admins). */
   isGlobalAdmin: boolean;
+  /** Grupos que administra con una asignación vigente (group_admins). */
+  administeredGroupIds: string[];
+  /** Empresas que administra por ser administrador de plataforma o de su grupo. */
+  administeredCompanyIds: string[];
   memberships: Membership[];
   /** Empresas que el usuario puede seleccionar como activas. */
   companies: CompanySummary[];
   activeCompanyId: string | null;
-  /** Número de membresías que supervisa como manager (puede cruzar empresas). */
+  /** Número de asignaciones vigentes como manager (pueden cruzar empresas). */
   supervisedCount: number;
 };
 
@@ -62,6 +73,12 @@ export function rolesInCompany(ctx: UserContext, companyId: string | null): Comp
   return ctx.memberships.find((m) => m.company.id === companyId)?.roles ?? [];
 }
 
+/** ¿Administra la empresa por ser administrador de plataforma o de su grupo? */
+export function administersCompany(ctx: UserContext, companyId: string | null): boolean {
+  if (!companyId) return false;
+  return ctx.isGlobalAdmin || ctx.administeredCompanyIds.includes(companyId);
+}
+
 function hasAnyRole(roles: CompanyRole[], allowed: CompanyRole[]): boolean {
   return roles.some((role) => allowed.includes(role));
 }
@@ -69,6 +86,7 @@ function hasAnyRole(roles: CompanyRole[], allowed: CompanyRole[]): boolean {
 /** ¿Puede el usuario acceder a la sección con su empresa activa? */
 export function canAccessSection(ctx: UserContext, section: SectionKey): boolean {
   const roles = rolesInCompany(ctx, ctx.activeCompanyId);
+  const admin = administersCompany(ctx, ctx.activeCompanyId);
   switch (section) {
     case "panel":
     case "perfil":
@@ -76,19 +94,17 @@ export function canAccessSection(ctx: UserContext, section: SectionKey): boolean
     case "fichajes":
     case "ausencias":
       // Toda persona contratada ficha y solicita ausencias, incluidos managers y RR. HH.
-      return hasAnyRole(roles, ["employee", "manager", "company_admin"]);
+      return hasAnyRole(roles, ["employee", "manager", "company_admin", "hr"]);
     case "gastos":
-      return hasAnyRole(roles, ["employee", "manager", "company_admin", "accounting"]);
+      return hasAnyRole(roles, ["employee", "manager", "company_admin", "hr", "accounting"]);
     case "equipo":
       return (
-        ctx.isGlobalAdmin ||
-        ctx.supervisedCount > 0 ||
-        hasAnyRole(roles, ["manager", "company_admin"])
+        admin || ctx.supervisedCount > 0 || hasAnyRole(roles, ["manager", "company_admin", "hr"])
       );
     case "auditoria":
-      return ctx.isGlobalAdmin || hasAnyRole(roles, ["company_admin"]);
+      return admin || hasAnyRole(roles, ["company_admin", "auditor"]);
     case "empresas":
-      return ctx.isGlobalAdmin;
+      return ctx.isGlobalAdmin || ctx.administeredGroupIds.length > 0;
   }
 }
 

@@ -4,8 +4,8 @@ Plataforma web multiempresa para el control horario, la gestión de vacaciones y
 gastos comerciales con OCR de tickets. Una sola aplicación para todas las empresas del grupo, cada
 una con su plantilla, responsables, calendarios, políticas e identidad visual.
 
-Estado actual: **fase 0 (base técnica) completada**. Los módulos funcionales aún no están
-construidos. Ver [docs/ESTADO_PROYECTO.md](docs/ESTADO_PROYECTO.md).
+Estado actual: **fase 0 (base técnica) y modelo de autorización multiempresa completados**. Los
+módulos funcionales aún no están construidos. Ver [docs/ESTADO_PROYECTO.md](docs/ESTADO_PROYECTO.md).
 
 ## Tecnología
 
@@ -56,29 +56,56 @@ O en local con Docker: `npx supabase start` (aplica `supabase/migrations/` autom
   - Cambio de email: `{{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}&type=email_change`
 - Configura un SMTP propio para producción (el de Supabase tiene límites bajos).
 
-### 3. Crear el primer administrador global
+### 3. Crear la administración inicial
 
-Invita al usuario desde **Authentication > Users > Invite user** y, después, en el editor SQL:
+Invita a las personas desde **Authentication > Users > Invite user** y, después, en el editor SQL
+(como `postgres`, nunca desde la aplicación):
 
 ```sql
+-- Administración de plataforma (soporte técnico)
 insert into public.platform_admins (user_id)
-select id from auth.users where email = 'persona@tu-grupo.es';
+select id from auth.users where email = 'soporte@tu-grupo.es';
+
+-- Grupo y su administrador
+insert into public.groups (name, slug) values ('Mi Grupo', 'mi-grupo');
+insert into public.group_admins (group_id, user_id)
+select g.id, u.id from public.groups g, auth.users u
+where g.slug = 'mi-grupo' and u.email = 'direccion@tu-grupo.es';
 ```
 
-Los administradores globales no pueden crearse desde la aplicación a propósito (ver
-[docs/PERMISOS.md](docs/PERMISOS.md)).
+A partir de ahí, la administración de grupo crea empresas y la de cada empresa gestiona
+membresías, roles y fichas. Los permisos **solo** viven en las tablas `platform_admins`,
+`group_admins`, `role_assignments` y `manager_assignments`; nunca en los metadatos de Auth. Ver
+[docs/PERMISOS.md](docs/PERMISOS.md).
+
+### Desarrollo local con datos sintéticos
+
+Con Docker: `npx supabase start` y `npx supabase db reset` aplican las migraciones y cargan
+`supabase/seeds/` (dos empresas ficticias, sin contraseñas: entra con "¿Has olvidado tu
+contraseña?" y el buzón local de Supabase). Nunca uses `--include-seed` contra un proyecto real.
 
 ## Comandos
 
-| Comando            | Descripción                                              |
-| ------------------ | -------------------------------------------------------- |
-| `npm run dev`      | Desarrollo                                               |
-| `npm run build`    | Build de producción                                      |
-| `npm run start`    | Servir el build                                          |
-| `npm run check`    | Tipos + lint + formato + pruebas unitarias               |
-| `npm test`         | Pruebas unitarias                                        |
-| `npm run test:e2e` | Pruebas E2E (tras `npm run build`)                       |
-| `npm run test:db`  | Migraciones y pruebas de RLS en un PostgreSQL desechable |
+| Comando                  | Descripción                                                                         |
+| ------------------------ | ----------------------------------------------------------------------------------- |
+| `npm run dev`            | Desarrollo                                                                          |
+| `npm run build`          | Build de producción                                                                 |
+| `npm run start`          | Servir el build                                                                     |
+| `npm run check`          | Tipos + lint + formato + pruebas unitarias                                          |
+| `npm test`               | Pruebas unitarias                                                                   |
+| `npm run test:e2e`       | Pruebas E2E (tras `npm run build`)                                                  |
+| `npm run test:db`        | Migraciones, aislamiento RLS, semillas y reversibilidad en un PostgreSQL desechable |
+| `npm run db:types`       | Regenera `src/types/database.ts` desde las migraciones                              |
+| `npm run db:types:check` | Falla si los tipos no coinciden con las migraciones                                 |
+
+`test:db` y `db:types` levantan un PostgreSQL temporal (necesitan PostgreSQL 15+ instalado). Para
+usar un servidor desechable existente: `TEST_DB_EXTERNAL=1 PGHOST=… PGUSER=… PGPASSWORD=…`.
+
+## Integración continua
+
+`.github/workflows/ci.yml` ejecuta en cada push y Pull Request: tipos, lint, formato y unitarias;
+migraciones con las pruebas positivas y negativas de aislamiento, reversibilidad y comprobación de
+tipos sobre un servicio `postgres:16`; y build con E2E.
 
 ## Despliegue
 

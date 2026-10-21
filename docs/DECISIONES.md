@@ -33,7 +33,7 @@ por la DAL (regla en CLAUDE.md).
 
 ## ADR-003 · Modelo multiempresa con membresías y roles en array
 
-**Fecha**: 2026-10-21 · **Estado**: aceptada
+**Fecha**: 2026-10-21 · **Estado**: sustituida por ADR-017
 
 **Contexto**: una persona puede estar en varias empresas y tener varios roles en cada una.
 
@@ -48,7 +48,7 @@ enum.
 
 ## ADR-004 · Supervisión entre empresas con clave foránea compuesta
 
-**Fecha**: 2026-10-21 · **Estado**: aceptada
+**Fecha**: 2026-10-21 · **Estado**: sustituida por ADR-017
 
 **Decisión**: `manager_assignments(manager_user_id, employee_membership_id, company_id)` con FK
 compuesta `(employee_membership_id, company_id)` hacia `company_memberships(id, company_id)`.
@@ -159,7 +159,7 @@ aprobación y auditoría. La hora la fija el servidor.
 
 ## ADR-015 · Tipos de base de datos escritos a mano hasta tener proyecto
 
-**Fecha**: 2026-10-21 · **Estado**: aceptada (temporal)
+**Fecha**: 2026-10-21 · **Estado**: sustituida por ADR-020
 
 **Decisión**: `src/types/database.ts` replica el formato de `supabase gen types`. Se regenerará al
 crear el proyecto y se añadirá una comprobación en CI que detecte divergencias.
@@ -171,3 +171,92 @@ crear el proyecto y se añadirá una comprobación en CI que detecte divergencia
 **Decisión**: mínimo 12 caracteres con minúsculas, mayúsculas y dígitos, validado en el formulario
 (zod) y en Supabase Auth (`supabase/config.toml` y panel). Mensajes de error genéricos en el acceso
 para no revelar si un correo existe.
+
+## ADR-017 · Autorización multiempresa por empresa y ámbito
+
+**Fecha**: 2026-10-22 · **Estado**: aceptada · Sustituye a ADR-003 y ADR-004
+
+**Contexto**: una persona puede pertenecer a varias empresas con roles distintos; los roles
+previstos son administrador de grupo, administrador de empresa, RR. HH., manager, contabilidad,
+empleado y auditor; algunos roles deben poder limitarse a un centro o equipo y todos necesitan
+vigencia. El array de roles en la membresía (ADR-003) no admite ámbito, vigencia ni auditoría por
+concesión.
+
+**Decisión**:
+
+- `role_assignments` (rol, ámbito `company`/`work_center`/`team`, estado, vigencia, `granted_by`)
+  sustituye al array. La administración de grupo vive en `group_admins` (con vigencia) y la de
+  plataforma en `platform_admins`.
+- Una única función de decisión, `private.has_permission(empresa, permiso, centro?, equipo?)`,
+  apoyada en `current_membership_id()` (membresía vigente en empresa y grupo activos) y en la matriz
+  inmutable `role_has_permission()`. Las políticas expresan permisos (`employees.read`), no roles.
+- La supervisión se modela sobre `employees` con `manager_assignments` vigentes; un manager puede
+  supervisar a personas de otra empresa del mismo grupo, nunca de otro grupo.
+- Techo de concesión (`can_grant_role`) y prohibición de autoconcesiones en las políticas.
+- Los permisos nunca se leen de `user_metadata`/`app_metadata` ni de claims del JWT, solo de tablas
+  controladas por el servidor; las políticas solo usan `auth.uid()`.
+- Funciones `security definer` en `private`, `search_path = ''`, `execute` solo para
+  `authenticated` y `service_role` en las que usan las políticas.
+
+**Alternativas descartadas**: roles en `app_metadata` con un _custom access token hook_ (rápido de
+evaluar, pero obliga a refrescar el token para revocar y duplica la fuente de verdad); una política
+por rol y tabla (multiplica políticas y errores).
+
+**Consecuencias**: añadir un permiso requiere migración del enum `private.app_permission`. Las
+políticas llaman a funciones por fila; con volúmenes grandes habrá que revisar índices y, si hace
+falta, cachear la membresía vigente por sentencia.
+
+## ADR-018 · Aislamiento también frente a inferencia
+
+**Fecha**: 2026-10-22 · **Estado**: aceptada
+
+**Contexto**: las pruebas detectaron que un índice único sin `company_id` respondía "clave
+duplicada" antes de evaluar la clave foránea, lo que permitía a un administrador de A deducir
+roles de una persona de B.
+
+**Decisión**: índices únicos siempre con `company_id` o `group_id`; claves foráneas compuestas
+`(id, company_id)`; el cliente no elige `id` ni campos del servidor (`grant insert` por columna);
+claves de empresa inmutables por trigger; `slug` de empresa único por grupo. Las pruebas comprueban
+que los intentos sobre otra empresa fallan por RLS o por clave foránea, nunca por duplicado.
+
+## ADR-019 · Reversiones obligatorias y verificadas
+
+**Fecha**: 2026-10-22 · **Estado**: aceptada
+
+**Decisión**: toda migración nueva incluye `supabase/rollbacks/<migración>.down.sql`. `npm run
+test:db` compara una descripción normalizada del catálogo antes de la migración y después de
+revertirla (deben ser idénticas) y comprueba que reaplicar reproduce el esquema. Migraciones y
+reversiones destructivas abortan si perderían datos, salvo autorización explícita
+(`app.allow_lossy_rollback`).
+
+**Consecuencias**: más trabajo por migración a cambio de poder deshacer con garantías. Las tres
+migraciones de la fase 0 no tienen reversión (anteriores a la norma).
+
+## ADR-020 · Tipos TypeScript generados desde las migraciones
+
+**Fecha**: 2026-10-22 · **Estado**: aceptada · Sustituye a ADR-015
+
+**Contexto**: `supabase gen types` requiere Docker o un proyecto enlazado, no disponibles por ahora.
+
+**Decisión**: `scripts/gen-db-types.mjs` lee el catálogo de un PostgreSQL desechable con las
+migraciones aplicadas y produce el formato de `supabase gen types`. `npm run db:types:check` en CI
+impide que tipos y esquema diverjan. Cuando haya proyecto o Docker, se puede usar la CLI oficial; si
+el resultado difiere en forma, se ajustará el generador o se adoptará la CLI.
+
+## ADR-021 · Semillas sintéticas solo en local
+
+**Fecha**: 2026-10-22 · **Estado**: aceptada
+
+**Decisión**: `supabase/seeds/` contiene solo datos ficticios (dominio `.example`, sin NIF, sin
+contraseñas, sin permisos en metadatos) y se cargan únicamente con `supabase db reset` en local.
+La regla de "sin datos simulados en pantallas productivas" sigue vigente: las semillas nunca se
+aplican a un entorno real. Una prueba automática comprueba estas condiciones.
+
+## ADR-022 · Administración de plataforma y de grupo separadas
+
+**Fecha**: 2026-10-22 · **Estado**: aceptada
+
+**Decisión**: `platform_admins` queda para soporte técnico (crea grupos y nombra administradores de
+grupo, solo por SQL o por un administrador de plataforma). El administrador de grupo
+(`group_admins`) administra las empresas de su grupo, puede crearlas y desactivarlas, pero no
+nombra administradores de grupo ni actúa fuera de su grupo. Nadie se nombra a sí mismo.

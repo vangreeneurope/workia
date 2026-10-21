@@ -19,18 +19,19 @@ No empieces un módulo funcional nuevo sin que el anterior esté verificado (ver
 
 ## Comandos
 
-| Comando             | Qué hace                                                               |
-| ------------------- | ---------------------------------------------------------------------- |
-| `npm run dev`       | Servidor de desarrollo en http://localhost:3000                        |
-| `npm run build`     | Build de producción (necesita las variables de `.env.example`)         |
-| `npm run start`     | Sirve el build                                                         |
-| `npm run typecheck` | Genera tipos de rutas y ejecuta `tsc --noEmit`                         |
-| `npm run lint`      | ESLint sin avisos permitidos                                           |
-| `npm run format`    | Prettier (escribe) · `npm run format:check` solo comprueba             |
-| `npm test`          | Pruebas unitarias (Vitest + Testing Library)                           |
-| `npm run test:e2e`  | Pruebas E2E (Playwright, móvil y escritorio). Requiere `npm run build` |
-| `npm run test:db`   | Migraciones + pruebas de RLS en un PostgreSQL desechable               |
-| `npm run check`     | typecheck + lint + formato + unitarias (ejecutar antes de cada commit) |
+| Comando             | Qué hace                                                                        |
+| ------------------- | ------------------------------------------------------------------------------- |
+| `npm run dev`       | Servidor de desarrollo en http://localhost:3000                                 |
+| `npm run build`     | Build de producción (necesita las variables de `.env.example`)                  |
+| `npm run start`     | Sirve el build                                                                  |
+| `npm run typecheck` | Genera tipos de rutas y ejecuta `tsc --noEmit`                                  |
+| `npm run lint`      | ESLint sin avisos permitidos                                                    |
+| `npm run format`    | Prettier (escribe) · `npm run format:check` solo comprueba                      |
+| `npm test`          | Pruebas unitarias (Vitest + Testing Library)                                    |
+| `npm run test:e2e`  | Pruebas E2E (Playwright, móvil y escritorio). Requiere `npm run build`          |
+| `npm run test:db`   | Migraciones, aislamiento RLS, semillas y reversibilidad (PostgreSQL desechable) |
+| `npm run db:types`  | Regenera `src/types/database.ts` desde las migraciones (`:check` en CI)         |
+| `npm run check`     | typecheck + lint + formato + unitarias (ejecutar antes de cada commit)          |
 
 ## Arquitectura en una frase
 
@@ -50,7 +51,9 @@ src/lib/            Infraestructura: supabase/, auth/ (dal, permisos, rutas), en
 src/types/          Tipos (database.ts refleja las migraciones)
 src/proxy.ts        Proxy de Next.js 16 (antes "middleware"): refresco de sesión y redirección
 supabase/migrations Migraciones SQL versionadas (fuente de verdad del esquema)
-supabase/tests      Pruebas de RLS (SQL) · 00_shim_supabase.sql solo para Postgres local
+supabase/rollbacks  Reversión de cada migración (obligatoria desde 2026-10-22)
+supabase/seeds      Datos SINTÉTICOS solo para desarrollo local (supabase db reset)
+supabase/tests      Pruebas SQL (helpers/ = aserciones y escenario) · 00_shim solo para Postgres local
 tests/unit          Vitest · tests/e2e Playwright
 docs/               Documentación funcional y técnica
 ```
@@ -75,26 +78,37 @@ docs/               Documentación funcional y técnica
 
 ## Reglas de seguridad (obligatorias)
 
-1. **Toda tabla nueva** en `public` lleva RLS activada, `revoke all … from anon, authenticated`
-   y `grant` explícitos mínimos, y pruebas en `supabase/tests/`. Sin pruebas de RLS no se fusiona.
-2. Las funciones de autorización van en el esquema `private`, `security definer`,
-   `set search_path = ''`. Reutiliza `private.has_company_role`, `is_global_admin`, etc.
-3. **Cada Server Action y Route Handler** obtiene la identidad con `getUserContext()` /
+1. **Toda tabla nueva** en `public` lleva `company_id` (o `group_id`), RLS activada,
+   `revoke all … from anon, authenticated`, `grant` por columna sin `delete`, claves foráneas
+   compuestas `(x_id, company_id)`, índices únicos que incluyan `company_id`, trigger
+   `prevent_key_change` y pruebas positivas y negativas en `supabase/tests/` (incluidas "otra
+   empresa" y "membresía caducada"). Sin pruebas de aislamiento no se fusiona.
+2. Las políticas se expresan con permisos: `private.has_permission(company_id, '<permiso>', …)`,
+   `employee_permission()`, `manages_employee()`. Funciones nuevas en `private`, `security definer`,
+   `set search_path = ''`, `execute` solo a `authenticated` y `service_role`, y que devuelvan
+   booleanos relativos al usuario actual. Ver `docs/PERMISOS.md`.
+3. **Los permisos viven solo en tablas del servidor** (`platform_admins`, `group_admins`,
+   `role_assignments`, `manager_assignments`). Nunca leas permisos de `user_metadata`,
+   `app_metadata` ni claims del JWT. Nadie se concede nada a sí mismo.
+4. Cada migración nueva lleva su `supabase/rollbacks/<migración>.down.sql`; `npm run test:db`
+   verifica que restaura el esquema exacto. Después, `npm run db:types`.
+5. **Cada Server Action y Route Handler** obtiene la identidad con `getUserContext()` /
    `requireUserId()` / `requireSection()` de `src/lib/auth/dal.ts`. Nunca confíes en ids de
    usuario o empresa que lleguen del cliente sin comprobarlos.
-4. Usa `getClaims()` (valida el JWT), nunca `getSession()` en servidor para autorizar.
-5. **Sin secretos en el frontend ni en el repositorio.** Solo `NEXT_PUBLIC_SUPABASE_URL`,
+6. Usa `getClaims()` (valida el JWT), nunca `getSession()` en servidor para autorizar.
+7. **Sin secretos en el frontend ni en el repositorio.** Solo `NEXT_PUBLIC_SUPABASE_URL`,
    `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` y `NEXT_PUBLIC_SITE_URL` son públicas. La clave secreta
    (`service_role`) solo en servidor, solo si un ADR lo justifica, y nunca en un Client Component.
-6. **Registros horarios inmutables**: las tablas de fichajes no tendrán `update`/`delete`; las
+8. **Registros horarios inmutables**: las tablas de fichajes no tendrán `update`/`delete`; las
    correcciones son filas nuevas enlazadas y auditadas (ver `docs/BASE_DATOS.md`).
-7. **Auditoría**: todo cambio relevante pasa por `private.audit_row_change()`. `audit_log` no se
+9. **Auditoría**: todo cambio relevante pasa por `private.audit_row_change()`. `audit_log` no se
    modifica ni se borra.
-8. **Archivos privados** (logotipos, justificantes, tickets) en buckets privados, ruta
-   `<company_id>/…`, y acceso con URL firmada de corta duración. Nunca buckets públicos.
-9. Redirecciones con destino de usuario siempre a través de `safeRedirectPath()`.
-10. Prohibido: reconocimiento facial o biometría, rastreo GPS continuo, datos simulados en
-    pantallas productivas, y registrar en logs datos personales o tokens.
+10. **Archivos privados** (logotipos, justificantes, tickets) en buckets privados, ruta
+    `<company_id>/…`, y acceso con URL firmada de corta duración. Nunca buckets públicos.
+11. Redirecciones con destino de usuario siempre a través de `safeRedirectPath()`.
+12. Prohibido: reconocimiento facial o biometría, rastreo GPS continuo, datos simulados en
+    pantallas productivas o entornos reales (las semillas sintéticas son solo locales), y
+    registrar en logs datos personales o tokens.
 
 ## Documentación técnica
 

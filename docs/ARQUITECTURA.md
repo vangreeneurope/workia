@@ -50,6 +50,12 @@ porque la capa 3 los filtra igualmente.
 
 ## 4. Multiempresa e identidad visual
 
+- Jerarquía: grupo → empresas → centros y equipos. Una persona tiene una membresía por empresa,
+  con estado y vigencia, y roles con ámbito (empresa, centro o equipo) en `role_assignments`.
+  La administración de grupo (`group_admins`) cubre todas las empresas de su grupo.
+- `getUserContext()` (DAL) lee esas tablas con la sesión del usuario y `assembleUserContext()`
+  aplica vigencias y estados; la interfaz decide qué mostrar con `canAccessSection()`. La
+  autorización real la aplica RLS con `private.has_permission()` (docs/PERMISOS.md).
 - La "empresa activa" es una preferencia de interfaz guardada en la cookie `empresa_activa`
   (`httpOnly`, `SameSite=Lax`). Se valida en servidor contra las empresas del usuario
   (`resolveActiveCompanyId`): una cookie manipulada se ignora.

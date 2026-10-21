@@ -64,6 +64,27 @@ describe("canAccessSection", () => {
     expect(allowed(ctx)).toEqual(["panel", "equipo", "auditoria", "empresas", "perfil"]);
   });
 
+  it("RR. HH. (hr): Equipo, fichajes y gastos, pero no Auditoría", () => {
+    const ctx = makeContext([[companyA, ["hr"]]]);
+    expect(allowed(ctx)).toEqual(["panel", "fichajes", "ausencias", "gastos", "equipo", "perfil"]);
+  });
+
+  it("auditor: solo Auditoría además de lo común", () => {
+    const ctx = makeContext([[companyA, ["auditor"]]]);
+    expect(allowed(ctx)).toEqual(["panel", "auditoria", "perfil"]);
+  });
+
+  it("administrador de grupo: Empresas, y Equipo/Auditoría solo en empresas de su grupo", () => {
+    const base = makeContext([], {
+      administeredGroupIds: ["g-1"],
+      administeredCompanyIds: [companyA.id],
+      companies: [companyA, companyB],
+    });
+    expect(canAccessSection({ ...base, activeCompanyId: companyA.id }, "auditoria")).toBe(true);
+    expect(canAccessSection({ ...base, activeCompanyId: companyA.id }, "empresas")).toBe(true);
+    expect(canAccessSection({ ...base, activeCompanyId: companyB.id }, "auditoria")).toBe(false);
+  });
+
   it("los roles dependen de la empresa activa", () => {
     const ctx = makeContext([
       [companyA, ["company_admin"]],

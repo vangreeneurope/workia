@@ -29,10 +29,36 @@ alter default privileges in schema public grant all on tables to anon, authentic
 alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
 alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
 
+-- Subconjunto de columnas reales de auth.users e auth.identities que usan las
+-- semillas (supabase/seeds). Los tokens deben ser '' y no NULL para GoTrue.
 create table auth.users (
-  id                 uuid primary key,
-  email              text,
-  raw_user_meta_data jsonb not null default '{}'::jsonb
+  id                     uuid primary key,
+  instance_id            uuid,
+  aud                    varchar(255),
+  role                   varchar(255),
+  email                  varchar(255),
+  encrypted_password     varchar(255),
+  email_confirmed_at     timestamptz,
+  raw_app_meta_data      jsonb default '{}'::jsonb,
+  raw_user_meta_data     jsonb not null default '{}'::jsonb,
+  confirmation_token     varchar(255),
+  recovery_token         varchar(255),
+  email_change_token_new varchar(255),
+  email_change           varchar(255),
+  created_at             timestamptz default now(),
+  updated_at             timestamptz default now()
+);
+
+create table auth.identities (
+  id              uuid primary key default gen_random_uuid(),
+  user_id         uuid not null references auth.users (id) on delete cascade,
+  provider_id     text not null,
+  identity_data   jsonb not null,
+  provider        text not null,
+  last_sign_in_at timestamptz,
+  created_at      timestamptz default now(),
+  updated_at      timestamptz default now(),
+  unique (provider_id, provider)
 );
 
 create or replace function auth.uid()

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireSection } from "@/lib/auth/dal";
-import { GLOBAL_ADMIN_LABEL, ROLE_LABELS } from "@/lib/auth/permissions";
+import { GLOBAL_ADMIN_LABEL, GROUP_ADMIN_LABEL, ROLE_LABELS } from "@/lib/auth/permissions";
 
 export const metadata: Metadata = { title: "Mi perfil" };
 
@@ -45,6 +45,9 @@ export default async function PerfilPage() {
           </CardHeader>
           <CardContent className="grid gap-3">
             {ctx.isGlobalAdmin ? <Badge className="w-fit">{GLOBAL_ADMIN_LABEL}</Badge> : null}
+            {ctx.administeredGroupIds.length > 0 ? (
+              <Badge className="w-fit">{GROUP_ADMIN_LABEL}</Badge>
+            ) : null}
             {ctx.memberships.length === 0 ? (
               <p className="text-muted-foreground text-sm">No tienes empresas asignadas.</p>
             ) : (

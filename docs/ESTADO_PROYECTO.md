@@ -1,83 +1,91 @@
 # Estado del proyecto
 
-**Última actualización**: 2026-10-21 · **Fase actual**: 0 (base técnica) completada en código;
-pendiente de validación contra un proyecto Supabase real.
+**Última actualización**: 2026-10-22 · **Fase actual**: 0 completada y modelo de autorización
+multiempresa implementado y probado en local. Pendiente de validación contra un proyecto Supabase
+real.
 
 ## 1. Qué está hecho
 
-**Estructura y herramientas**
+### Fase 0 · Base técnica (2026-10-21)
 
-- Next.js 16.4.2 (App Router, Turbopack), React 19.3, TypeScript estricto
-  (`strict`, `noUncheckedIndexedAccess`, `noImplicitReturns`…), Tailwind CSS 4, shadcn/ui (Radix).
-- ESLint (sin avisos permitidos, prohíbe `any`), Prettier con orden de clases, Vitest +
-  Testing Library, Playwright 1.56.1 (perfiles móvil y escritorio).
-- `.env.example`, `.nvmrc`, `supabase/config.toml` endurecido para desarrollo local.
+- Next.js 16.4.2 (App Router, Cache Components), React 19.3, TypeScript estricto, Tailwind CSS 4,
+  shadcn/ui (Radix), ESLint sin avisos, Prettier, Vitest, Playwright 1.56.1.
+- Autenticación con Supabase (acceso, recuperación, invitación, cambio de contraseña), proxy de
+  sesión, capa de acceso a datos, layout mobile-first con navegación protegida, selector de empresa
+  con identidad visual, PWA, cabeceras de seguridad.
 
-**Supabase**
+### Modelo de autorización multiempresa (2026-10-22)
 
-- Migraciones: identidad y multiempresa (`companies`, `profiles`, `platform_admins`,
-  `company_memberships`, `manager_assignments`), auditoría inmutable (`audit_log`) y bucket privado
-  `company-logos`. RLS y privilegios mínimos en todas las tablas.
-- Clientes de servidor y navegador, proxy de sesión, capa de acceso a datos (DAL).
+- Migraciones `20261022100000_modelo_multiempresa` y `20261022100100_empleados`: `groups`,
+  `group_admins`, `work_centers`, `teams`, `role_assignments`, `employees`, `employment_terms`;
+  cambios en `companies` (grupo, estado), `company_memberships` (estado y vigencia) y
+  `manager_assignments` (sobre empleados, con estado y vigencia).
+- Roles: administración de plataforma, administrador de grupo, `company_admin`, `hr`, `manager`,
+  `accounting`, `employee`, `auditor`, con ámbito (empresa, centro, equipo) y vigencia.
+- Funciones seguras `current_membership_id()` y `has_permission(empresa, permiso, centro, equipo)`
+  sin recursión de RLS; techo de concesión de roles; prohibición de autoconcesiones; permisos solo
+  en tablas del servidor (nunca en metadatos de Auth).
+- Aislamiento también frente a inferencia: claves foráneas compuestas, índices únicos por empresa,
+  claves inmutables, ids generados por el servidor (ADR-018).
+- Auditoría de cambios privilegiados con actor, empresa y grupo.
+- Reversión documentada y verificada de cada migración nueva (`supabase/rollbacks/`).
+- Semillas sintéticas solo locales (`supabase/seeds/`).
+- Tipos TypeScript generados desde las migraciones (`npm run db:types`) con control de divergencia.
+- La aplicación lee roles de `role_assignments` aplicando vigencias (`assembleUserContext`) y
+  reconoce la administración de grupo.
+- CI en GitHub Actions (`.github/workflows/ci.yml`).
+- Documentación: BASE_DATOS (diagrama de relaciones, reversibilidad), PERMISOS (matrices por tabla
+  y rol), ADR-017 a ADR-022, README y CLAUDE.md.
 
-**Aplicación**
+## 2. Resultados de verificación (2026-10-22)
 
-- Acceso con contraseña, recuperación de contraseña, confirmación de enlaces de correo
-  (invitación, recuperación, cambio de email), cambio de contraseña, cierre de sesión.
-- Layout responsive mobile-first: barra lateral en escritorio, barra inferior con "Más" en móvil,
-  cabecera con selector de empresa activa y menú de usuario, márgenes `safe-area` para iOS.
-- Navegación filtrada por rol y empresa activa; cada página privada verifica permisos en servidor.
-- Identidad visual por empresa (color y logotipo privado con URL firmada).
-- Panel de inicio y perfil con datos reales del usuario. Módulos funcionales con estado honesto
-  "en preparación", sin datos simulados.
-- PWA: manifiesto, iconos (192, 512, maskable, apple-touch), service worker sin caché de datos
-  personales y página sin conexión.
-- Cabeceras de seguridad (CSP, HSTS en producción, X-Frame-Options, Permissions-Policy…).
+| Verificación               | Comando                                           | Resultado                                                                                                                      |
+| -------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Tipos                      | `npm run typecheck`                               | Sin errores                                                                                                                    |
+| Lint                       | `npm run lint`                                    | 0 errores, 0 avisos                                                                                                            |
+| Formato                    | `npm run format:check`                            | Correcto                                                                                                                       |
+| Unitarias                  | `npm test`                                        | 5 archivos, 45 pruebas superadas                                                                                               |
+| Aislamiento multiempresa   | `npm run test:db` → `10_aislamiento_multiempresa` | 134 aserciones superadas                                                                                                       |
+| Integridad y escalada      | `npm run test:db` → `20_integridad_y_escalada`    | 26 aserciones superadas                                                                                                        |
+| Semillas sintéticas        | `npm run test:db` → `30_seed_sintetico`           | 15 aserciones superadas                                                                                                        |
+| Reversibilidad             | `npm run test:db`                                 | 2 reversiones restauran el esquema exacto, reaplicar reproduce el esquema, 2 reversiones exigen autorización para perder datos |
+| Tipos frente a esquema     | `npm run db:types:check`                          | Al día                                                                                                                         |
+| Build de producción        | `npm run build`                                   | Correcto                                                                                                                       |
+| E2E                        | `npm run test:e2e`                                | 18 pruebas superadas (móvil y escritorio)                                                                                      |
+| Dependencias de producción | `npm audit --omit=dev`                            | 0 vulnerabilidades                                                                                                             |
+| Dependencias de desarrollo | `npm audit`                                       | 5 altas en la cadena de `eslint-config-next` (sin cambios desde la fase 0)                                                     |
 
-**Documentación**: CLAUDE.md, README.md y `docs/` completos (PRD, arquitectura, base de datos,
-permisos, normativa, plan, 16 ADR, estado).
+Comprobaciones adicionales realizadas:
 
-## 2. Resultados de verificación (2026-10-21)
+- **Control negativo**: al abrir a propósito la política de lectura de empleados (`true or …`),
+  `npm run test:db` falla en dos pruebas; las pruebas negativas detectan fugas reales.
+- **Modo CI**: `test:db` y `db:types:check` probados contra un servidor PostgreSQL externo
+  (`TEST_DB_EXTERNAL=1`), como el servicio `postgres:16` del workflow.
+- **Hallazgo corregido durante las pruebas**: un índice único sin `company_id` permitía deducir los
+  roles de una persona de otra empresa por el error "clave duplicada" (ADR-018).
 
-| Verificación               | Comando                | Resultado                                                                                                                                                                     |
-| -------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Tipos                      | `npm run typecheck`    | Sin errores                                                                                                                                                                   |
-| Lint                       | `npm run lint`         | 0 errores, 0 avisos                                                                                                                                                           |
-| Formato                    | `npm run format:check` | Correcto                                                                                                                                                                      |
-| Unitarias                  | `npm test`             | 4 archivos, 36 pruebas superadas                                                                                                                                              |
-| RLS y migraciones          | `npm run test:db`      | 3 migraciones aplicadas, 52 comprobaciones superadas (PostgreSQL 16 local)                                                                                                    |
-| Build de producción        | `npm run build`        | Correcto; 16 rutas (privadas como prerender parcial)                                                                                                                          |
-| E2E                        | `npm run test:e2e`     | 18 pruebas superadas (9 en móvil Pixel 7, 9 en escritorio Chrome)                                                                                                             |
-| Dependencias de producción | `npm audit --omit=dev` | 0 vulnerabilidades                                                                                                                                                            |
-| Dependencias de desarrollo | `npm audit`            | 5 altas en la cadena `eslint-config-next` → `fast-glob` → `micromatch` → `braces` (solo herramientas de lint; la corrección propuesta por npm es bajar a Next 14, descartada) |
-
-Las pruebas E2E y el build se ejecutaron con valores de Supabase de relleno: cubren todo lo que
-ocurre sin sesión (redirecciones, formularios, validación, manifiesto, cabeceras), pero **no** el
-flujo con una sesión real.
-
-Además, se comprobó que el script de pruebas de base de datos falla correctamente ante una aserción
-falsa (control negativo) y se revisó visualmente la pantalla de acceso en formato móvil.
+El workflow de CI está escrito y validado como YAML, pero **aún no se ha ejecutado en GitHub**
+porque el repositorio no tiene remoto.
 
 ## 3. Bloqueantes y riesgos
 
-1. **Sin proyecto Supabase conectado.** Falta aplicar las migraciones en Supabase real, regenerar
-   tipos y probar el flujo con sesión (panel, selector de empresa, logotipo, cambio de contraseña).
-   El armazón privado no se ha podido ver renderizado con datos.
-2. **Sin repositorio remoto en GitHub.** El código está versionado en git local, en un contenedor
-   temporal. Hay que conectar un repositorio y subirlo para no perderlo.
-3. **Red del entorno**: `ui.shadcn.com` bloqueado (componentes escritos a mano, ADR-010).
-4. **Emulación de Supabase en pruebas de RLS** (ADR-012): validar también en un proyecto real.
-5. **CSP con `'unsafe-inline'`** (ADR-009), a resolver en la fase 5.
-6. **Vulnerabilidades en herramientas de desarrollo** (ver tabla): vigilar actualizaciones de
-   `eslint-config-next`.
-7. **Normativa**: confirmar el estado de la reforma del registro de jornada y revisar
-   `docs/NORMATIVA.md` con la asesoría antes de la fase 1.
+1. **Sin repositorio remoto en GitHub**: el código está en git local en un contenedor temporal, y
+   CI no se puede ejecutar hasta subirlo.
+2. **Sin proyecto Supabase**: las migraciones y las pruebas de RLS se han ejecutado sobre
+   PostgreSQL 16 con una emulación mínima de Supabase (ADR-012). Falta aplicarlas en un proyecto
+   real (Supabase usa PostgreSQL 17 en `config.toml`) y validar las semillas con
+   `supabase db reset` (columnas reales de `auth.users`/`auth.identities` y acceso con GoTrue).
+3. **Altas de personas**: crear membresías para usuarios que aún no existen en Auth requiere un flujo
+   de invitación con privilegios de servidor (ADR-011, pendiente para la fase 1).
+4. **Rendimiento de RLS**: las políticas llaman a funciones por fila; correcto para el volumen
+   previsto, pero habrá que medir con datos reales (ADR-017).
+5. Riesgos heredados: CSP con `'unsafe-inline'` (ADR-009), componentes shadcn escritos a mano
+   (ADR-010), vulnerabilidades en herramientas de lint, revisión normativa pendiente.
 
 ## 4. Próximos pasos
 
-1. Crear el repositorio en GitHub y subir la rama de la fase 0.
-2. Crear proyecto Supabase de pruebas (región UE), `supabase db push`, configurar Auth (README) y
-   crear el primer administrador global.
-3. Regenerar `src/types/database.ts` y añadir E2E con sesión real.
-4. Responder las preguntas abiertas del PRD (OCR, hosting, ubicación al fichar, políticas).
-5. Iniciar la fase 1 (administración y control horario).
+1. Crear el repositorio en GitHub, subir la rama y comprobar que CI pasa.
+2. Crear un proyecto Supabase de pruebas (región UE), `supabase db push`, ejecutar las pruebas SQL
+   contra él y comparar `supabase gen types` con `src/types/database.ts`.
+3. Fase 1: administración (empresas, centros, equipos, invitaciones, roles, asignaciones) y control
+   horario sobre `employees`, con las mismas reglas de aislamiento y reversión.

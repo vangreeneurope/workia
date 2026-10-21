@@ -6,7 +6,13 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireSection } from "@/lib/auth/dal";
-import { GLOBAL_ADMIN_LABEL, ROLE_LABELS, rolesInCompany } from "@/lib/auth/permissions";
+import {
+  GLOBAL_ADMIN_LABEL,
+  GROUP_ADMIN_LABEL,
+  ROLE_LABELS,
+  administersCompany,
+  rolesInCompany,
+} from "@/lib/auth/permissions";
 
 export const metadata: Metadata = { title: "Inicio" };
 
@@ -14,6 +20,7 @@ export default async function PanelPage() {
   const ctx = await requireSection("panel");
   const activeCompany = ctx.companies.find((c) => c.id === ctx.activeCompanyId) ?? null;
   const activeRoles = rolesInCompany(ctx, ctx.activeCompanyId);
+  const groupAdminHere = !ctx.isGlobalAdmin && administersCompany(ctx, ctx.activeCompanyId);
   const firstName = ctx.fullName.split(" ")[0] || ctx.email;
 
   return (
@@ -47,12 +54,17 @@ export default async function PanelPage() {
                   <ShieldCheck aria-hidden /> {GLOBAL_ADMIN_LABEL}
                 </Badge>
               ) : null}
+              {groupAdminHere ? (
+                <Badge>
+                  <ShieldCheck aria-hidden /> {GROUP_ADMIN_LABEL}
+                </Badge>
+              ) : null}
               {activeRoles.map((role) => (
                 <Badge key={role} variant="secondary">
                   {ROLE_LABELS[role]}
                 </Badge>
               ))}
-              {!ctx.isGlobalAdmin && activeRoles.length === 0 ? (
+              {!ctx.isGlobalAdmin && !groupAdminHere && activeRoles.length === 0 ? (
                 <span className="text-muted-foreground text-sm">Sin rol en esta empresa</span>
               ) : null}
             </CardContent>

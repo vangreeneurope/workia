@@ -31,6 +31,8 @@ export function makeContext(
     email: "persona@grupo.test",
     fullName: "Persona de Prueba",
     isGlobalAdmin: false,
+    administeredGroupIds: [],
+    administeredCompanyIds: [],
     memberships,
     companies: memberships.map((m) => m.company),
     activeCompanyId: memberships[0]?.company.id ?? null,
