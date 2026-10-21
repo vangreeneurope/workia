@@ -35,6 +35,9 @@ describe("isPublicPath", () => {
     expect(isPublicPath("/acceder")).toBe(true);
     expect(isPublicPath("/acceder/recuperar")).toBe(true);
     expect(isPublicPath("/auth/confirmar")).toBe(true);
+    expect(isPublicPath("/terminal")).toBe(true);
+    expect(isPublicPath("/terminal/activar")).toBe(true);
+    expect(isPublicPath("/terminales")).toBe(false);
     expect(isPublicPath("/panel")).toBe(false);
     expect(isPublicPath("/accederx")).toBe(false);
     expect(isPublicPath("/")).toBe(false);

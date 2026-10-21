@@ -1,5 +1,6 @@
 /** Rutas accesibles sin sesión. Todo lo demás requiere autenticación. */
-export const PUBLIC_PATHS = ["/acceder", "/auth/confirmar", "/auth/error"] as const;
+/** "/terminal" es el fichaje compartido con PIN: se identifica por el token del dispositivo (ADR-036). */
+export const PUBLIC_PATHS = ["/acceder", "/auth/confirmar", "/auth/error", "/terminal"] as const;
 
 export const LOGIN_PATH = "/acceder";
 export const HOME_PATH = "/panel";

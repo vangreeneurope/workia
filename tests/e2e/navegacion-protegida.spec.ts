@@ -83,3 +83,46 @@ test("el horario y su administración exigen sesión", async ({ page }) => {
     await expect(page).toHaveURL(/\/acceder\?siguiente=/);
   }
 });
+
+test("el fichaje, el historial y la revisión exigen sesión", async ({ page }) => {
+  for (const path of [
+    "/fichajes",
+    "/fichajes/historial",
+    "/fichajes/revision",
+    "/admin/fichajes",
+  ]) {
+    await page.goto(path);
+    await expect(page).toHaveURL(/\/acceder\?siguiente=/);
+  }
+});
+
+test("el terminal sin activar pide su código y no muestra datos", async ({ page }) => {
+  await page.goto("/terminal");
+  await expect(page).toHaveURL(/\/terminal$/);
+  await expect(page.getByRole("heading", { name: "Activar terminal de fichaje" })).toBeVisible();
+  await expect(page.getByLabel("Código del terminal")).toBeVisible();
+  await expect(page.getByLabel("PIN")).toHaveCount(0);
+  const box = await page.getByRole("button", { name: "Activar" }).boundingBox();
+  expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+});
+
+test("un código de terminal con formato incorrecto se rechaza sin activar nada", async ({
+  page,
+  context,
+}) => {
+  await page.goto("/terminal");
+  await page.getByLabel("Código del terminal").fill("no-es-un-token");
+  await page.getByRole("button", { name: "Activar" }).click();
+  await expect(page.getByText("El código del terminal no es válido")).toBeVisible();
+  const cookies = await context.cookies();
+  expect(cookies.find((c) => c.name === "terminal")).toBeUndefined();
+});
+
+test("una cookie de terminal falsa no da acceso al fichaje", async ({ page, context, baseURL }) => {
+  await context.addCookies([
+    { name: "terminal", value: "a".repeat(64), url: `${baseURL}/terminal` },
+  ]);
+  await page.goto("/terminal");
+  await expect(page.getByRole("heading", { name: "Activar terminal de fichaje" })).toBeVisible();
+  await expect(page.getByLabel("PIN")).toHaveCount(0);
+});

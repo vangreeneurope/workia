@@ -390,3 +390,51 @@ ausencias (hoy no tiene escritura desde la API).
 `schedule_events` (una por persona afectada, sin datos personales) dentro de la misma transacción.
 La persona las ve en su horario; el futuro proveedor las leerá con `service_role` y marcará
 `delivered_at`. Nadie más puede modificarlas.
+
+## ADR-035 · Permisos y escritura del control horario
+
+**Fecha**: 2026-10-25 · **Estado**: aceptada
+
+**Decisión**: matriz propia `private.role_has_time_permission` (administración de empresa y RR. HH.
+leen y gestionan; auditoría lee), como en ADR-030. El manager lee a quien supervisa y decide
+correcciones cuando es su aprobador de `time_corrections` (mismo cálculo y suplencias que el resto
+de aprobaciones). Fichajes, jornadas, solicitudes, ajustes e incidencias **no tienen `grant` de
+escritura**: solo funciones `security definer` que comprueban identidad, ámbito y máquina de
+estados. Los fichajes y ajustes llevan triggers de inmutabilidad que aplican también a la clave de
+servicio (salvo retirar la foto caducada).
+
+## ADR-036 · Terminal compartido con token de dispositivo
+
+**Fecha**: 2026-10-25 · **Estado**: aceptada (decidida con la responsable del proyecto)
+
+**Contexto**: el terminal ficha en nombre de personas que no tienen sesión abierta.
+**Decisión**: token aleatorio de 256 bits por terminal, mostrado una vez y guardado solo como
+SHA-256; cookie httpOnly en `/terminal`. Dos funciones accesibles para `anon`:
+`kiosk_device_info` (comprobar el token) y `kiosk_punch` (token + código + PIN bcrypt). Límites:
+5 fallos seguidos bloquean el PIN 15 min; 20 fallos en 10 min bloquean el terminal 10 min; mismo
+mensaje y coste para códigos inexistentes. Las respuestas no contienen datos personales.
+**Alternativas descartadas**: cuenta técnica por terminal (más gestión de cuentas y roles) y clave
+de servicio en el servidor (salta RLS y amplía ADR-025).
+**Consecuencia**: es la única excepción a "toda Server Action obtiene la identidad de la sesión".
+
+## ADR-037 · Selfie opcional: sin biometría y 30 días
+
+**Fecha**: 2026-10-25 · **Estado**: aceptada (plazo decidido con la responsable; validar con la asesoría)
+
+**Decisión**: interruptor por política, solo JPEG ≤ 2 MB, metadatos eliminados en servidor (EXIF
+puede contener GPS), bucket privado `punch-selfies` con ruta `<empresa>/<persona>/<clave>.jpg`,
+subida solo a la ruta propia y con la política activa; lectura para la persona, su manager y
+RR. HH. Ningún análisis de la imagen. Conservación 30 días: la base de datos lista las caducadas y
+marca la retirada; el borrado del archivo lo hace una tarea con la API de Storage (pendiente de
+programar).
+
+## ADR-038 · Hora oficial, idempotencia y jornadas olvidadas
+
+**Fecha**: 2026-10-25 · **Estado**: aceptada
+
+**Decisión**: hora oficial = `now()` del servidor; la del dispositivo solo se declara y, con más de
+5 min de diferencia, genera incidencia. Clave de idempotencia única por persona; bloqueo
+consultivo por persona para serializar fichajes (probado con sesiones simultáneas). La jornada es
+del día local de su entrada en la zona del centro. Una jornada abierta más de 16 h se cierra como
+incompleta al fichar una nueva entrada (sin inventar la salida). Sin conexión, el cliente reintenta
+con la misma clave y sin ubicación ni foto.

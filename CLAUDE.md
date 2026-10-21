@@ -97,7 +97,7 @@ docs/               Documentación funcional y técnica
    verifica que restaura el esquema exacto. Después, `npm run db:types`.
 5. **Cada Server Action y Route Handler** obtiene la identidad con `getUserContext()` /
    `requireUserId()` / `requireSection()` de `src/lib/auth/dal.ts` (en administración,
-   `adminAction()` o `requireAdminArea()`). El `company_id` de una escritura sale siempre de
+   `adminAction()` o `requireAdminArea()`). Única excepción: el terminal `/terminal` (ADR-036). El `company_id` de una escritura sale siempre de
    `ctx.companyId`, nunca del formulario. Nunca confíes en ids que lleguen del cliente.
 6. Usa `getClaims()` (valida el JWT), nunca `getSession()` en servidor para autorizar.
 7. **Sin secretos en el frontend ni en el repositorio.** Solo `NEXT_PUBLIC_SUPABASE_URL`,
@@ -124,6 +124,7 @@ docs/               Documentación funcional y técnica
 - `docs/PERMISOS.md`: matriz de roles y cómo se aplica en cada capa.
 - `docs/VIGENCIA_Y_BAJAS.md`: fechas de efecto, bajas, aprobadores y suplencias.
 - `docs/HORARIOS.md`: calendarios, plantillas de turno, precedencia, zonas horarias y cambios de hora.
+- `docs/CONTROL_HORARIO.md`: fichajes, terminal con PIN, correcciones, incidencias y operación.
 - `docs/NORMATIVA.md`: registro de jornada, RGPD/LOPDGDD, conservación.
 - `docs/PLAN_DESARROLLO.md`: fases y criterios de salida.
 - `docs/DECISIONES.md`: registro de decisiones de arquitectura (ADR).

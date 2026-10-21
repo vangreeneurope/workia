@@ -142,6 +142,31 @@ RPC nuevas (definer, con comprobación explícita de permisos y empresa derivada
 `shift_assignment_conflicts`, `publish_shift_assignment`, `close_shift_assignment` y
 `my_schedule_access`. `audit_events` admite la acción `publish`.
 
+### Control horario (migración `20261025100000_control_horario`)
+
+Funcionamiento y operación en [CONTROL_HORARIO.md](CONTROL_HORARIO.md).
+
+| Tabla                          | Propósito                                         | Claves y restricciones relevantes                                                                                                                    |
+| ------------------------------ | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `punches`                      | Fichaje original                                  | inmutable (trigger, también para servicio salvo retirar la foto); clave idempotente única por (empresa, persona); ubicación coherente con el permiso |
+| `time_entries`                 | Jornada recalculada                               | una abierta por persona (índice parcial); fecha = día local de la entrada; sin borrado                                                               |
+| `time_correction_requests`     | Solicitud de corrección                           | forma según la acción (añadir, cambiar, anular); solo cambia la decisión                                                                             |
+| `time_adjustments`             | Ajuste aprobado (antes, después, motivo, autores) | inmutable; uno por solicitud                                                                                                                         |
+| `time_incidents`               | Incidencias detectadas                            | sin duplicados por (jornada, clave); solo cambia su estado                                                                                           |
+| `time_tracking_policies`       | Ubicación y selfie por empresa o centro           | una por empresa y una por centro; aviso obligatorio si se usa la ubicación                                                                           |
+| `kiosk_devices`                | Terminales                                        | solo el hash del token; columna no legible desde la API                                                                                              |
+| `kiosk_pins`, `kiosk_attempts` | PIN (bcrypt) e intentos                           | sin acceso desde la API                                                                                                                              |
+| `work_events`                  | Recordatorios y avisos pendientes                 | únicos por (persona, clave); inmutables salvo para servicio                                                                                          |
+
+RPC: `record_punch`, `my_time_status`, `my_time_access`, `set_my_kiosk_pin`, `reset_kiosk_pin`,
+`register_kiosk_device`, `request_time_correction`, `cancel_time_correction`,
+`decide_time_correction`, `resolve_time_incident` (authenticated); `kiosk_device_info` y
+`kiosk_punch` (también anon, ADR-036); `generate_time_reminders`, `expired_punch_selfies` y
+`mark_punch_selfie_purged` (solo service_role). Bucket privado `punch-selfies` (JPEG, 2 MB).
+El horario planificado se recalcula en SQL con `private.planned_shift` (mismas reglas que el
+resolvedor TypeScript; las horas repetidas del cambio de hora se corrigen en
+`private.local_to_utc`).
+
 ### Auditoría y almacenamiento
 
 - `audit_log`: append-only. Columnas `actor_id` (`auth.uid()`), `company_id`, `group_id`,
@@ -205,6 +230,7 @@ orden inverso con `psql` y borrar la fila correspondiente de
 | `20261022100100_empleados`              | Sí                                                     | fichas de empleado y condiciones; asignaciones de manager de empleados sin cuenta                                                       |
 | `20261023100000_administracion`         | Sí (generada desde el texto literal de las anteriores) | suplencias, `audit_events`, fechas de baja, asignaciones por equipo o por tipo                                                          |
 | `20261024100000_calendarios_turnos`     | Sí                                                     | calendarios, festivos, plantillas, asignaciones, ausencias integradas y eventos (la auditoría se conserva siempre)                      |
+| `20261025100000_control_horario`        | Sí                                                     | todo el registro de jornada (exportar antes: obligación de 4 años); exige vaciar antes el bucket de selfies                             |
 
 Protecciones:
 
@@ -226,7 +252,10 @@ Protecciones:
    (inmutabilidad, restricciones, falsificaciones, metadatos y claims), `30_seed_sintetico` y
    `40_administracion` (aprobadores, solapes, suplencias, bajas, auditoría, importación y separación
    plataforma / empresa) y `50_horarios` (permisos por ámbito, versionado sin efecto retroactivo,
-   validación de plantillas, conflictos, publicación y eventos).
+   validación de plantillas, conflictos, publicación y eventos) y `60_control_horario`
+   (idempotencia, estados, medianoche, zona, ubicación, selfie, terminal, correcciones, incidencias,
+   permisos). Después, `scripts/test-db-concurrency.sh` lanza dos sesiones simultáneas (misma clave,
+   doble toque, aplicación y terminal a la vez).
 3. Comprueba reversibilidad y protección de datos de las reversiones.
 
 Cada prueba actúa como un usuario concreto (`set role authenticated` + claims del JWT). Limitación:
@@ -246,9 +275,7 @@ npx supabase gen types typescript --local --schema public > src/types/database.t
 
 ## 9. Previsto para fases siguientes (no implementado)
 
-- **Control horario (fase 1)**: `time_entries` (fichaje original, hora del servidor, sin `update`
-  ni `delete`, trigger `prevent_mutation()`) y `time_entry_corrections` (solicitud enlazada con
-  motivo y aprobación). Ambas con `company_id`, `employee_id` y claves compuestas.
+- **Control horario**: exportación para la Inspección (sin tablas nuevas).
 - **Ausencias (fase 2)**: `leave_types`, `leave_balances`, `leave_requests` (las aprobadas
   alimentarán `leave_periods`; los calendarios laborales ya existen) (justificantes en bucket privado `leave-attachments`).
 - **Gastos (fase 3)**: `expense_policies`, `expense_reports`, `expenses`, `expense_receipts`

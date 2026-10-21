@@ -6,6 +6,8 @@ import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PinForm } from "@/features/time-tracking/components/correction-forms";
+import { getMyTimeStatus } from "@/features/time-tracking/queries";
 import { requireSection } from "@/lib/auth/dal";
 import { GLOBAL_ADMIN_LABEL, GROUP_ADMIN_LABEL, ROLE_LABELS } from "@/lib/auth/permissions";
 
@@ -13,6 +15,7 @@ export const metadata: Metadata = { title: "Mi perfil" };
 
 export default async function PerfilPage() {
   const ctx = await requireSection("perfil");
+  const timeStatus = await getMyTimeStatus();
 
   return (
     <>
@@ -38,6 +41,22 @@ export default async function PerfilPage() {
             </dl>
           </CardContent>
         </Card>
+
+        {timeStatus ? (
+          <Card id="pin-terminal">
+            <CardHeader>
+              <CardTitle className="text-base">PIN del terminal de fichaje</CardTitle>
+              <CardDescription>
+                {timeStatus.hasKioskPin
+                  ? "Ya tienes un PIN. Puedes cambiarlo cuando quieras."
+                  : "Créalo para fichar en el terminal compartido de tu centro con tu código de empleado."}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PinForm />
+            </CardContent>
+          </Card>
+        ) : null}
 
         <Card>
           <CardHeader>

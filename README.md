@@ -111,6 +111,15 @@ fechas están en [docs/VIGENCIA_Y_BAJAS.md](docs/VIGENCIA_Y_BAJAS.md).
 Para invitar personas por correo hace falta `SUPABASE_SECRET_KEY` en el servidor (ver
 `.env.example` y ADR-025). Sin ella, todo lo demás funciona.
 
+## Control horario
+
+**Fichajes** (`/fichajes`) registra entrada, pausas y salida desde el móvil o el ordenador, con
+hora oficial del servidor, reintento sin conexión sin duplicados, ubicación puntual y selfie
+opcional según la política de cada empresa. El **terminal compartido** (`/terminal`) permite fichar
+con código de empleado y PIN. Historial, incidencias y correcciones (que nunca modifican el fichaje
+original) en `/fichajes/historial` y `/fichajes/revision`. Operación y soporte en
+[docs/CONTROL_HORARIO.md](docs/CONTROL_HORARIO.md).
+
 ## Horarios y calendarios laborales
 
 **Horario** (`/horario`) muestra el horario planificado en vista semanal o mensual: la propia
@@ -142,7 +151,7 @@ desplegarse en cualquier plataforma compatible con Next.js. Requisitos:
 [CLAUDE.md](CLAUDE.md) (convenciones y reglas) · [PRD](docs/PRD.md) ·
 [Arquitectura](docs/ARQUITECTURA.md) · [Base de datos](docs/BASE_DATOS.md) ·
 [Permisos](docs/PERMISOS.md) · [Vigencia y bajas](docs/VIGENCIA_Y_BAJAS.md) ·
-[Horarios](docs/HORARIOS.md) ·
+[Horarios](docs/HORARIOS.md) · [Control horario](docs/CONTROL_HORARIO.md) ·
 [Normativa](docs/NORMATIVA.md) ·
 [Plan de desarrollo](docs/PLAN_DESARROLLO.md) · [Decisiones](docs/DECISIONES.md) ·
 [Estado del proyecto](docs/ESTADO_PROYECTO.md)

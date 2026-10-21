@@ -1,10 +1,10 @@
 # Estado del proyecto
 
-**Última actualización**: 2026-10-24 · **Fase actual**: 1 en curso. Administración y horarios
-planificados (calendarios, plantillas de turno y asignaciones) implementados y probados en local;
-fichajes pendientes. Nada se ha validado aún contra un proyecto Supabase real: el módulo de
-administración sigue sin verificarse con sesión real, y este módulo se ha construido igualmente por
-petición expresa (excepción a la regla de CLAUDE.md, registrada aquí).
+**Última actualización**: 2026-10-25 · **Fase actual**: 1 en curso. Administración, horarios
+planificados y control horario (fichaje móvil, web y terminal) implementados y probados en local.
+Nada se ha validado aún contra un proyecto Supabase real: los módulos anteriores siguen sin
+verificarse con sesión real y los dos últimos se han construido por petición expresa (excepción a
+la regla de CLAUDE.md, registrada aquí).
 
 ## 1. Qué está hecho
 
@@ -82,32 +82,53 @@ petición expresa (excepción a la regla de CLAUDE.md, registrada aquí).
 - Zonas horarias de empresas y centros validadas en la base de datos.
 - Documentación: docs/HORARIOS.md, ADR-030 a ADR-034, BASE_DATOS, PERMISOS, plan y README.
 
-## 2. Resultados de verificación (2026-10-24)
+### Control horario (2026-10-25)
+
+- Migración `20261025100000_control_horario` con reversión verificada: fichajes inmutables con
+  hora del servidor, hora declarada, origen, zona, dispositivo seudónimo y clave idempotente;
+  jornadas recalculadas en la misma transacción; solicitudes de corrección y ajustes con antes,
+  después, motivo y autores; incidencias automáticas (tolerancia, fuera de horario, olvido, jornada
+  abierta, solape, ubicación no disponible, hora del dispositivo distinta); políticas de ubicación y
+  selfie; terminales con token; PIN con bcrypt y límites de intentos; eventos de trabajo.
+- Máquina de estados en base de datos y en la interfaz; bloqueo por persona para fichajes
+  simultáneos; jornada olvidada cerrada como incompleta sin inventar la salida.
+- Pantallas: fichaje móvil y escritorio con aviso previo a la ubicación, selfie opcional y cola sin
+  conexión; terminal `/terminal` con código y PIN que se limpia sola; historial con solicitud de
+  correcciones; revisión de correcciones e incidencias; administración de políticas, terminales y
+  PIN; PIN propio en el perfil.
+- Decisiones de la responsable del proyecto: terminal por token de dispositivo y selfies 30 días.
+- Documentación: docs/CONTROL_HORARIO.md, ADR-035 a ADR-038, BASE_DATOS, PERMISOS, NORMATIVA,
+  ARQUITECTURA, PRD, plan y README.
+
+## 2. Resultados de verificación (2026-10-25)
 
 | Verificación               | Comando                                           | Resultado                                                                                                              |
 | -------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | Tipos                      | `npm run typecheck`                               | Sin errores                                                                                                            |
 | Lint                       | `npm run lint`                                    | 0 errores, 0 avisos                                                                                                    |
 | Formato                    | `npm run format:check`                            | Correcto                                                                                                               |
-| Unitarias                  | `npm test`                                        | 15 archivos, 142 pruebas superadas (incluye zona horaria, cambio de hora, precedencia y plantillas)                    |
+| Unitarias                  | `npm test`                                        | 17 archivos, 165 pruebas superadas (incluye estados, cola sin conexión, selfie y pantallas de fichaje)                 |
 | Aislamiento multiempresa   | `npm run test:db` → `10_aislamiento_multiempresa` | 134 aserciones superadas                                                                                               |
 | Integridad y escalada      | `npm run test:db` → `20_integridad_y_escalada`    | 26 aserciones superadas                                                                                                |
-| Semillas sintéticas        | `npm run test:db` → `30_seed_sintetico`           | 19 aserciones superadas                                                                                                |
+| Semillas sintéticas        | `npm run test:db` → `30_seed_sintetico`           | 21 aserciones superadas                                                                                                |
 | Administración             | `npm run test:db` → `40_administracion`           | 81 aserciones superadas                                                                                                |
 | Horarios                   | `npm run test:db` → `50_horarios`                 | 101 aserciones superadas                                                                                               |
-| Reversibilidad             | `npm run test:db`                                 | 4 reversiones restauran el esquema exacto, reaplicar lo reproduce, 4 reversiones exigen autorización para perder datos |
+| Control horario            | `npm run test:db` → `60_control_horario`          | 115 aserciones superadas                                                                                               |
+| Concurrencia               | `npm run test:db` → `test-db-concurrency.sh`      | 3 escenarios con dos sesiones simultáneas superados                                                                    |
+| Reversibilidad             | `npm run test:db`                                 | 5 reversiones restauran el esquema exacto, reaplicar lo reproduce, 5 reversiones exigen autorización para perder datos |
 | Tipos frente a esquema     | `npm run db:types:check`                          | Al día (incluye las funciones RPC)                                                                                     |
-| Build de producción        | `npm run build`                                   | Correcto, 40 rutas                                                                                                     |
-| E2E                        | `npm run test:e2e`                                | 22 pruebas superadas (móvil y escritorio)                                                                              |
+| Build de producción        | `npm run build`                                   | Correcto, 45 rutas                                                                                                     |
+| E2E                        | `npm run test:e2e`                                | 30 pruebas superadas (móvil y escritorio)                                                                              |
 | Dependencias de producción | `npm audit --omit=dev`                            | 0 vulnerabilidades                                                                                                     |
 
-Comprobaciones adicionales: revisión visual a 360 px y en escritorio del calendario mensual, la
-semana y el editor de plantillas mediante una página temporal ya eliminada (sin desbordamiento
-horizontal); en el módulo anterior, revisión visual de formularios y prueba del interruptor
-optimista.
+Comprobaciones adicionales: revisión visual a 360 px y en escritorio del panel de fichaje y del
+terminal, y antes del calendario y el editor de plantillas, con páginas temporales ya eliminadas
+(sin desbordamiento horizontal). Esa revisión detectó y corrigió una clave del terminal generada
+durante el renderizado.
 
-**Lo que no se ha podido verificar**: las pantallas de administración y de horarios con una sesión y
-datos reales
+**Lo que no se ha podido verificar**: las pantallas de administración, horarios y fichaje con una
+sesión y datos reales, la subida real de selfies a Storage, la geolocalización y la cámara en
+dispositivos físicos
 (requiere un proyecto Supabase), la invitación por correo (requiere `SUPABASE_SECRET_KEY` y Auth
 real) y la ejecución del workflow de CI en GitHub (el repositorio no tiene remoto). La lógica de
 cada operación está cubierta por las pruebas SQL contra PostgreSQL 16 con la emulación de Supabase.
@@ -125,7 +146,11 @@ cada operación está cubierta por las pruebas SQL contra PostgreSQL 16 con la e
    festivo no genera avisos todavía; `leave_periods` no tiene aún quien la rellene (módulo de
    ausencias); el manager solo consulta horarios (ADR-030). Los festivos reales deben registrarse
    desde una fuente aprobada por la empresa.
-7. Riesgos heredados: CSP con `'unsafe-inline'`, componentes shadcn escritos a mano,
+7. **Control horario**: falta programar `generate_time_reminders` (cada 15 min) y el borrado de
+   selfies caducadas con la API de Storage; no hay adaptador de correo para los eventos de
+   trabajo; falta la exportación para la Inspección; validar con la asesoría el plazo de selfies y,
+   con el DPD, la activación de la ubicación en cada empresa.
+8. Riesgos heredados: CSP con `'unsafe-inline'`, componentes shadcn escritos a mano,
    vulnerabilidades en herramientas de lint, revisión normativa pendiente.
 
 ## 4. Próximos pasos
@@ -134,5 +159,5 @@ cada operación está cubierta por las pruebas SQL contra PostgreSQL 16 con la e
 2. Proyecto Supabase de pruebas: `supabase db push`, configurar `SUPABASE_SECRET_KEY` y SMTP, probar
    el módulo con las cuentas sintéticas y añadir E2E con sesión.
 3. Probar el horario con las semillas sintéticas (`supabase db reset`) y sesión real.
-4. Fichajes sobre el horario planificado y visor de auditoría (resto de la fase 1), con las reglas
-   de clasificación de excesos de jornada aprobadas por la asesoría.
+4. Tareas programadas del control horario, exportación para la Inspección y visor de auditoría
+   (resto de la fase 1); reglas de clasificación de excesos de jornada aprobadas por la asesoría.

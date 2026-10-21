@@ -91,8 +91,10 @@ complejos (pendiente de confirmar si se necesita), app nativa en tiendas (se usa
 1. **Proveedor de OCR** (servicio cloud o modelo propio) y requisito de que los datos se procesen
    en la UE.
 2. **Hosting** de la aplicación y dominio definitivo; región del proyecto Supabase.
-3. **Ubicación al fichar**: ¿se descarta totalmente o se quiere una ubicación puntual opcional,
-   solo en el momento del fichaje y con información previa? (El rastreo continuo está excluido.)
+3. **Ubicación al fichar**: resuelto técnicamente (2026-10-25) como política por empresa o centro
+   (no se registra / opcional / exigida), lectura puntual con aviso previo y nunca seguimiento
+   (docs/CONTROL_HORARIO.md). Pendiente: que cada empresa decida y documente su uso con la
+   asesoría y el DPD antes de activarla.
 4. **Políticas por empresa**: convenios aplicables, jornada, cómputo de vacaciones (días naturales o
    laborables), tipos de ausencia, límites de gasto, precio por kilómetro y dietas.
 5. **Integraciones**: ¿exportación a nómina o a un ERP/contabilidad concreto?

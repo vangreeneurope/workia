@@ -179,3 +179,19 @@ insert into public.shift_assignment_days (assignment_id, company_id, day_index, 
 update public.shift_assignments
 set status = 'published', published_at = now(), published_by = '5eed0000-0000-4000-8000-000000000003'
 where company_id = '5eed2000-0000-4000-8000-00000000000a';
+
+-- -----------------------------------------------------------------------------
+-- Control horario sintético: política de Alfa (ubicación opcional, sin selfie)
+-- y una jornada de ayer de Elena. Sin PIN: es una credencial y no va en el
+-- repositorio (cada persona lo crea en su perfil).
+-- -----------------------------------------------------------------------------
+insert into public.time_tracking_policies (company_id, location_mode, location_notice)
+values ('5eed2000-0000-4000-8000-00000000000a', 'optional',
+  'Datos sintéticos: se toma una sola ubicación al fichar para comprobar el centro de trabajo.');
+
+select private.insert_punch('5eed6000-0000-4000-8000-000000000005', k.kind::public.punch_kind,
+  gen_random_uuid(), 'web', null, null, null, 'not_requested', null, null, null, null,
+  ((current_date - 1) + k.at) at time zone 'Europe/Madrid')
+from (values ('start', time '08:02'), ('break_start', time '11:00'), ('break_end', time '11:20'),
+  ('end', time '15:35')) as k(kind, at)
+order by k.at;

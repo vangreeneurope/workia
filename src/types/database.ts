@@ -594,6 +594,154 @@ export type Database = {
           },
         ];
       };
+      kiosk_attempts: {
+        Row: {
+          company_id: string;
+          created_at: string;
+          device_id: string;
+          employee_id: string | null;
+          id: number;
+          success: boolean;
+        };
+        Insert: {
+          company_id: string;
+          created_at?: string;
+          device_id: string;
+          employee_id?: string | null;
+          id?: never;
+          success: boolean;
+        };
+        Update: {
+          company_id?: string;
+          created_at?: string;
+          device_id?: string;
+          employee_id?: string | null;
+          id?: never;
+          success?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "kiosk_attempts_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "kiosk_attempts_device_id_company_id_fkey";
+            columns: ["device_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "kiosk_devices";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      kiosk_devices: {
+        Row: {
+          blocked_until: string | null;
+          company_id: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          last_used_at: string | null;
+          name: string;
+          status: Database["public"]["Enums"]["entity_status"];
+          token_hash: string;
+          updated_at: string;
+          work_center_id: string;
+        };
+        Insert: {
+          blocked_until?: string | null;
+          company_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          last_used_at?: string | null;
+          name: string;
+          status?: Database["public"]["Enums"]["entity_status"];
+          token_hash: string;
+          updated_at?: string;
+          work_center_id: string;
+        };
+        Update: {
+          blocked_until?: string | null;
+          company_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          last_used_at?: string | null;
+          name?: string;
+          status?: Database["public"]["Enums"]["entity_status"];
+          token_hash?: string;
+          updated_at?: string;
+          work_center_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "kiosk_devices_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "kiosk_devices_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "kiosk_devices_work_center_id_company_id_fkey";
+            columns: ["work_center_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "work_centers";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      kiosk_pins: {
+        Row: {
+          company_id: string;
+          employee_id: string;
+          failed_attempts: number;
+          locked_until: string | null;
+          pin_hash: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          company_id: string;
+          employee_id: string;
+          failed_attempts?: number;
+          locked_until?: string | null;
+          pin_hash?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          company_id?: string;
+          employee_id?: string;
+          failed_attempts?: number;
+          locked_until?: string | null;
+          pin_hash?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "kiosk_pins_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "kiosk_pins_employee_id_company_id_fkey";
+            columns: ["employee_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
       leave_periods: {
         Row: {
           company_id: string;
@@ -763,6 +911,111 @@ export type Database = {
           updated_at?: string;
         };
         Relationships: [];
+      };
+      punches: {
+        Row: {
+          accuracy_m: number | null;
+          company_id: string;
+          created_at: string;
+          created_by: string | null;
+          device_at: string | null;
+          device_id: string | null;
+          employee_id: string;
+          id: string;
+          idempotency_key: string;
+          kind: Database["public"]["Enums"]["punch_kind"];
+          kiosk_device_id: string | null;
+          latitude: number | null;
+          location_status: Database["public"]["Enums"]["location_status"];
+          longitude: number | null;
+          selfie_path: string | null;
+          selfie_purged_at: string | null;
+          server_at: string;
+          source: Database["public"]["Enums"]["punch_source"];
+          time_entry_id: string;
+          time_zone: string;
+        };
+        Insert: {
+          accuracy_m?: number | null;
+          company_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          device_at?: string | null;
+          device_id?: string | null;
+          employee_id: string;
+          id?: string;
+          idempotency_key: string;
+          kind: Database["public"]["Enums"]["punch_kind"];
+          kiosk_device_id?: string | null;
+          latitude?: number | null;
+          location_status?: Database["public"]["Enums"]["location_status"];
+          longitude?: number | null;
+          selfie_path?: string | null;
+          selfie_purged_at?: string | null;
+          server_at?: string;
+          source: Database["public"]["Enums"]["punch_source"];
+          time_entry_id: string;
+          time_zone: string;
+        };
+        Update: {
+          accuracy_m?: number | null;
+          company_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          device_at?: string | null;
+          device_id?: string | null;
+          employee_id?: string;
+          id?: string;
+          idempotency_key?: string;
+          kind?: Database["public"]["Enums"]["punch_kind"];
+          kiosk_device_id?: string | null;
+          latitude?: number | null;
+          location_status?: Database["public"]["Enums"]["location_status"];
+          longitude?: number | null;
+          selfie_path?: string | null;
+          selfie_purged_at?: string | null;
+          server_at?: string;
+          source?: Database["public"]["Enums"]["punch_source"];
+          time_entry_id?: string;
+          time_zone?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "punches_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "punches_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "punches_employee_id_company_id_fkey";
+            columns: ["employee_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "punches_kiosk_device_id_company_id_fkey";
+            columns: ["kiosk_device_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "kiosk_devices";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "punches_time_entry_id_company_id_employee_id_fkey";
+            columns: ["time_entry_id", "company_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "time_entries";
+            referencedColumns: ["id", "company_id", "employee_id"];
+          },
+        ];
       };
       role_assignments: {
         Row: {
@@ -1272,6 +1525,420 @@ export type Database = {
           },
         ];
       };
+      time_adjustments: {
+        Row: {
+          action: Database["public"]["Enums"]["correction_action"];
+          after: Json;
+          before: Json;
+          company_id: string;
+          created_at: string;
+          decided_by: string | null;
+          decision: string;
+          decision_note: string | null;
+          effective_at: string | null;
+          employee_id: string;
+          id: string;
+          kind: Database["public"]["Enums"]["punch_kind"] | null;
+          punch_id: string | null;
+          reason: string;
+          request_id: string;
+          requested_by: string | null;
+          time_entry_id: string;
+        };
+        Insert: {
+          action: Database["public"]["Enums"]["correction_action"];
+          after: Json;
+          before: Json;
+          company_id: string;
+          created_at?: string;
+          decided_by?: string | null;
+          decision?: string;
+          decision_note?: string | null;
+          effective_at?: string | null;
+          employee_id: string;
+          id?: string;
+          kind?: Database["public"]["Enums"]["punch_kind"] | null;
+          punch_id?: string | null;
+          reason: string;
+          request_id: string;
+          requested_by?: string | null;
+          time_entry_id: string;
+        };
+        Update: {
+          action?: Database["public"]["Enums"]["correction_action"];
+          after?: Json;
+          before?: Json;
+          company_id?: string;
+          created_at?: string;
+          decided_by?: string | null;
+          decision?: string;
+          decision_note?: string | null;
+          effective_at?: string | null;
+          employee_id?: string;
+          id?: string;
+          kind?: Database["public"]["Enums"]["punch_kind"] | null;
+          punch_id?: string | null;
+          reason?: string;
+          request_id?: string;
+          requested_by?: string | null;
+          time_entry_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "time_adjustments_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "time_adjustments_decided_by_fkey";
+            columns: ["decided_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "time_adjustments_employee_id_company_id_fkey";
+            columns: ["employee_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "time_adjustments_punch_id_company_id_employee_id_fkey";
+            columns: ["punch_id", "company_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "punches";
+            referencedColumns: ["id", "company_id", "employee_id"];
+          },
+          {
+            foreignKeyName: "time_adjustments_request_id_company_id_fkey";
+            columns: ["request_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "time_correction_requests";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "time_adjustments_requested_by_fkey";
+            columns: ["requested_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "time_adjustments_time_entry_id_company_id_employee_id_fkey";
+            columns: ["time_entry_id", "company_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "time_entries";
+            referencedColumns: ["id", "company_id", "employee_id"];
+          },
+        ];
+      };
+      time_correction_requests: {
+        Row: {
+          action: Database["public"]["Enums"]["correction_action"];
+          company_id: string;
+          created_at: string;
+          decided_at: string | null;
+          decided_by: string | null;
+          decision_note: string | null;
+          employee_id: string;
+          id: string;
+          kind: Database["public"]["Enums"]["punch_kind"] | null;
+          proposed_at: string | null;
+          punch_id: string | null;
+          reason: string;
+          requested_by: string | null;
+          status: Database["public"]["Enums"]["correction_status"];
+          time_entry_id: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          action: Database["public"]["Enums"]["correction_action"];
+          company_id: string;
+          created_at?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          decision_note?: string | null;
+          employee_id: string;
+          id?: string;
+          kind?: Database["public"]["Enums"]["punch_kind"] | null;
+          proposed_at?: string | null;
+          punch_id?: string | null;
+          reason: string;
+          requested_by?: string | null;
+          status?: Database["public"]["Enums"]["correction_status"];
+          time_entry_id?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          action?: Database["public"]["Enums"]["correction_action"];
+          company_id?: string;
+          created_at?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          decision_note?: string | null;
+          employee_id?: string;
+          id?: string;
+          kind?: Database["public"]["Enums"]["punch_kind"] | null;
+          proposed_at?: string | null;
+          punch_id?: string | null;
+          reason?: string;
+          requested_by?: string | null;
+          status?: Database["public"]["Enums"]["correction_status"];
+          time_entry_id?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "time_correction_requests_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "time_correction_requests_decided_by_fkey";
+            columns: ["decided_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "time_correction_requests_employee_id_company_id_fkey";
+            columns: ["employee_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "time_correction_requests_punch_id_company_id_employee_id_fkey";
+            columns: ["punch_id", "company_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "punches";
+            referencedColumns: ["id", "company_id", "employee_id"];
+          },
+          {
+            foreignKeyName: "time_correction_requests_requested_by_fkey";
+            columns: ["requested_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "time_correction_requests_time_entry_id_company_id_employee_fkey";
+            columns: ["time_entry_id", "company_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "time_entries";
+            referencedColumns: ["id", "company_id", "employee_id"];
+          },
+        ];
+      };
+      time_entries: {
+        Row: {
+          break_seconds: number;
+          closed_incomplete_at: string | null;
+          company_id: string;
+          created_at: string;
+          employee_id: string;
+          ended_at: string | null;
+          id: string;
+          recalculated_at: string;
+          started_at: string | null;
+          status: Database["public"]["Enums"]["time_entry_status"];
+          time_zone: string;
+          updated_at: string;
+          work_date: string;
+          worked_seconds: number;
+        };
+        Insert: {
+          break_seconds?: number;
+          closed_incomplete_at?: string | null;
+          company_id: string;
+          created_at?: string;
+          employee_id: string;
+          ended_at?: string | null;
+          id?: string;
+          recalculated_at?: string;
+          started_at?: string | null;
+          status?: Database["public"]["Enums"]["time_entry_status"];
+          time_zone: string;
+          updated_at?: string;
+          work_date: string;
+          worked_seconds?: number;
+        };
+        Update: {
+          break_seconds?: number;
+          closed_incomplete_at?: string | null;
+          company_id?: string;
+          created_at?: string;
+          employee_id?: string;
+          ended_at?: string | null;
+          id?: string;
+          recalculated_at?: string;
+          started_at?: string | null;
+          status?: Database["public"]["Enums"]["time_entry_status"];
+          time_zone?: string;
+          updated_at?: string;
+          work_date?: string;
+          worked_seconds?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "time_entries_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "time_entries_employee_id_company_id_fkey";
+            columns: ["employee_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      time_incidents: {
+        Row: {
+          company_id: string;
+          dedupe_key: string;
+          detail: Json;
+          detected_at: string;
+          employee_id: string;
+          id: string;
+          kind: Database["public"]["Enums"]["time_incident_kind"];
+          punch_id: string | null;
+          resolution_note: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          status: Database["public"]["Enums"]["time_incident_status"];
+          time_entry_id: string;
+          updated_at: string;
+          work_date: string;
+        };
+        Insert: {
+          company_id: string;
+          dedupe_key: string;
+          detail?: Json;
+          detected_at?: string;
+          employee_id: string;
+          id?: string;
+          kind: Database["public"]["Enums"]["time_incident_kind"];
+          punch_id?: string | null;
+          resolution_note?: string | null;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          status?: Database["public"]["Enums"]["time_incident_status"];
+          time_entry_id: string;
+          updated_at?: string;
+          work_date: string;
+        };
+        Update: {
+          company_id?: string;
+          dedupe_key?: string;
+          detail?: Json;
+          detected_at?: string;
+          employee_id?: string;
+          id?: string;
+          kind?: Database["public"]["Enums"]["time_incident_kind"];
+          punch_id?: string | null;
+          resolution_note?: string | null;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          status?: Database["public"]["Enums"]["time_incident_status"];
+          time_entry_id?: string;
+          updated_at?: string;
+          work_date?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "time_incidents_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "time_incidents_employee_id_company_id_fkey";
+            columns: ["employee_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "time_incidents_punch_id_company_id_employee_id_fkey";
+            columns: ["punch_id", "company_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "punches";
+            referencedColumns: ["id", "company_id", "employee_id"];
+          },
+          {
+            foreignKeyName: "time_incidents_resolved_by_fkey";
+            columns: ["resolved_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "time_incidents_time_entry_id_company_id_employee_id_fkey";
+            columns: ["time_entry_id", "company_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "time_entries";
+            referencedColumns: ["id", "company_id", "employee_id"];
+          },
+        ];
+      };
+      time_tracking_policies: {
+        Row: {
+          company_id: string;
+          created_at: string;
+          id: string;
+          location_mode: Database["public"]["Enums"]["location_mode"];
+          location_notice: string | null;
+          selfie_enabled: boolean;
+          updated_at: string;
+          work_center_id: string | null;
+        };
+        Insert: {
+          company_id: string;
+          created_at?: string;
+          id?: string;
+          location_mode?: Database["public"]["Enums"]["location_mode"];
+          location_notice?: string | null;
+          selfie_enabled?: boolean;
+          updated_at?: string;
+          work_center_id?: string | null;
+        };
+        Update: {
+          company_id?: string;
+          created_at?: string;
+          id?: string;
+          location_mode?: Database["public"]["Enums"]["location_mode"];
+          location_notice?: string | null;
+          selfie_enabled?: boolean;
+          updated_at?: string;
+          work_center_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "time_tracking_policies_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "time_tracking_policies_work_center_id_company_id_fkey";
+            columns: ["work_center_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "work_centers";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
       work_center_holiday_calendars: {
         Row: {
           calendar_id: string;
@@ -1393,9 +2060,61 @@ export type Database = {
           },
         ];
       };
+      work_events: {
+        Row: {
+          company_id: string;
+          created_at: string;
+          dedupe_key: string;
+          delivered_at: string | null;
+          due_at: string;
+          employee_id: string;
+          event_type: string;
+          id: number;
+          payload: Json;
+        };
+        Insert: {
+          company_id: string;
+          created_at?: string;
+          dedupe_key: string;
+          delivered_at?: string | null;
+          due_at?: string;
+          employee_id: string;
+          event_type: string;
+          id?: never;
+          payload?: Json;
+        };
+        Update: {
+          company_id?: string;
+          created_at?: string;
+          dedupe_key?: string;
+          delivered_at?: string | null;
+          due_at?: string;
+          employee_id?: string;
+          event_type?: string;
+          id?: never;
+          payload?: Json;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "work_events_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "work_events_employee_id_company_id_fkey";
+            columns: ["employee_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
     };
     Views: { [_ in never]: never };
     Functions: {
+      cancel_time_correction: { Args: { p_request: string }; Returns: undefined };
       change_employment_terms: {
         Args: {
           p_employee: string;
@@ -1408,12 +2127,36 @@ export type Database = {
         Returns: string;
       };
       close_shift_assignment: { Args: { p_id: string; p_last_day: string }; Returns: undefined };
+      decide_time_correction: {
+        Args: { p_request: string; p_approve: boolean; p_note?: string };
+        Returns: string;
+      };
+      expired_punch_selfies: {
+        Args: { p_limit?: number };
+        Returns: { punch_id: string; selfie_path: string }[];
+      };
       find_group_user_by_email: { Args: { p_company: string; p_email: string }; Returns: string };
+      generate_time_reminders: { Args: { p_now?: string }; Returns: number };
       group_user_labels: {
         Args: { p_company: string; p_users: unknown };
         Returns: { user_id: string; full_name: string }[];
       };
       import_employees: { Args: { p_company: string; p_rows: Json }; Returns: number };
+      kiosk_device_info: {
+        Args: { p_token: string };
+        Returns: { device_name: string; work_center_name: string; company_name: string }[];
+      };
+      kiosk_punch: {
+        Args: {
+          p_token: string;
+          p_employee_code: string;
+          p_pin: string;
+          p_kind: Database["public"]["Enums"]["punch_kind"];
+          p_idempotency_key: string;
+          p_device_at?: string;
+        };
+        Returns: Json;
+      };
       log_admin_event: {
         Args: {
           p_company: string;
@@ -1424,6 +2167,7 @@ export type Database = {
         };
         Returns: undefined;
       };
+      mark_punch_selfie_purged: { Args: { p_punch: string }; Returns: undefined };
       my_company_permissions: {
         Args: { p_company: string };
         Returns: {
@@ -1437,6 +2181,24 @@ export type Database = {
         Args: { p_company: string };
         Returns: { action: string; scope_type: string; work_center_id: string; team_id: string }[];
       };
+      my_time_access: {
+        Args: { p_company: string };
+        Returns: { action: string; scope_type: string; work_center_id: string; team_id: string }[];
+      };
+      my_time_status: {
+        Args: { p_company: string };
+        Returns: {
+          employee_id: string;
+          time_zone: string;
+          entry_id: string;
+          entry_status: Database["public"]["Enums"]["time_entry_status"];
+          started_at: string;
+          location_mode: Database["public"]["Enums"]["location_mode"];
+          location_notice: string;
+          selfie_enabled: boolean;
+          has_kiosk_pin: boolean;
+        }[];
+      };
       publish_shift_assignment: {
         Args: { p_id: string; p_accept_warnings?: boolean };
         Returns: number;
@@ -1446,6 +2208,36 @@ export type Database = {
         Returns: number;
       };
       reactivate_employee: { Args: { p_employee: string }; Returns: undefined };
+      record_punch: {
+        Args: {
+          p_company: string;
+          p_kind: Database["public"]["Enums"]["punch_kind"];
+          p_idempotency_key: string;
+          p_source: Database["public"]["Enums"]["punch_source"];
+          p_device_at?: string;
+          p_device_id?: string;
+          p_location_status?: Database["public"]["Enums"]["location_status"];
+          p_latitude?: number;
+          p_longitude?: number;
+          p_accuracy_m?: number;
+          p_selfie_path?: string;
+        };
+        Returns: Json;
+      };
+      register_kiosk_device: { Args: { p_work_center: string; p_name: string }; Returns: string };
+      request_time_correction: {
+        Args: {
+          p_employee: string;
+          p_action: Database["public"]["Enums"]["correction_action"];
+          p_reason: string;
+          p_entry?: string;
+          p_punch?: string;
+          p_kind?: Database["public"]["Enums"]["punch_kind"];
+          p_proposed_at?: string;
+        };
+        Returns: string;
+      };
+      reset_kiosk_pin: { Args: { p_employee: string }; Returns: undefined };
       resolve_approver: {
         Args: {
           p_employee: string;
@@ -1458,6 +2250,14 @@ export type Database = {
           assignment_id: string;
           substitution_id: string;
         }[];
+      };
+      resolve_time_incident: {
+        Args: {
+          p_incident: string;
+          p_status: Database["public"]["Enums"]["time_incident_status"];
+          p_note?: string;
+        };
+        Returns: undefined;
       };
       save_shift_assignment: {
         Args: {
@@ -1488,6 +2288,7 @@ export type Database = {
         };
         Returns: string;
       };
+      set_my_kiosk_pin: { Args: { p_company: string; p_pin: string }; Returns: undefined };
       shift_assignment_conflicts: {
         Args: { p_assignment: string };
         Returns: {
@@ -1509,15 +2310,32 @@ export type Database = {
       calendar_scope: "national" | "regional" | "local" | "company";
       contract_type:
         "permanent" | "temporary" | "seasonal_permanent" | "internship" | "training" | "other";
+      correction_action: "add" | "change" | "void";
+      correction_status: "pending" | "approved" | "rejected" | "cancelled";
       entity_status: "active" | "inactive";
       grant_status: "active" | "revoked";
+      location_mode: "off" | "optional" | "required";
+      location_status: "not_requested" | "granted" | "denied" | "unavailable" | "timeout";
       membership_status: "invited" | "active" | "suspended" | "ended";
+      punch_kind: "start" | "break_start" | "break_end" | "end";
+      punch_source: "mobile" | "web" | "kiosk";
       role_scope: "company" | "work_center" | "team";
       schedule_status: "draft" | "published" | "revoked";
       segment_kind: "work" | "break";
       shift_assignment_scope: "exception" | "employee" | "team" | "contract";
       shift_kind: "continuous" | "split" | "night" | "flexible";
       terms_status: "draft" | "active" | "ended";
+      time_entry_status: "open" | "on_break" | "closed" | "incomplete";
+      time_incident_kind:
+        | "start_out_of_tolerance"
+        | "end_out_of_tolerance"
+        | "unplanned_work"
+        | "missing_end"
+        | "open_entry"
+        | "overlap"
+        | "location_unavailable"
+        | "device_time_mismatch";
+      time_incident_status: "open" | "resolved" | "dismissed";
       working_time: "full_time" | "part_time";
     };
     CompositeTypes: { [_ in never]: never };

@@ -37,9 +37,13 @@ Principios de diseño adoptados:
 - **Biometría**: excluida. La AEPD, en su guía sobre control de presencia mediante sistemas
   biométricos (2023), considera estos datos de categoría especial y, con carácter general, no
   justificado su uso para el control horario.
-- **Geolocalización**: excluido el rastreo continuo. Si se decidiera registrar una ubicación
-  puntual al fichar (pregunta abierta en el PRD), exigiría información previa expresa a la plantilla
-  (art. 90 LOPDGDD) y una evaluación de proporcionalidad.
+- **Geolocalización**: excluido el rastreo continuo. La ubicación puntual al fichar está desactivada
+  por defecto; cada empresa o centro puede activarla (opcional o exigida) con un texto de
+  información previa obligatorio que se muestra antes de pedir el permiso (art. 90 LOPDGDD). Antes
+  de activarla, la empresa debe hacer la evaluación de proporcionalidad con el DPD.
+- **Selfie al fichar**: opcional y desactivada por defecto; no se usa para identificar (sin
+  biometría), se eliminan los metadatos y se conserva 30 días (**verificar** el plazo con la
+  asesoría). Si se activa, informar a la plantilla de su finalidad.
 - **Desconexión digital** (art. 88): las notificaciones de la plataforma respetarán la política de
   desconexión de cada empresa (sin avisos fuera de horario salvo urgencia definida).
 - **Confidencialidad**: control de acceso por rol y empresa (RLS), auditoría, almacenamiento
@@ -78,6 +82,7 @@ ausencia, su duración y el cómputo serán configurables por empresa, no fijado
 | Dato                                | Plazo mínimo propuesto                                          | Motivo                   |
 | ----------------------------------- | --------------------------------------------------------------- | ------------------------ |
 | Registros de jornada y correcciones | 4 años                                                          | Art. 34.9 ET             |
+| Selfies de fichaje                  | 30 días (decisión de 2026-10-25, a validar)                     | Minimización             |
 | Auditoría de cambios                | Igual que el dato auditado de mayor plazo                       | Trazabilidad             |
 | Ausencias y justificantes           | Según asesoría laboral                                          | Convenio y prescripción  |
 | Gastos y tickets                    | Según asesoría (4-6 años)                                       | LGT / Código de Comercio |

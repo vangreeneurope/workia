@@ -1,7 +1,8 @@
 /**
  * Qué áreas de administración ve cada usuario en la empresa activa. Se basa en
  * los permisos reales que devuelve la base de datos (my_company_permissions y,
- * para horarios, my_schedule_access como "schedule.read" / "schedule.manage"),
+ * para horarios y control horario, my_schedule_access y my_time_access como
+ * "schedule.*" y "time.*"),
  * así que no duplica la matriz de roles. La autorización definitiva es RLS.
  */
 
@@ -22,7 +23,8 @@ export type AdminArea =
   | "importar"
   | "plantillas"
   | "horarios"
-  | "calendarios";
+  | "calendarios"
+  | "fichajes";
 
 export const ADMIN_AREAS: { key: AdminArea; label: string; href: string; description: string }[] = [
   {
@@ -80,6 +82,12 @@ export const ADMIN_AREAS: { key: AdminArea; label: string; href: string; descrip
     href: "/admin/calendarios",
     description: "Festivos con su fuente y centros a los que aplican.",
   },
+  {
+    key: "fichajes",
+    label: "Control horario",
+    href: "/admin/fichajes",
+    description: "Ubicación y selfie al fichar, terminales compartidos y PIN.",
+  },
 ];
 
 export function hasPermission(
@@ -117,6 +125,8 @@ export function canUseArea(
       return hasPermission(permissions, "schedule.manage", "company");
     case "horarios":
       return hasPermission(permissions, "schedule.manage");
+    case "fichajes":
+      return hasPermission(permissions, "time.manage");
   }
 }
 

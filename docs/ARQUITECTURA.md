@@ -34,6 +34,14 @@ identidad del usuario, de modo que RLS se aplica siempre.
 Una página sin permiso responde 404 (no revela que existe). Un error en la capa 2 nunca expone datos
 porque la capa 3 los filtra igualmente.
 
+### Terminal compartido (excepción documentada)
+
+`/terminal` es una ruta pública: el dispositivo se identifica con un token secreto (cookie
+httpOnly, solo en `/terminal`) y cada persona con su código y PIN. Las Server Actions del terminal
+usan un cliente **sin sesión** (`src/lib/supabase/anon.ts`) y solo pueden llamar a
+`kiosk_device_info` y `kiosk_punch`, que validan token, PIN, bloqueos y límites en la base de
+datos (ADR-036). No usan la clave de servicio.
+
 ## 3. Autenticación
 
 - `@supabase/ssr` guarda la sesión en cookies `httpOnly` gestionadas por Supabase.

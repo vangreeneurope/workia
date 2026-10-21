@@ -18,16 +18,18 @@ Pendiente externo: validar migraciones y flujo de acceso en un proyecto Supabase
 Estado (2026-10-23): **administración implementada** (empresas, centros, equipos, personas,
 condiciones con fecha de efecto, bajas, cuentas y roles, aprobadores, suplencias, importación CSV,
 auditoría minimizada). Calendarios laborales, plantillas de turno versionadas y asignaciones
-implementados (2026-10-24, docs/HORARIOS.md). Pendiente: fichajes, visor de auditoría y validación
-de ambos módulos en un proyecto Supabase real.
+implementados (2026-10-24, docs/HORARIOS.md). Control horario con fichaje móvil, web y terminal,
+correcciones e incidencias implementado (2026-10-25, docs/CONTROL_HORARIO.md). Pendiente:
+exportación para la Inspección, visor de auditoría, tareas programadas (recordatorios y borrado de
+selfies) y validación de todos los módulos en un proyecto Supabase real.
 
 1. Proyecto Supabase de pruebas y de producción (región UE); migraciones aplicadas; tipos
    regenerados.
 2. Gestión de empresas (admin. global): alta, edición, logotipo y color.
 3. Gestión de personas (RR. HH.): invitación por correo desde servidor (requiere ADR sobre el uso
    de la clave secreta o de una Edge Function), roles, baja, asignación de responsables.
-4. Control horario: tablas inmutables `time_entries` y `time_entry_corrections`, fichaje en un
-   toque, historial, correcciones con aprobación, vista de equipo, exportación.
+4. Control horario: hecho (`punches` inmutables, `time_entries` recalculadas, ajustes, incidencias,
+   terminal con PIN, historial y revisión). Falta la exportación para la Inspección.
 5. Visor de auditoría.
 
 Criterios de salida: pruebas RLS de las nuevas tablas (incluida la inmutabilidad), E2E con sesión

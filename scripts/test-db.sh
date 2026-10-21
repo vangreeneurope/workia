@@ -3,7 +3,8 @@
 #   1. Aplica la emulación mínima de Supabase y todas las migraciones.
 #   2. Ejecuta cada supabase/tests/NN_*.test.sql en una base nueva clonada de
 #      esa plantilla (las pruebas no se contaminan entre sí).
-#   3. Comprueba la reversibilidad: cada script de supabase/rollbacks/ debe
+#   3. Pruebas de concurrencia con sesiones simultáneas (test-db-concurrency.sh).
+#   4. Comprueba la reversibilidad: cada script de supabase/rollbacks/ debe
 #      dejar el esquema idéntico al anterior a su migración, y volver a aplicar
 #      las migraciones debe reproducir el esquema completo.
 #
@@ -13,6 +14,7 @@
 set -euo pipefail
 
 source "$(dirname "$0")/lib/pg-temp.sh"
+source "$(dirname "$0")/test-db-concurrency.sh"
 pg_start
 
 echo "> Plantilla: emulación de Supabase + migraciones"
@@ -30,6 +32,9 @@ for file in "$PG_TESTS"/[1-9]*.test.sql; do
   fi
   pg_drop_db "t_$name"
 done
+if ! run_concurrency_tests; then
+  failures=$((failures + 1))
+fi
 if [[ "$failures" -ne 0 ]]; then
   echo "Han fallado pruebas de base de datos." >&2
   exit 1

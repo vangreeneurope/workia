@@ -156,3 +156,6 @@ insert into storage.objects (bucket_id, name) values
 -- para comprobar que no se pierden datos sin autorización).
 insert into public.shift_templates (id, company_id, code, name) values
   ('5f000000-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'FX', 'Plantilla de pruebas');
+
+-- Control horario: política por defecto de A (sin ubicación ni selfie).
+insert into public.time_tracking_policies (company_id) values ('aaaaaaaa-0000-0000-0000-000000000001');

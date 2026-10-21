@@ -27,19 +27,28 @@ export const getAdminContext = cache(async (): Promise<AdminContext | null> => {
   const companyId = user.activeCompanyId;
   if (!companyId) return null;
   const supabase = await createClient();
-  const [permissionsRes, scheduleRes] = await Promise.all([
+  const [permissionsRes, scheduleRes, timeRes] = await Promise.all([
     supabase.rpc("my_company_permissions", { p_company: companyId }),
     supabase.rpc("my_schedule_access", { p_company: companyId }),
+    supabase.rpc("my_time_access", { p_company: companyId }),
   ]);
-  if (permissionsRes.error || scheduleRes.error) {
+  if (permissionsRes.error || scheduleRes.error || timeRes.error) {
     throw new Error("No se pudieron cargar tus permisos.");
   }
-  const schedule: CompanyPermission[] = (scheduleRes.data ?? []).map((s) => ({
-    permission: `schedule.${s.action}`,
-    scope_type: s.scope_type,
-    work_center_id: s.work_center_id,
-    team_id: s.team_id,
-  }));
+  const toPermissions = (
+    prefix: string,
+    rows: { action: string; scope_type: string; work_center_id: string; team_id: string }[] | null,
+  ): CompanyPermission[] =>
+    (rows ?? []).map((s) => ({
+      permission: `${prefix}.${s.action}`,
+      scope_type: s.scope_type,
+      work_center_id: s.work_center_id,
+      team_id: s.team_id,
+    }));
+  const schedule = [
+    ...toPermissions("schedule", scheduleRes.data),
+    ...toPermissions("time", timeRes.data),
+  ];
   return {
     user,
     companyId,
