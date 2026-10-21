@@ -1,0 +1,57 @@
+import type { CSSProperties, ReactNode } from "react";
+
+import { getCompanyLogoUrl, getUserContext } from "@/lib/auth/dal";
+import { brandForeground, safeBrandColor } from "@/lib/auth/permissions";
+import { visibleNavKeys } from "@/lib/navigation";
+
+import { AppHeader } from "./app-header";
+import { CompanyBrand } from "./company-brand";
+import { MobileNav } from "./mobile-nav";
+import { SidebarNav } from "./sidebar-nav";
+
+/**
+ * Armazón de la zona privada. Lee la sesión, así que siempre se renderiza
+ * dentro de un <Suspense> (requisito de Cache Components).
+ */
+export async function AppShell({ children }: { children: ReactNode }) {
+  const ctx = await getUserContext();
+  const activeCompany = ctx.companies.find((c) => c.id === ctx.activeCompanyId) ?? null;
+  const logoUrl = await getCompanyLogoUrl(activeCompany?.logoPath ?? null);
+  const brand = safeBrandColor(activeCompany?.primaryColor);
+  const navKeys = visibleNavKeys(ctx);
+
+  const brandStyle = {
+    "--brand": brand,
+    "--brand-foreground": brandForeground(brand),
+  } as CSSProperties;
+
+  return (
+    <div style={brandStyle} className="min-h-dvh md:grid md:grid-cols-[16rem_1fr]">
+      <aside className="bg-card sticky top-0 hidden h-dvh flex-col border-r md:flex">
+        <div className="flex h-16 items-center border-b px-4">
+          <CompanyBrand name={activeCompany?.name ?? "Portal del empleado"} logoUrl={logoUrl} />
+        </div>
+        <SidebarNav visibleKeys={navKeys} />
+      </aside>
+
+      <div className="flex min-h-dvh min-w-0 flex-col">
+        <AppHeader
+          user={{ fullName: ctx.fullName, email: ctx.email, isGlobalAdmin: ctx.isGlobalAdmin }}
+          companies={ctx.companies.map(({ id, name }) => ({ id, name }))}
+          activeCompanyId={ctx.activeCompanyId}
+          brand={
+            <CompanyBrand name={activeCompany?.name ?? "Portal del empleado"} logoUrl={logoUrl} />
+          }
+        />
+        <main
+          id="contenido"
+          className="mx-auto w-full max-w-5xl flex-1 px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] md:px-8 md:pb-10"
+        >
+          {children}
+        </main>
+      </div>
+
+      <MobileNav visibleKeys={navKeys} />
+    </div>
+  );
+}

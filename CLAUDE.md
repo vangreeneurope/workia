@@ -1,0 +1,108 @@
+# CLAUDE.md
+
+Guía para Claude Code (y para cualquier persona del equipo) al trabajar en este repositorio.
+Plataforma web multiempresa de control horario, vacaciones y ausencias, y gastos comerciales con OCR.
+
+@AGENTS.md
+
+## Antes de empezar cualquier tarea
+
+1. Lee `docs/ESTADO_PROYECTO.md` para saber en qué fase estamos y qué está pendiente.
+2. Si la tarea toca datos o permisos, lee `docs/BASE_DATOS.md` y `docs/PERMISOS.md`.
+3. Si toca jornada, ausencias, gastos o datos personales, lee `docs/NORMATIVA.md`.
+4. Esta versión de Next.js (16.4) cambia APIs respecto a versiones anteriores: consulta la guía en
+   `node_modules/next/dist/docs/` antes de usar una API que no hayas visto en este código.
+5. Al terminar, actualiza `docs/ESTADO_PROYECTO.md` y, si tomaste una decisión de arquitectura,
+   añade un ADR en `docs/DECISIONES.md`.
+
+No empieces un módulo funcional nuevo sin que el anterior esté verificado (ver `docs/PLAN_DESARROLLO.md`).
+
+## Comandos
+
+| Comando             | Qué hace                                                               |
+| ------------------- | ---------------------------------------------------------------------- |
+| `npm run dev`       | Servidor de desarrollo en http://localhost:3000                        |
+| `npm run build`     | Build de producción (necesita las variables de `.env.example`)         |
+| `npm run start`     | Sirve el build                                                         |
+| `npm run typecheck` | Genera tipos de rutas y ejecuta `tsc --noEmit`                         |
+| `npm run lint`      | ESLint sin avisos permitidos                                           |
+| `npm run format`    | Prettier (escribe) · `npm run format:check` solo comprueba             |
+| `npm test`          | Pruebas unitarias (Vitest + Testing Library)                           |
+| `npm run test:e2e`  | Pruebas E2E (Playwright, móvil y escritorio). Requiere `npm run build` |
+| `npm run test:db`   | Migraciones + pruebas de RLS en un PostgreSQL desechable               |
+| `npm run check`     | typecheck + lint + formato + unitarias (ejecutar antes de cada commit) |
+
+## Arquitectura en una frase
+
+Next.js App Router (Server Components y Server Actions) sobre Supabase (Postgres + Auth + Storage),
+con la autorización aplicada en tres capas: proxy (redirección optimista), capa de acceso a datos
+en servidor (`src/lib/auth/dal.ts`) y Row Level Security en la base de datos, que es la barrera
+definitiva. Detalle en `docs/ARQUITECTURA.md`.
+
+## Estructura
+
+```
+src/app/            Rutas. (auth) = público, (app) = privado con AppShell, auth/ = callbacks
+src/components/ui/  Componentes shadcn/ui (no editar su API; personalizar con className)
+src/components/     Componentes compartidos (layout, formularios, estados vacíos)
+src/features/<x>/   Lógica por dominio: actions.ts (Server Actions), schemas.ts (zod), components/
+src/lib/            Infraestructura: supabase/, auth/ (dal, permisos, rutas), env, navegación
+src/types/          Tipos (database.ts refleja las migraciones)
+src/proxy.ts        Proxy de Next.js 16 (antes "middleware"): refresco de sesión y redirección
+supabase/migrations Migraciones SQL versionadas (fuente de verdad del esquema)
+supabase/tests      Pruebas de RLS (SQL) · 00_shim_supabase.sql solo para Postgres local
+tests/unit          Vitest · tests/e2e Playwright
+docs/               Documentación funcional y técnica
+```
+
+## Convenciones
+
+- TypeScript estricto (`strict`, `noUncheckedIndexedAccess`). Prohibido `any`; usa `unknown` y valida.
+- Interfaz, rutas (URLs), mensajes y documentación en **español**. Identificadores de código y de
+  base de datos en **inglés** (`companies`, `company_memberships`). Comentarios en español.
+- Mobile-first: diseña primero para 360 px; objetivos táctiles de 44 px mínimo; respeta
+  `env(safe-area-inset-*)` en elementos fijos.
+- Server Components por defecto. `"use client"` solo para interactividad.
+- Formularios: Server Action + `useActionState` + esquema zod en `features/<x>/schemas.ts`.
+  Devuelve `FormState`; nunca lances errores con detalles internos al cliente.
+- Cache Components está activo: cualquier componente que lea cookies, sesión o `searchParams`
+  debe estar dentro de `<Suspense>`. No uses `"use cache"` con datos de una empresa o persona sin
+  revisarlo y documentarlo (riesgo de servir datos de un usuario a otro).
+- Accesibilidad: cada página tiene un `<h1>`; etiquetas asociadas a sus campos; `aria-current` en
+  navegación.
+- Estilo: Prettier (100 columnas) con orden de clases Tailwind. Importaciones de tipos con `type`.
+- Commits pequeños y descriptivos en español (`feat(fichajes): …`, `fix(auth): …`, `docs: …`).
+
+## Reglas de seguridad (obligatorias)
+
+1. **Toda tabla nueva** en `public` lleva RLS activada, `revoke all … from anon, authenticated`
+   y `grant` explícitos mínimos, y pruebas en `supabase/tests/`. Sin pruebas de RLS no se fusiona.
+2. Las funciones de autorización van en el esquema `private`, `security definer`,
+   `set search_path = ''`. Reutiliza `private.has_company_role`, `is_global_admin`, etc.
+3. **Cada Server Action y Route Handler** obtiene la identidad con `getUserContext()` /
+   `requireUserId()` / `requireSection()` de `src/lib/auth/dal.ts`. Nunca confíes en ids de
+   usuario o empresa que lleguen del cliente sin comprobarlos.
+4. Usa `getClaims()` (valida el JWT), nunca `getSession()` en servidor para autorizar.
+5. **Sin secretos en el frontend ni en el repositorio.** Solo `NEXT_PUBLIC_SUPABASE_URL`,
+   `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` y `NEXT_PUBLIC_SITE_URL` son públicas. La clave secreta
+   (`service_role`) solo en servidor, solo si un ADR lo justifica, y nunca en un Client Component.
+6. **Registros horarios inmutables**: las tablas de fichajes no tendrán `update`/`delete`; las
+   correcciones son filas nuevas enlazadas y auditadas (ver `docs/BASE_DATOS.md`).
+7. **Auditoría**: todo cambio relevante pasa por `private.audit_row_change()`. `audit_log` no se
+   modifica ni se borra.
+8. **Archivos privados** (logotipos, justificantes, tickets) en buckets privados, ruta
+   `<company_id>/…`, y acceso con URL firmada de corta duración. Nunca buckets públicos.
+9. Redirecciones con destino de usuario siempre a través de `safeRedirectPath()`.
+10. Prohibido: reconocimiento facial o biometría, rastreo GPS continuo, datos simulados en
+    pantallas productivas, y registrar en logs datos personales o tokens.
+
+## Documentación técnica
+
+- `docs/PRD.md`: requisitos de producto y preguntas abiertas.
+- `docs/ARQUITECTURA.md`: capas, flujo de autenticación, PWA, despliegue.
+- `docs/BASE_DATOS.md`: esquema actual y previsto, convenciones SQL.
+- `docs/PERMISOS.md`: matriz de roles y cómo se aplica en cada capa.
+- `docs/NORMATIVA.md`: registro de jornada, RGPD/LOPDGDD, conservación.
+- `docs/PLAN_DESARROLLO.md`: fases y criterios de salida.
+- `docs/DECISIONES.md`: registro de decisiones de arquitectura (ADR).
+- `docs/ESTADO_PROYECTO.md`: estado actual, resultados de verificación y bloqueantes.
