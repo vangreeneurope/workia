@@ -8,6 +8,7 @@ import { useValidatedForm } from "@/components/admin/use-validated-form";
 import { FormField } from "@/components/form-field";
 import { Label } from "@/components/ui/label";
 import { initialFormState } from "@/lib/forms";
+import { networkSafe } from "@/lib/network";
 
 import { attachToRequest, decideAbsence, respondInfo } from "../actions";
 import { decisionSchema, infoResponseSchema } from "../schemas";
@@ -36,7 +37,10 @@ export function InfoResponseForm({ requestId }: { requestId: string }) {
 }
 
 export function AttachForm({ requestId }: { requestId: string }) {
-  const [state, formAction, pending] = useActionState(attachToRequest, initialFormState);
+  const [state, formAction, pending] = useActionState(
+    networkSafe(attachToRequest),
+    initialFormState,
+  );
   return (
     <form action={formAction} className="grid gap-2">
       <FormMessage state={state} />

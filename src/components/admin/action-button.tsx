@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import type { FormState } from "@/lib/forms";
+import { safeCall } from "@/lib/network";
 
 /**
  * Botón para una acción puntual del servidor (revocar, reactivar…). No es
@@ -35,7 +36,7 @@ export function ActionButton({
         aria-label={ariaLabel}
         onClick={() => {
           if (confirmMessage && !window.confirm(confirmMessage)) return;
-          startTransition(async () => setResult(await action()));
+          startTransition(async () => setResult(await safeCall(action)));
         }}
       >
         {pending ? <Loader2 className="animate-spin" aria-hidden /> : null}

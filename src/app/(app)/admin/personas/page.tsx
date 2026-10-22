@@ -82,7 +82,7 @@ export default async function PersonasPage({ searchParams }: PageProps<"/admin/p
             key: "name",
             header: "Persona",
             cell: (r) => (
-              <Link href={`/admin/personas/${r.id}`} className="underline-offset-4 hover:underline">
+              <Link href={`/admin/personas/${r.id}`} className="underline underline-offset-4">
                 {r.last_name}, {r.first_name}
               </Link>
             ),

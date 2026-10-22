@@ -6,12 +6,16 @@ import { useActionState } from "react";
 import { FormField } from "@/components/form-field";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { networkSafe } from "@/lib/network";
 
 import { updatePassword } from "../actions";
 import { initialFormState } from "../schemas";
 
 export function NewPasswordForm() {
-  const [state, formAction, pending] = useActionState(updatePassword, initialFormState);
+  const [state, formAction, pending] = useActionState(
+    networkSafe(updatePassword),
+    initialFormState,
+  );
 
   return (
     <form action={formAction} className="grid gap-4" noValidate>

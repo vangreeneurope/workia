@@ -36,7 +36,13 @@ export function ReportTable({
           </li>
         ))}
       </ul>
-      <div className="hidden overflow-x-auto rounded-xl border md:block">
+      {/* Región desplazable enfocable: con teclado se recorre con las flechas. */}
+      <div
+        className="relative hidden overflow-x-auto rounded-xl border md:block"
+        role="region"
+        aria-label={caption}
+        tabIndex={0}
+      >
         <table className="w-full text-sm">
           <caption className="sr-only">{caption}</caption>
           <thead className="bg-muted/50 text-muted-foreground text-left">

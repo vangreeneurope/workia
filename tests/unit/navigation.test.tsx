@@ -39,7 +39,13 @@ describe("MobileNav", () => {
     render(
       <MobileNav visibleKeys={["panel", "fichajes", "ausencias", "gastos", "equipo", "perfil"]} />,
     );
-    expect(screen.getAllByRole("link")).toHaveLength(4);
+    expect(screen.getAllByRole("link").map((l) => l.textContent)).toEqual([
+      "Inicio",
+      "Fichar",
+      "Solicitudes",
+      "Gastos",
+    ]);
+    expect(screen.getByRole("link", { name: "Fichar" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("button", { name: "Más" })).toBeInTheDocument();
   });
 

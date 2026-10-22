@@ -8,6 +8,7 @@ import { SubmitButton } from "@/components/admin/submit-button";
 import { useValidatedForm } from "@/components/admin/use-validated-form";
 import { FormField } from "@/components/form-field";
 import { initialFormState } from "@/lib/forms";
+import { networkSafe } from "@/lib/network";
 
 import {
   adjustBalance,
@@ -439,7 +440,7 @@ export function AssignmentForm({
 }
 
 export function EndAssignmentForm({ id, today }: { id: string; today: string }) {
-  const [state, formAction, pending] = useActionState(endAssignment, initialFormState);
+  const [state, formAction, pending] = useActionState(networkSafe(endAssignment), initialFormState);
   return (
     <form action={formAction} className="flex flex-wrap items-end gap-2">
       <input type="hidden" name="id" value={id} />

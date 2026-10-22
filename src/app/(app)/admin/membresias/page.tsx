@@ -91,10 +91,7 @@ export default async function MembresiasPage({ searchParams }: PageProps<"/admin
             key: "person",
             header: "Persona",
             cell: (r) => (
-              <Link
-                href={`/admin/membresias/${r.id}`}
-                className="underline-offset-4 hover:underline"
-              >
+              <Link href={`/admin/membresias/${r.id}`} className="underline underline-offset-4">
                 {r.profiles?.full_name || r.profiles?.email || "Sin nombre"}
               </Link>
             ),

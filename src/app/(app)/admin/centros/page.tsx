@@ -48,7 +48,7 @@ export default async function CentrosPage() {
             key: "name",
             header: "Centro",
             cell: (r) => (
-              <Link href={`/admin/centros/${r.id}`} className="underline-offset-4 hover:underline">
+              <Link href={`/admin/centros/${r.id}`} className="underline underline-offset-4">
                 {r.name}
               </Link>
             ),

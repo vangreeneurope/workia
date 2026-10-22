@@ -37,7 +37,7 @@ const FORMAT_LABELS: Record<string, string> = {
 
 function TotalsTable({ rows, caption }: { rows: TotalRow[]; caption: string }) {
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto" role="region" aria-label={caption} tabIndex={0}>
       <table className="w-full text-sm">
         <caption className="sr-only">{caption}</caption>
         <thead className="text-muted-foreground text-left">
@@ -275,7 +275,7 @@ export default async function LotePage({ params }: PageProps<"/gastos/contabilid
           <CardTitle className="text-base">Líneas ({data.lines.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" role="region" aria-label="Líneas del lote" tabIndex={0}>
             <table className="w-full min-w-[640px] text-sm">
               <caption className="sr-only">Líneas del lote</caption>
               <thead className="text-muted-foreground text-left">

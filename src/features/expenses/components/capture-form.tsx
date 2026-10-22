@@ -7,6 +7,7 @@ import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { Button } from "@/components/ui/button";
 import { initialFormState } from "@/lib/forms";
+import { networkSafe } from "@/lib/network";
 
 import { uploadReceipt } from "../actions";
 import { prepareReceipt, type PreparedReceipt } from "../compress";
@@ -24,7 +25,7 @@ function formatBytes(n: number): string {
  * vuelve a validar todo.
  */
 export function CaptureForm() {
-  const [state, formAction, pending] = useActionState(uploadReceipt, initialFormState);
+  const [state, formAction, pending] = useActionState(networkSafe(uploadReceipt), initialFormState);
   const [, startSubmit] = useTransition();
   const [prepared, setPrepared] = useState<PreparedReceipt | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -132,6 +133,11 @@ export function CaptureForm() {
             <Upload className="size-7" aria-hidden />
             Subir foto o PDF
           </Button>
+          <p className="text-muted-foreground text-xs sm:col-span-2">
+            La cámara solo se abre al pulsar el botón y la foto no sale del dispositivo hasta que la
+            envías. Si no permites la cámara o no está disponible, sube una foto o un PDF, o
+            registra el gasto sin ticket más abajo.
+          </p>
         </div>
       ) : (
         <figure className="grid gap-3">

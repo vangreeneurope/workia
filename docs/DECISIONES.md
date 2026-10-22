@@ -722,3 +722,50 @@ de datos personales y secretos, `alert: true` en eventos de seguridad); `console
 fuera de él (prueba estática). El proxy asigna `x-request-id`, que llega a PostgREST y a
 `audit_events`. Los límites de frecuencia por persona y acción viven en la base de datos
 (`check_rate_limit`) y los aplican las Server Actions y las descargas.
+
+## ADR-060 · Errores de red visibles en formularios y acciones
+
+**Fecha**: 2026-10-22 · **Estado**: aceptada
+
+**Contexto**: una Server Action que falla por red (o con 5xx) rechaza la promesa en el navegador y
+React muestra la página de error: se pierde lo escrito y la persona no sabe si la operación llegó.
+
+**Decisión**: todos los `useActionState` envuelven su acción con `networkSafe()` y las llamadas
+sueltas (botones) con `safeCall()` (`src/lib/network.ts`). Un fallo se convierte en un estado de
+error con un mensaje que no afirma ni niega que se guardara ("No se ha podido confirmar el envío
+con el servidor…"); las redirecciones y `notFound()` siguen su curso (`unstable_rethrow`). Nunca se
+muestra éxito sin respuesta del servidor. Las operaciones que crean registros (fichaje, solicitud,
+gasto, ticket) llevan clave de idempotencia y la conservan en el reintento, así que reintentar no
+duplica; la cola local sigue limitada a los fichajes (sin ubicación ni foto).
+
+**Consecuencias**: el formulario conserva los datos y el reintento es seguro. La prueba E2E
+`flujos.spec.ts` pierde a propósito la respuesta de la primera llamada (el servidor sí la procesa)
+y comprueba que el reintento no crea un segundo registro.
+
+## ADR-061 · Entorno E2E con sesión: PostgREST real y pasarela de pruebas
+
+**Fecha**: 2026-10-22 · **Estado**: aceptada
+
+**Decisión**: las pruebas con sesión arrancan PostgreSQL desechable con todas las migraciones y las
+semillas sintéticas, PostgREST 12.2.3 (binario con huella SHA-256 fija) y una pasarela Node
+(`scripts/e2e/gateway.mjs`) que simula Auth (JWT HS256 con secreto aleatorio por ejecución, TOTP de
+prueba) y Storage, y reenvía `/rest/v1` a PostgREST. Así RLS, permisos y MFA por rol son los
+reales; solo la emisión de tokens es simulada. La pasarela solo escucha en `127.0.0.1`, no existe
+fuera de las pruebas y su contraseña y código son exclusivos de este entorno.
+
+**Consecuencias**: no se prueban el servicio Auth de Supabase ni su Storage reales (correo de
+recuperación, subida firmada); siguen cubiertos por las pruebas sin sesión y por la revisión
+manual en el proyecto real.
+
+## ADR-062 · Instalación PWA a petición, sin banners automáticos
+
+**Fecha**: 2026-10-22 · **Estado**: aceptada
+
+**Decisión**: se intercepta `beforeinstallprompt` (Chrome y Edge) para no mostrar el banner
+automático y se ofrece "Instalar en este dispositivo" en Mi perfil; en iOS se explican los pasos de
+Safari (Compartir › Añadir a pantalla de inicio). El service worker se mantiene como en ADR-008:
+página sin conexión e iconos; ninguna respuesta autenticada, ticket, coordenada, token ni informe se
+guarda en Cache Storage.
+
+**Consecuencias**: la app instalada sigue necesitando conexión salvo para encolar fichajes
+(ADR-060). Cachear más (por ejemplo, catálogos no personales) exigiría un ADR nuevo.

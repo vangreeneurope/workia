@@ -6,13 +6,14 @@ import { useActionState, useRef, useTransition } from "react";
 import { FormMessage } from "@/components/admin/form-message";
 import { Button } from "@/components/ui/button";
 import { initialFormState } from "@/lib/forms";
+import { networkSafe } from "@/lib/network";
 
 import { createExpenseWithoutReceipt } from "../actions";
 
 /** Gastos sin ticket: kilometraje y, si la política lo permite, manuales. */
 export function NoReceiptForm({ mileage, manual }: { mileage: boolean; manual: boolean }) {
   const [state, formAction, pending] = useActionState(
-    createExpenseWithoutReceipt,
+    networkSafe(createExpenseWithoutReceipt),
     initialFormState,
   );
   const [, startTransition] = useTransition();

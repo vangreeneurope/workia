@@ -5,7 +5,8 @@
 con OCR intercambiable, informes, aprobación y liquidación contable; falta el proveedor de OCR) y
 fase 4 casi completa (avisos, correo y tareas programadas; informes, exportaciones y auditoría
 consultable; faltan el proveedor de correo, push e informes de grupo), más el endurecimiento de
-seguridad y privacidad previo al piloto (fase 5, parcial). Nada se ha validado aún contra
+seguridad y privacidad previo al piloto (fase 5, parcial) y la revisión de experiencia móvil,
+escritorio, PWA y accesibilidad (2026-10-22, docs/UX.md). Nada se ha validado aún contra
 un proyecto Supabase real ni en GitHub Actions (sin remoto): los tres trabajos del CI se han
 ejecutado en local. Los módulos se han construido por petición expresa sin validar antes los
 anteriores con sesión real (excepción a la regla de CLAUDE.md, registrada aquí).
@@ -219,14 +220,40 @@ anteriores con sesión real (excepción a la regla de CLAUDE.md, registrada aqu�
   nuevo trabajo `seguridad` en CI. Hallazgos corregidos: dos Server Actions sin identidad, lectura
   global de secuencias, coordenadas visibles para auditoría y perfiles visibles para la plataforma.
 
-## 2. Resultados de verificación (2026-10-31)
+### Experiencia móvil, escritorio, PWA y accesibilidad (2026-10-22)
+
+- Entorno E2E con sesión (ADR-061): PostgreSQL con migraciones y semillas sintéticas, PostgREST real
+  y pasarela de pruebas para Auth y Storage (`scripts/e2e/`). Permite probar las pantallas con RLS,
+  permisos y MFA reales.
+- Auditoría automática de 62 rutas × 7 perfiles × 5 tamaños (360, 390, 768, 1024, 1440 px): pasó de
+  542 hallazgos a 0. Correcciones: objetivos táctiles de 44 px hasta 1023 px (botones, campos,
+  desplegables, menú de usuario, enlaces de acceso), cuadrícula `minmax(0,1fr)` y tarjetas `min-w-0`
+  contra el desbordamiento de tablas, tablas de administración que **recortaban** acciones a 768 px
+  (ahora se desplazan dentro de su caja), regiones desplazables enfocables con nombre.
+- Navegación móvil Inicio, Fichar, Solicitudes, Gastos y Más; estado activo no solo por color;
+  empresa activa visible en cabecera (móvil) y columna lateral (escritorio).
+- Formularios: ayuda asociada (`description`), resumen de errores con foco y enlaces a cada campo,
+  foco en el error tras enviar, botón pendiente anunciado, `aria-describedby` combinado.
+- Accesibilidad: foco visible global, `main` como destino del salto, movimiento reducido, foco
+  gestionado en el fichaje, avisador global de éxitos (el mensaje ya no se pierde cuando la
+  tarjeta aprobada sale de la bandeja).
+- Red: `networkSafe()`/`safeCall()` en todos los formularios y botones de acción (ADR-060); página
+  de error con `retry`, estado sin conexión y código para soporte.
+- Cámara: explicación previa y alternativas (archivo, gasto sin ticket). Ubicación: ya cumplía
+  (aviso previo, una lectura, «Fichar sin ubicación», estados denegado/no disponible/tiempo).
+- PWA: instalación a petición en Mi perfil (ADR-062); el service worker sigue sin cachear datos.
+- Presupuestos de rendimiento por ruta (JS, imágenes, consultas) con prueba automática.
+- CI: el trabajo de build y E2E instala PostgreSQL, guarda PostgREST en caché y sube los resultados
+  si falla.
+
+## 2. Resultados de verificación (2026-10-22)
 
 | Verificación               | Comando                                           | Resultado                                                                                                    |
 | -------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | Tipos                      | `npm run typecheck`                               | Sin errores                                                                                                  |
 | Lint                       | `npm run lint`                                    | 0 errores, 0 avisos                                                                                          |
 | Formato                    | `npm run format:check`                            | Correcto                                                                                                     |
-| Unitarias                  | `npm test`                                        | 24 archivos, 278 pruebas superadas (incluidos escáner estático, redacción de registros, subidas y MFA)       |
+| Unitarias                  | `npm test`                                        | 25 archivos, 284 pruebas superadas (incluidos escáner estático, MFA, resumen de errores y errores de red)    |
 | Aislamiento multiempresa   | `npm run test:db` → `10_aislamiento_multiempresa` | 134 aserciones superadas                                                                                     |
 | Integridad y escalada      | `npm run test:db` → `20_integridad_y_escalada`    | 26 aserciones superadas                                                                                      |
 | Semillas sintéticas        | `npm run test:db` → `30_seed_sintetico`           | 24 aserciones superadas                                                                                      |
@@ -245,7 +272,10 @@ anteriores con sesión real (excepción a la regla de CLAUDE.md, registrada aqu�
 | Reversibilidad             | `npm run test:db`                                 | 11 reversiones restauran el esquema exacto, reaplicar lo reproduce, 11 exigen autorización para perder datos |
 | Tipos frente a esquema     | `npm run db:types:check`                          | Al día (incluye las funciones RPC)                                                                           |
 | Build de producción        | `npm run build`                                   | Correcto (incluye seguridad de la cuenta, privacidad y consola de privacidad)                                |
-| E2E                        | `npm run test:e2e`                                | 48 pruebas superadas (móvil y escritorio; incluye cabeceras de seguridad y `x-request-id`)                   |
+| E2E                        | `npm run test:e2e`                                | 118 superadas, 0 fallos (80 omitidas a propósito: las pruebas con datos usan un solo perfil)                 |
+| Auditoría de vistas        | `auditoria-vistas.spec.ts`                        | 0 hallazgos: desbordamiento, recortes, 44 px, un `h1`/`main` y axe-core WCAG 2.2 sin infracciones graves     |
+| Flujos críticos            | `flujos.spec.ts`                                  | Fichaje, solicitud, aprobación y gasto con teclado en móvil; respuesta perdida y reintento sin duplicar      |
+| Presupuestos               | `rendimiento.spec.ts`                             | 201-243 KB de JS, 0 KB de imágenes y 7-18 consultas por ruta diaria (límites 260 KB, 150 KB y 20)            |
 | Secretos                   | `npm run security:secrets`                        | Sin secretos en archivos versionados ni en el historial                                                      |
 | Dependencias de producción | `npm audit --omit=dev`                            | 0 vulnerabilidades                                                                                           |
 
@@ -272,6 +302,11 @@ dispositivos físicos
 (requiere un proyecto Supabase), la invitación por correo (requiere `SUPABASE_SECRET_KEY` y Auth
 real) y la ejecución del workflow de CI en GitHub (el repositorio no tiene remoto). La lógica de
 cada operación está cubierta por las pruebas SQL contra PostgreSQL 16 con la emulación de Supabase.
+
+**Experiencia de uso, no verificado**: Safari real (WebKit no está disponible en este entorno; iOS
+solo se emula sobre Chromium), VoiceOver y TalkBack reales, cámara y geolocalización en
+dispositivos físicos, instalación PWA en iOS y Android reales, Firefox y Safari de escritorio, y
+rendimiento en red móvil real. Modo oscuro sin activar. Ver docs/UX.md, § 12.
 
 ## 3. Bloqueantes y riesgos
 

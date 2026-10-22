@@ -31,7 +31,7 @@ export function SelectField({
         aria-invalid={hasErrors || undefined}
         aria-describedby={hasErrors ? errorId : undefined}
         className={cn(
-          "border-input dark:bg-input/30 h-11 w-full rounded-md border bg-transparent px-3 text-base shadow-xs outline-none md:h-10 md:text-sm",
+          "border-input dark:bg-input/30 h-11 w-full rounded-md border bg-transparent px-3 text-base shadow-xs outline-none lg:h-10 lg:text-sm",
           "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
           "aria-invalid:border-destructive",
           className,

@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 /** Esqueleto estático del armazón mientras se verifica la sesión. */
 export function ShellSkeleton() {
   return (
-    <div className="min-h-dvh md:grid md:grid-cols-[16rem_1fr]" aria-busy="true">
+    <div className="min-h-dvh md:grid md:grid-cols-[16rem_minmax(0,1fr)]" aria-busy="true">
       <aside className="from-sidebar to-sidebar-end hidden h-dvh flex-col gap-2 bg-linear-to-b p-4 md:flex">
         <Skeleton className="h-9 w-40" />
         <div className="mt-6 grid gap-2">

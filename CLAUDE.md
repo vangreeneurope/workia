@@ -29,7 +29,7 @@ No empieces un módulo funcional nuevo sin que el anterior esté verificado (ver
 | `npm run lint`      | ESLint sin avisos permitidos                                                    |
 | `npm run format`    | Prettier (escribe) · `npm run format:check` solo comprueba                      |
 | `npm test`          | Pruebas unitarias (Vitest + Testing Library)                                    |
-| `npm run test:e2e`  | Pruebas E2E (Playwright, móvil y escritorio). Requiere `npm run build`          |
+| `npm run test:e2e`  | E2E (Playwright, móvil y escritorio; con sesión vía `scripts/e2e/stack.sh`)     |
 | `npm run test:db`   | Migraciones, aislamiento RLS, semillas y reversibilidad (PostgreSQL desechable) |
 | `npm run db:types`  | Regenera `src/types/database.ts` desde las migraciones (`:check` en CI)         |
 | `npm run check`     | typecheck + lint + formato + unitarias (ejecutar antes de cada commit)          |
@@ -71,7 +71,9 @@ docs/               Documentación funcional y técnica
   `env(safe-area-inset-*)` en elementos fijos.
 - Server Components por defecto. `"use client"` solo para interactividad.
 - Formularios: Server Action + `useActionState` + esquema zod en `features/<x>/schemas.ts`.
-  Devuelve `FormState`; nunca lances errores con detalles internos al cliente.
+  Devuelve `FormState`; nunca lances errores con detalles internos al cliente. En el cliente,
+  envuelve la acción con `networkSafe()` (o `safeCall()` en botones): errores de red visibles y
+  éxitos en el avisador global (ADR-060). Detalle de interfaz en `docs/UX.md`.
 - Cache Components está activo: cualquier componente que lea cookies, sesión o `searchParams`
   debe estar dentro de `<Suspense>`. No uses `"use cache"` con datos de una empresa o persona sin
   revisarlo y documentarlo (riesgo de servir datos de un usuario a otro).
@@ -139,6 +141,8 @@ docs/               Documentación funcional y técnica
 - `docs/AVISOS.md`: bandeja, correo, outbox, reintentos, tareas programadas y guía de proveedor.
 - `docs/INFORMES.md`: diccionario de informes y cálculos, filtros, exportaciones, auditoría,
   índices y límites medidos.
+- `docs/UX.md`: sistema visual, tamaños y navegadores objetivo, formularios, accesibilidad, PWA,
+  red inestable, presupuestos de rendimiento y limitaciones conocidas.
 - `docs/NORMATIVA.md`: registro de jornada, RGPD/LOPDGDD, conservación.
 - `docs/SEGURIDAD.md`: modelo de amenazas, auditoría de seguridad, cabeceras, MFA, registros.
 - `docs/PRIVACIDAD.md`: matriz de datos, retención, derechos, soporte y EIPD.

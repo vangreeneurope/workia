@@ -7,6 +7,7 @@ import { FormMessage } from "@/components/admin/form-message";
 import { SelectField } from "@/components/admin/select-field";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { initialFormState } from "@/lib/forms";
+import { networkSafe } from "@/lib/network";
 
 import { requestReportExport } from "../actions";
 import type { ReportKey } from "../catalog";
@@ -16,7 +17,10 @@ import type { ReportKey } from "../catalog";
  * idempotencia se conserva en los reintentos y se renueva tras un envío correcto.
  */
 export function ExportForm({ report, query }: { report: ReportKey; query: string }) {
-  const [state, formAction, pending] = useActionState(requestReportExport, initialFormState);
+  const [state, formAction, pending] = useActionState(
+    networkSafe(requestReportExport),
+    initialFormState,
+  );
   const [, startTransition] = useTransition();
   const key = useRef("");
   // Tras una solicitud correcta, la siguiente es otra exportación (otra clave).

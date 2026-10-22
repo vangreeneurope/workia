@@ -7,6 +7,7 @@ import { SubmitButton } from "@/components/admin/submit-button";
 import { useValidatedForm } from "@/components/admin/use-validated-form";
 import { FormField } from "@/components/form-field";
 import { initialFormState, type FormState } from "@/lib/forms";
+import { networkSafe } from "@/lib/network";
 
 import { terminationSchema } from "../../schemas";
 
@@ -66,7 +67,7 @@ export function ReactivateForm({
 }: {
   action: (prev: FormState, formData: FormData) => Promise<FormState>;
 }) {
-  const [state, formAction, pending] = useActionState(action, initialFormState);
+  const [state, formAction, pending] = useActionState(networkSafe(action), initialFormState);
   return (
     <form action={formAction} className="grid gap-3">
       <FormMessage state={state} />

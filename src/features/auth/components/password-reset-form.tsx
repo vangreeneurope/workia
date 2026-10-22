@@ -6,12 +6,16 @@ import { useActionState } from "react";
 import { FormField } from "@/components/form-field";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { networkSafe } from "@/lib/network";
 
 import { requestPasswordReset } from "../actions";
 import { initialFormState } from "../schemas";
 
 export function PasswordResetForm() {
-  const [state, formAction, pending] = useActionState(requestPasswordReset, initialFormState);
+  const [state, formAction, pending] = useActionState(
+    networkSafe(requestPasswordReset),
+    initialFormState,
+  );
 
   if (state.status === "success") {
     return (

@@ -21,7 +21,7 @@ export default function RecuperarPage() {
         <PasswordResetForm />
         <Link
           href="/acceder"
-          className="text-muted-foreground hover:text-foreground text-center text-sm underline-offset-4 hover:underline"
+          className="text-muted-foreground hover:text-foreground inline-flex min-h-11 items-center justify-center text-center text-sm underline underline-offset-4"
         >
           Volver a acceder
         </Link>

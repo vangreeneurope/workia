@@ -4,6 +4,7 @@ import { useActionState, useState, type FormEvent } from "react";
 import { z } from "zod";
 
 import { initialFormState, type FormState } from "@/lib/forms";
+import { networkSafe } from "@/lib/network";
 
 type Action = (prev: FormState, formData: FormData) => Promise<FormState>;
 
@@ -12,7 +13,7 @@ type Action = (prev: FormState, formData: FormData) => Promise<FormState>;
  * solo envía si es válido. La Server Action vuelve a validar siempre.
  */
 export function useValidatedForm<S extends z.ZodType>(schema: S, action: Action) {
-  const [state, formAction, pending] = useActionState(action, initialFormState);
+  const [state, formAction, pending] = useActionState(networkSafe(action), initialFormState);
   const [clientErrors, setClientErrors] = useState<FormState["fieldErrors"]>();
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {

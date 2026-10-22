@@ -9,6 +9,7 @@ import { SubmitButton } from "@/components/admin/submit-button";
 import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { initialFormState, type FormState } from "@/lib/forms";
+import { networkSafe } from "@/lib/network";
 
 import {
   closePeriod,
@@ -26,7 +27,7 @@ type Action = (prev: FormState, fd: FormData) => Promise<FormState>;
  * reintentos y sabe qué botón se pulsó.
  */
 function useManualForm(action: Action, withKey = false) {
-  const [state, formAction, pending] = useActionState(action, initialFormState);
+  const [state, formAction, pending] = useActionState(networkSafe(action), initialFormState);
   const [, startTransition] = useTransition();
   const key = useRef("");
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {

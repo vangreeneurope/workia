@@ -17,13 +17,14 @@ const buttonVariants = cva(
           "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
         secondary: "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
-        link: "text-primary underline-offset-4 hover:underline",
+        link: "text-primary underline underline-offset-4",
       },
       size: {
-        default: "h-10 px-4 py-2 has-[>svg]:px-3",
-        sm: "h-8 rounded-lg gap-1.5 px-3 has-[>svg]:px-2.5",
+        // 44 px en pantallas táctiles (hasta lg); compactos en escritorio.
+        default: "h-11 px-4 py-2 has-[>svg]:px-3 lg:h-10",
+        sm: "h-11 min-w-11 rounded-lg gap-1.5 px-3 has-[>svg]:px-2.5 lg:h-8 lg:min-w-0",
         lg: "h-11 rounded-lg px-6 has-[>svg]:px-4",
-        icon: "size-10",
+        icon: "size-11 lg:size-10",
       },
     },
     defaultVariants: {

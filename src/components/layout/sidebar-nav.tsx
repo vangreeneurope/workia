@@ -23,9 +23,9 @@ export function SidebarNav({ visibleKeys }: { visibleKeys: SectionKey[] }) {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors",
+                  "relative flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors focus-visible:outline-white",
                   active
-                    ? "bg-sidebar-accent text-sidebar-foreground shadow-xs"
+                    ? "bg-sidebar-accent text-sidebar-foreground font-semibold shadow-xs before:absolute before:inset-y-2 before:left-0 before:w-1 before:rounded-full before:bg-current"
                     : "text-sidebar-muted hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
                 )}
               >

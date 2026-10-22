@@ -10,6 +10,7 @@ import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { initialFormState, type FormState } from "@/lib/forms";
+import { networkSafe, safeCall } from "@/lib/network";
 
 import { quoteAbsence, submitAbsence, type QuoteResult } from "../actions";
 import { formatAmount, UNIT_LABELS, type AbsenceUnit } from "../units";
@@ -29,7 +30,7 @@ export function RequestForm({ types, today }: { types: TypeOption[]; today: stri
   // restablece al renderizar): se crea al enviar y se reutiliza en reintentos.
   const keyStore = useRef("");
   const [state, formAction, pending] = useActionState(async (prev: FormState, fd: FormData) => {
-    const result = await submitAbsence(prev, fd);
+    const result = await networkSafe(submitAbsence)(prev, fd);
     if (result.status === "success") {
       keyStore.current = "";
       setFormKey((k) => k + 1);
@@ -54,7 +55,7 @@ export function RequestForm({ types, today }: { types: TypeOption[]; today: stri
   function calculate() {
     if (!formRef.current) return;
     const fd = withKey(formRef.current);
-    startQuote(async () => setQuote(await quoteAbsence(fd)));
+    startQuote(async () => setQuote(await safeCall(() => quoteAbsence(fd))));
   }
 
   if (types.length === 0) {

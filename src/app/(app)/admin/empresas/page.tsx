@@ -49,7 +49,7 @@ export default async function EmpresasAdminPage() {
             cell: (r) => (
               <Link
                 href={`/admin/empresas/${r.id}`}
-                className="inline-flex items-center gap-2 underline-offset-4 hover:underline"
+                className="inline-flex min-h-11 items-center gap-2 underline underline-offset-4"
               >
                 <span
                   aria-hidden

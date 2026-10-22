@@ -9,6 +9,7 @@ import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { initialFormState } from "@/lib/forms";
 import { cn } from "@/lib/utils";
+import { networkSafe } from "@/lib/network";
 
 import { confirmExpense, saveExpense } from "../actions";
 import { centsToInput, formatCents } from "../money";
@@ -74,9 +75,12 @@ export function ReviewForm({
   similarCount: number;
   today: string;
 }) {
-  const [saveState, saveAction, saving] = useActionState(saveExpense, initialFormState);
+  const [saveState, saveAction, saving] = useActionState(
+    networkSafe(saveExpense),
+    initialFormState,
+  );
   const [confirmState, confirmAction, confirming] = useActionState(
-    confirmExpense,
+    networkSafe(confirmExpense),
     initialFormState,
   );
   const [, startTransition] = useTransition();

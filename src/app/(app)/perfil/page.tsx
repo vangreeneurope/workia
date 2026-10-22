@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PageHeader } from "@/components/page-header";
+import { InstallCard } from "@/components/pwa/install-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -109,6 +110,8 @@ export default async function PerfilPage() {
             )}
           </CardContent>
         </Card>
+
+        <InstallCard />
 
         <div>
           <Button asChild variant="outline">

@@ -4,6 +4,7 @@ import { useOptimistic, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import type { FormState } from "@/lib/forms";
+import { safeCall } from "@/lib/network";
 
 import { StatusBadge } from "./status-badge";
 
@@ -41,7 +42,7 @@ export function StatusToggle({
           startTransition(async () => {
             setError(undefined);
             setOptimistic(next);
-            const result = await action({ id, status: next });
+            const result = await safeCall(() => action({ id, status: next }));
             if (result.status === "error") setError(result.message);
           })
         }

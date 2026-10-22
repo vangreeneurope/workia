@@ -21,12 +21,14 @@ export function SubmitButton({
     <Button
       type="submit"
       disabled={pending}
+      aria-busy={pending || undefined}
       variant={variant}
       className={className}
       onClick={onClick}
     >
       {pending ? <Loader2 className="animate-spin" aria-hidden /> : null}
       {children}
+      {pending ? <span className="sr-only"> (enviando…)</span> : null}
     </Button>
   );
 }

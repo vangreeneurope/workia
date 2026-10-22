@@ -21,15 +21,25 @@ export type NavItem = {
   icon: LucideIcon;
   /** Aparece en la barra inferior del móvil (máximo 4; el resto va en "Más"). */
   mobilePrimary?: boolean;
+  /** Texto corto en la barra inferior (acción principal), si difiere de `label`. */
+  mobileLabel?: string;
 };
 
 export const NAV_ITEMS: readonly NavItem[] = [
   { key: "panel", label: "Inicio", href: "/panel", icon: House, mobilePrimary: true },
   { key: "horario", label: "Horario", href: "/horario", icon: CalendarClock },
-  { key: "fichajes", label: "Fichajes", href: "/fichajes", icon: Clock, mobilePrimary: true },
+  {
+    key: "fichajes",
+    label: "Fichajes",
+    mobileLabel: "Fichar",
+    href: "/fichajes",
+    icon: Clock,
+    mobilePrimary: true,
+  },
   {
     key: "ausencias",
     label: "Ausencias",
+    mobileLabel: "Solicitudes",
     href: "/ausencias",
     icon: CalendarDays,
     mobilePrimary: true,

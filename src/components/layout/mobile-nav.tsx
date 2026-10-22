@@ -17,8 +17,12 @@ import type { SectionKey } from "@/lib/auth/permissions";
 import { NAV_ITEMS, isActivePath } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
+// La pestaña activa se marca con color, peso del texto y una barra superior
+// (no solo con color), además de aria-current.
 const tabClass =
-  "flex min-h-14 flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors";
+  "relative flex min-h-14 flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors";
+const activeTab =
+  "text-brand font-semibold before:absolute before:inset-x-4 before:top-0 before:h-0.5 before:rounded-full before:bg-current";
 
 /** Barra de navegación inferior para móvil (zona del pulgar). */
 export function MobileNav({ visibleKeys }: { visibleKeys: SectionKey[] }) {
@@ -43,10 +47,10 @@ export function MobileNav({ visibleKeys }: { visibleKeys: SectionKey[] }) {
               <Link
                 href={item.href}
                 aria-current={active ? "page" : undefined}
-                className={cn(tabClass, active ? "text-brand" : "text-muted-foreground")}
+                className={cn(tabClass, active ? activeTab : "text-muted-foreground")}
               >
                 <Icon className="size-5" aria-hidden />
-                {item.label}
+                {item.mobileLabel ?? item.label}
               </Link>
             </li>
           );
@@ -55,7 +59,7 @@ export function MobileNav({ visibleKeys }: { visibleKeys: SectionKey[] }) {
           <li className="flex flex-1">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger
-                className={cn(tabClass, secondaryActive ? "text-brand" : "text-muted-foreground")}
+                className={cn(tabClass, secondaryActive ? activeTab : "text-muted-foreground")}
               >
                 <Ellipsis className="size-5" aria-hidden />
                 Más

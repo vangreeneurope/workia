@@ -53,7 +53,13 @@ export function DataTable<T>({
           </li>
         ))}
       </ul>
-      <div className="hidden overflow-hidden rounded-lg border md:block">
+      {/* Si la tabla no cabe (768-1024 px), se desplaza dentro de su caja; nunca recorta. */}
+      <div
+        className="relative hidden overflow-x-auto rounded-lg border md:block"
+        role="region"
+        aria-label={caption}
+        tabIndex={0}
+      >
         <table className="w-full text-sm">
           <caption className="sr-only">{caption}</caption>
           <thead className="bg-muted/50 text-left">

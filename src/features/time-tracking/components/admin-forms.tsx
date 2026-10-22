@@ -11,6 +11,7 @@ import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { initialFormState } from "@/lib/forms";
+import { networkSafe } from "@/lib/network";
 
 import { registerKiosk, resetPinForm, savePolicy, type KioskRegistration } from "../actions";
 import { kioskDeviceSchema, LOCATION_MODE_LABELS, LOCATION_MODES, policySchema } from "../schemas";
@@ -131,7 +132,7 @@ export function KioskRegistrationForm({ centers }: { centers: Option[] }) {
 }
 
 export function PinResetForm({ employees }: { employees: Option[] }) {
-  const [state, formAction, pending] = useActionState(resetPinForm, initialFormState);
+  const [state, formAction, pending] = useActionState(networkSafe(resetPinForm), initialFormState);
   return (
     <form action={formAction} className="grid gap-3">
       <FormMessage state={state} />

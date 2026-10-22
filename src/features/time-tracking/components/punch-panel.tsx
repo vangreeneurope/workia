@@ -115,6 +115,21 @@ export function PunchPanel({
   const [noticeFor, setNoticeFor] = useState<PunchKind | null>(null);
   const [selfie, setSelfie] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const noticeRef = useRef<HTMLButtonElement>(null);
+  const actionsRef = useRef<HTMLDivElement>(null);
+  const returnFocus = useRef(false);
+
+  // Teclado y lector de pantalla: el foco va al aviso de ubicación cuando se
+  // abre y vuelve a las acciones tras fichar (el resultado se anuncia aparte).
+  useEffect(() => {
+    if (noticeFor) noticeRef.current?.focus();
+  }, [noticeFor]);
+  useEffect(() => {
+    if (!pending && !noticeFor && returnFocus.current) {
+      returnFocus.current = false;
+      actionsRef.current?.querySelector<HTMLButtonElement>("button:not([disabled])")?.focus();
+    }
+  }, [pending, noticeFor, result]);
 
   const flush = useCallback(async () => {
     const queue = loadQueue(storage);
@@ -146,6 +161,7 @@ export function PunchPanel({
   }, [flush]);
 
   async function punch(kind: PunchKind, location: LocationReading) {
+    returnFocus.current = true;
     setPending(true);
     setResult(null);
     const key = crypto.randomUUID();
@@ -238,7 +254,12 @@ export function PunchPanel({
                 : " Es opcional: puedes fichar sin ella."}
             </p>
             <div className="flex flex-wrap gap-2">
-              <Button type="button" className="min-h-11" onClick={() => continueWithLocation(true)}>
+              <Button
+                ref={noticeRef}
+                type="button"
+                className="min-h-11"
+                onClick={() => continueWithLocation(true)}
+              >
                 Compartir ubicación y fichar
               </Button>
               <Button
@@ -253,7 +274,7 @@ export function PunchPanel({
           </AlertDescription>
         </Alert>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div ref={actionsRef} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {actions.map((kind) => (
             <Button
               key={kind}

@@ -113,7 +113,8 @@ test("un código de terminal con formato incorrecto se rechaza sin activar nada"
   await page.goto("/terminal");
   await page.getByLabel("Código del terminal").fill("no-es-un-token");
   await page.getByRole("button", { name: "Activar" }).click();
-  await expect(page.getByText("El código del terminal no es válido")).toBeVisible();
+  // Error junto al campo (además del resumen de errores, que enlaza con él).
+  await expect(page.locator("#token-error")).toHaveText(/El código del terminal no es válido/);
   const cookies = await context.cookies();
   expect(cookies.find((c) => c.name === "terminal")).toBeUndefined();
 });

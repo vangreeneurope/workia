@@ -9,6 +9,7 @@ import { SubmitButton } from "@/components/admin/submit-button";
 import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { initialFormState } from "@/lib/forms";
+import { networkSafe } from "@/lib/network";
 
 import { saveTemplateDraft } from "../actions";
 import { SHIFT_KINDS } from "../schemas";
@@ -62,7 +63,10 @@ export function TemplateEditor({
   templateId: string;
   initial: TemplateEditorValue;
 }) {
-  const [state, formAction, pending] = useActionState(saveTemplateDraft, initialFormState);
+  const [state, formAction, pending] = useActionState(
+    networkSafe(saveTemplateDraft),
+    initialFormState,
+  );
   const [kind, setKind] = useState<ShiftKind>(initial.kind);
   const [flexTarget, setFlexTarget] = useState(formatMinute(initial.targetMinutes).slice(0, 5));
   const [flexStart, setFlexStart] = useState(

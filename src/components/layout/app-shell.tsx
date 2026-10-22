@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { brandForeground, mfaPending, safeBrandColor } from "@/lib/auth/permissions";
 import { visibleNavKeys } from "@/lib/navigation";
 
+import { Announcer } from "./announcer";
 import { AppHeader } from "./app-header";
 import { CompanyBrand } from "./company-brand";
 import { MobileNav } from "./mobile-nav";
@@ -40,7 +41,7 @@ export async function AppShell({ children }: { children: ReactNode }) {
   } as CSSProperties;
 
   return (
-    <div style={brandStyle} className="min-h-dvh md:grid md:grid-cols-[16rem_1fr]">
+    <div style={brandStyle} className="min-h-dvh md:grid md:grid-cols-[16rem_minmax(0,1fr)]">
       <aside className="from-sidebar to-sidebar-end text-sidebar-foreground sticky top-0 hidden h-dvh flex-col bg-linear-to-b md:flex">
         <div className="flex h-16 items-center border-b border-white/10 px-4">
           <CompanyBrand name={activeCompany?.name ?? "Portal del empleado"} logoUrl={logoUrl} />
@@ -60,6 +61,7 @@ export async function AppShell({ children }: { children: ReactNode }) {
         />
         <main
           id="contenido"
+          tabIndex={-1}
           className="mx-auto w-full max-w-5xl flex-1 px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] md:px-8 md:pb-10"
         >
           {mfaPending(ctx) ? (
@@ -82,6 +84,7 @@ export async function AppShell({ children }: { children: ReactNode }) {
       </div>
 
       <MobileNav visibleKeys={navKeys} />
+      <Announcer />
     </div>
   );
 }

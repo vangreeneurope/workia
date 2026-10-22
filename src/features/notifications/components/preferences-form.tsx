@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { FormMessage } from "@/components/admin/form-message";
 import { SubmitButton } from "@/components/admin/submit-button";
 import { initialFormState } from "@/lib/forms";
+import { networkSafe } from "@/lib/network";
 
 import { savePreferences } from "../actions";
 
@@ -13,7 +14,10 @@ export function PreferencesForm({
 }: {
   options: { event: string; label: string; enabled: boolean }[];
 }) {
-  const [state, formAction, pending] = useActionState(savePreferences, initialFormState);
+  const [state, formAction, pending] = useActionState(
+    networkSafe(savePreferences),
+    initialFormState,
+  );
   return (
     <form action={formAction} className="grid gap-3">
       <FormMessage state={state} />

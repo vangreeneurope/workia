@@ -4,6 +4,7 @@ import { AlertCircle, CheckCircle2, Loader2, RefreshCw, ScanText } from "lucide-
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { safeCall } from "@/lib/network";
 
 import { retryOcr } from "../actions";
 
@@ -60,7 +61,7 @@ export function OcrStatus({
           onClick={() =>
             startTransition(async () => {
               setError(null);
-              const result = await retryOcr(expenseId);
+              const result = await safeCall(() => retryOcr(expenseId));
               if (result.status === "error") setError(result.message ?? "No se pudo reintentar.");
             })
           }

@@ -8,6 +8,7 @@ import { SubmitButton } from "@/components/admin/submit-button";
 import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { initialFormState } from "@/lib/forms";
+import { networkSafe } from "@/lib/network";
 
 import { activateKiosk, kioskPunchAction, type KioskResult } from "../actions";
 import { formatClock } from "../format";
@@ -18,7 +19,7 @@ const RESULT_SECONDS = 5;
 const IDLE_SECONDS = 30;
 
 export function KioskActivation({ notice }: { notice?: string }) {
-  const [state, formAction, pending] = useActionState(activateKiosk, initialFormState);
+  const [state, formAction, pending] = useActionState(networkSafe(activateKiosk), initialFormState);
   return (
     <div className="grid gap-4">
       <h1 className="text-2xl font-semibold">Activar terminal de fichaje</h1>
@@ -61,7 +62,7 @@ export function KioskScreen({
   // Clave de idempotencia del intento: se crea al elegir la acción (nunca al
   // renderizar) y se mantiene si el mismo envío se reintenta.
   const [attempt, setAttempt] = useState("");
-  const [state, formAction, pending] = useActionState(kioskPunchAction, initialKiosk);
+  const [state, formAction, pending] = useActionState(networkSafe(kioskPunchAction), initialKiosk);
   const [dismissed, setDismissed] = useState<KioskResult | null>(null);
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const shown = state.status !== "idle" && !state.fieldErrors && state !== dismissed ? state : null;

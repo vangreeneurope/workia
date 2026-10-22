@@ -7,6 +7,7 @@ import { useState, useTransition } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { NETWORK_ERROR_MESSAGE } from "@/lib/network";
 
 import {
   confirmImport,
@@ -21,6 +22,12 @@ import {
   type ColumnMapping,
   type ImportField,
 } from "../employees-import";
+
+const networkFailure = () => ({
+  ok: false as const,
+  message: NETWORK_ERROR_MESSAGE,
+  validation: undefined,
+});
 
 type Preview = Extract<PreviewResult, { ok: true }>;
 type Validation = Extract<ValidationResult, { ok: true }>;
@@ -51,7 +58,7 @@ export function ImportWizard() {
     const text = await file.text();
     setCsvText(text);
     startTransition(async () => {
-      const result = await previewImport(text);
+      const result = await previewImport(text).catch(networkFailure);
       if (result.ok) {
         setPreview(result);
         setMapping(result.mapping);
@@ -65,7 +72,7 @@ export function ImportWizard() {
     if (!csvText) return;
     setError(undefined);
     startTransition(async () => {
-      const result = await validateImportAction(csvText, mapping);
+      const result = await validateImportAction(csvText, mapping).catch(networkFailure);
       if (result.ok) setValidation(result);
       else setError(result.message);
     });
@@ -75,7 +82,7 @@ export function ImportWizard() {
     if (!csvText) return;
     setError(undefined);
     startTransition(async () => {
-      const result = await confirmImport(csvText, mapping);
+      const result = await confirmImport(csvText, mapping).catch(networkFailure);
       if (result.ok) {
         setImported(result.imported);
       } else {
@@ -150,7 +157,7 @@ export function ImportWizard() {
                 </Label>
                 <select
                   id={`map-${field.key}`}
-                  className="border-input h-11 rounded-md border bg-transparent px-3 text-base md:h-10 md:text-sm"
+                  className="border-input h-11 rounded-md border bg-transparent px-3 text-base lg:h-10 lg:text-sm"
                   value={mapping[field.key] ?? ""}
                   onChange={(e) => {
                     setValidation(undefined);

@@ -4,6 +4,7 @@ import { useActionState } from "react";
 
 import { SubmitButton } from "@/components/admin/submit-button";
 import { initialFormState } from "@/lib/forms";
+import { networkSafe } from "@/lib/network";
 
 import { endAssignment } from "../actions";
 
@@ -17,7 +18,7 @@ export function EndAssignmentForm({
   today: string;
   label: string;
 }) {
-  const [state, formAction, pending] = useActionState(endAssignment, initialFormState);
+  const [state, formAction, pending] = useActionState(networkSafe(endAssignment), initialFormState);
   return (
     <form action={formAction} className="flex flex-wrap items-center gap-2">
       <input type="hidden" name="id" value={id} />
@@ -29,7 +30,7 @@ export function EndAssignmentForm({
         type="date"
         name="end_date"
         defaultValue={today}
-        className="border-input h-9 rounded-md border bg-transparent px-2 text-sm"
+        className="border-input h-11 rounded-md border bg-transparent px-2 text-base lg:h-9 lg:text-sm"
       />
       <SubmitButton pending={pending} variant="outline">
         Finalizar
