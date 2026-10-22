@@ -151,9 +151,11 @@ Se calculan con los permisos reales de la base de datos (`my_company_permissions
 | Vacaciones y ausencias                     | `absence.manage` (tipos y políticas de empresa; asignaciones y ajustes)  |
 | Gastos                                     | `expense.manage` (ámbito empresa: política y categorías)                 |
 
-Permisos de gastos (`my_expense_access`, ADR-042): `read` (administración de empresa y
-Contabilidad) y `manage` (administración de empresa; la de grupo solo configura y no abre
-tickets). El manager lee los gastos y tickets de quien supervisa. Solo la persona edita sus
+Permisos de gastos (`my_expense_access`, ADR-042 y ADR-045): `read` (administración de empresa y
+Contabilidad), `manage` (administración de empresa; la de grupo solo configura y no abre tickets),
+`approve` (administración de empresa: respaldo y pasos por rol) y `close` (solo Contabilidad con
+ámbito de empresa: cerrar periodos, generar y descargar el paquete contable). Nadie aprueba sus
+propios gastos ni dos pasos del mismo informe. El manager lee los gastos y tickets de quien supervisa. Solo la persona edita sus
 borradores.
 
 Permisos de ausencias (`my_absence_access`, ADR-039): `read` (administración de empresa, RR. HH.,

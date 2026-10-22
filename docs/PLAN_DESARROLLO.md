@@ -52,8 +52,9 @@ flujo de aprobación y validación por Contabilidad, exportación contable, tick
 Hecho (2026-10-27, docs/GASTOS.md): captura con cámara o archivo, validación y duplicados, bucket
 privado, adaptador de OCR con proveedor falso para pruebas (sin proveedor real: pendiente de ADR),
 cola con reintentos, revisión con confianza por campo, política y categorías, kilometraje.
-Pendiente: proveedor de OCR, notas de gasto, aprobación, validación por Contabilidad, liquidación
-y exportación.
+Hecho (2026-10-28, docs/LIQUIDACION_GASTOS.md): informes mensuales con snapshot y versiones,
+aprobación por líneas y pasos con reglas y delegación, consola contable, cierre idempotente en lotes,
+lote corrector y paquete PDF, CSV, XLSX y ZIP. Pendiente: proveedor de OCR y mapeo a un ERP concreto.
 
 ## Fase 4 · Informes y notificaciones
 

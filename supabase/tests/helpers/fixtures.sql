@@ -169,3 +169,8 @@ insert into public.absence_types (id, company_id, code, name) values
 -- pierden datos sin autorización).
 insert into public.expense_categories (id, company_id, code, name) values
   ('9c000000-0000-4000-8000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'FX', 'Categoría de pruebas');
+
+-- Liquidación: cuenta contable por defecto en A (las pruebas de reversión
+-- comprueban que no se pierden datos sin autorización).
+insert into public.expense_account_mappings (company_id, category_id, account_code) values
+  ('aaaaaaaa-0000-0000-0000-000000000001', null, '629');

@@ -159,3 +159,26 @@ test("los gastos, la revisión y los tickets exigen sesión", async ({ page, req
   expect(response.status()).toBe(307);
   expect(response.headers()["location"]).toContain("/acceder");
 });
+
+test("informes, bandeja, contabilidad y descargas contables exigen sesión", async ({
+  page,
+  request,
+}) => {
+  for (const path of [
+    "/gastos/informes",
+    "/gastos/informes/00000000-0000-4000-8000-000000000000",
+    "/gastos/bandeja",
+    "/gastos/contabilidad",
+    "/gastos/contabilidad/lotes/00000000-0000-4000-8000-000000000000",
+  ]) {
+    await page.goto(path);
+    await expect(page).toHaveURL(/\/acceder\?siguiente=/);
+  }
+  // El paquete contable nunca se sirve sin sesión.
+  const response = await request.get(
+    "/gastos/contabilidad/descargas/00000000-0000-4000-8000-000000000000",
+    { maxRedirects: 0 },
+  );
+  expect(response.status()).toBe(307);
+  expect(response.headers()["location"]).toContain("/acceder");
+});

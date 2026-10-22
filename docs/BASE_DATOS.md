@@ -210,6 +210,27 @@ RPC: `find_receipt_duplicate`, `register_expense_receipt`, `create_expense`, `cl
 `set_expense_discarded`, `my_expense_access` (authenticated). Bucket privado `expense-receipts`
 (PDF, JPEG, PNG; 10 MB), ruta `<empresa>/<persona>/<año>/<mes>/<uuid>.<ext>`.
 
+### Informes y liquidación (migración `20261028100000_informes_gastos`)
+
+Ciclo, aprobación, cierre y exportación en [LIQUIDACION_GASTOS.md](LIQUIDACION_GASTOS.md).
+
+| Tabla                                            | Propósito                             | Claves y restricciones relevantes                                                                          |
+| ------------------------------------------------ | ------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `expense_approval_rules`                         | Pasos adicionales por umbral          | un aprobador (rol o persona); orden 2 a 9                                                                  |
+| `expense_account_mappings`                       | Cuentas contables por categoría       | una por categoría y una por defecto (índice único con `coalesce`)                                          |
+| `expense_reports`                                | Informe mensual por persona y versión | uno en revisión por persona y mes; versiones enlazadas; transiciones por trigger                           |
+| `expense_report_items`                           | Líneas con snapshot del gasto         | copia y huella inmutables; un gasto por informe                                                            |
+| `approval_instances`, `approval_steps`           | Aprobación por pasos                  | paso actual; delegación registrada; sin borrado                                                            |
+| `accounting_batches`                             | Lotes contables                       | secuencia única por empresa; clave idempotente; un cierre ordinario por periodo; solo pasa a contabilizado |
+| `accounting_batch_lines`                         | Líneas del lote                       | inmutables; importes en céntimos; ajustes con motivo                                                       |
+| `accounting_batch_exclusions`                    | Informes excluidos de un cierre       | motivo obligatorio; inmutables; auditados                                                                  |
+| `accounting_exports`, `accounting_export_events` | Paquete y registro                    | un archivo por formato y lote con su SHA-256; generación y descargas inmutables                            |
+
+RPC: `submit_expense_report`, `decide_report_line`, `complete_report_step`,
+`my_pending_expense_approvals`, `accounting_close_blockers`, `close_accounting_period`,
+`create_corrective_batch`, `mark_batch_accounted`, `accounting_batch_totals`,
+`register_accounting_export`, `log_export_download`. Bucket privado `accounting-exports`.
+
 ### Auditoría y almacenamiento
 
 - `audit_log`: append-only. Columnas `actor_id` (`auth.uid()`), `company_id`, `group_id`,

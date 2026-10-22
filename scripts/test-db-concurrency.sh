@@ -13,6 +13,8 @@
 #      una reserva el saldo y la otra se rechaza (nunca saldo consumido dos veces).
 #   5. Mismo ticket registrado dos veces a la vez (reintento): un solo gasto.
 #   6. Dos sesiones reclaman a la vez el mismo trabajo de OCR: una sola ejecución.
+#   7. Dos cierres contables simultáneos del mismo periodo (misma clave y clave
+#      distinta): un solo lote; el reintento devuelve el mismo.
 
 concurrency_session() {
   # $1 = base, $2 = usuario (uuid), $3 = sentencia, $4 = segundos de espera antes de confirmar
@@ -144,6 +146,46 @@ SQL
     echo "FALLO: dos sesiones reclaman el mismo trabajo (ejecuciones=$n)" >&2; cat "$out_a" "$out_b" >&2; return 1
   fi
   echo "  ok - Dos sesiones reclaman el mismo trabajo de OCR: una sola ejecución"
+
+  # Cierre contable: un informe aprobado de E1 en el mes anterior (como servicio).
+  pg_sql "$db" -At -o /dev/null <<'SQL'
+insert into public.expense_categories (id, company_id, code, name)
+values ('9e000000-0000-4000-8000-0000000000c1', 'aaaaaaaa-0000-0000-0000-000000000001', 'CIERRE', 'Cierre');
+insert into public.expenses (id, company_id, employee_id, source, status, idempotency_key, category_id, expense_date,
+  currency, total_cents, payment_method, confirmed_at)
+values ('9e000000-0000-4000-8000-0000000000e1', 'aaaaaaaa-0000-0000-0000-000000000001',
+  'e0000000-0000-0000-0000-000000000007', 'manual', 'ready', '9e000000-0000-4000-8000-0000000000e1',
+  '9e000000-0000-4000-8000-0000000000c1', (date_trunc('month', now()) - interval '1 month')::date + 1, 'EUR', 4321,
+  'cash', now());
+insert into public.expense_reports (id, company_id, employee_id, period_month, version, status, idempotency_key)
+values ('9e000000-0000-4000-8000-0000000000a1', 'aaaaaaaa-0000-0000-0000-000000000001',
+  'e0000000-0000-0000-0000-000000000007', (date_trunc('month', now()) - interval '1 month')::date, 1, 'approved',
+  '9e000000-0000-4000-8000-0000000000a1');
+insert into public.expense_report_items (company_id, employee_id, report_id, expense_id, snapshot, snapshot_hash,
+  expense_date, category_id, currency, total_cents, decision)
+values ('aaaaaaaa-0000-0000-0000-000000000001', 'e0000000-0000-0000-0000-000000000007',
+  '9e000000-0000-4000-8000-0000000000a1', '9e000000-0000-4000-8000-0000000000e1',
+  '{"category_code": "CIERRE", "category_name": "Cierre"}', repeat('c', 64),
+  (date_trunc('month', now()) - interval '1 month')::date + 1, '9e000000-0000-4000-8000-0000000000c1', 'EUR', 4321,
+  'approved');
+SQL
+  local close="select public.close_accounting_period('$company', (date_trunc('month', now()) - interval '1 month')::date"
+  concurrency_session "$db" 00000000-0000-0000-0000-000000000009 "$close, '9e000000-0000-4000-8000-0000000000b1')" 2 >"$out_a" &
+  sleep 0.5
+  concurrency_session "$db" 00000000-0000-0000-0000-000000000009 "$close, '9e000000-0000-4000-8000-0000000000b1')" 0 >"$out_b"
+  wait
+  n="$(pg_sql "$db" -At -c "select count(*) || '/' || (select count(*) from public.accounting_batch_lines) from public.accounting_batches")"
+  if [[ "$n" != "1/1" ]] || [[ "$(grep -E '^[0-9a-f-]{36}$' "$out_a")" != "$(grep -E '^[0-9a-f-]{36}$' "$out_b")" ]]; then
+    echo "FALLO: cierre simultáneo con la misma clave (lotes/líneas=$n)" >&2; cat "$out_a" "$out_b" >&2; return 1
+  fi
+  echo "  ok - Mismo cierre en dos sesiones simultáneas: un solo lote y la segunda recibe el mismo"
+
+  concurrency_session "$db" 00000000-0000-0000-0000-000000000009 "$close, '9e000000-0000-4000-8000-0000000000b2')" 0 >"$out_b"
+  n="$(pg_sql "$db" -At -c "select count(*) from public.accounting_batches")"
+  if [[ "$n" != "1" ]] || ! grep -q "ya está cerrado" "$out_b"; then
+    echo "FALLO: doble cierre con otra clave (lotes=$n)" >&2; cat "$out_b" >&2; return 1
+  fi
+  echo "  ok - Doble cierre con otra clave: rechazado, sigue habiendo un solo lote"
   rm -f "$out_a" "$out_b"
   pg_drop_db "$db"
 }

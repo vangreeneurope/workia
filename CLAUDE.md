@@ -127,6 +127,8 @@ docs/               Documentación funcional y técnica
 - `docs/CONTROL_HORARIO.md`: fichajes, terminal con PIN, correcciones, incidencias y operación.
 - `docs/AUSENCIAS.md`: tipos, políticas versionadas, libro de saldos, aprobación y privacidad.
 - `docs/GASTOS.md`: captura de tickets, OCR intercambiable, cola y reintentos, duplicados y reglas.
+- `docs/LIQUIDACION_GASTOS.md`: informes mensuales, aprobación por pasos, cierre en lotes y
+  esquema de exportación (PDF, CSV, XLSX, ZIP).
 - `docs/NORMATIVA.md`: registro de jornada, RGPD/LOPDGDD, conservación.
 - `docs/PLAN_DESARROLLO.md`: fases y criterios de salida.
 - `docs/DECISIONES.md`: registro de decisiones de arquitectura (ADR).

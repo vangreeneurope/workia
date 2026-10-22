@@ -59,6 +59,9 @@ select test.ok(not exists (select 1 from public.expense_policies where legal_ref
   and not exists (select 1 from public.expense_categories where name not like '%(ejemplo)')
   and not exists (select 1 from public.expenses) and not exists (select 1 from storage.objects where bucket_id = 'expense-receipts'),
   'Semilla: la política de gastos es de ejemplo y no hay tickets en el repositorio');
+select test.ok(not exists (select 1 from public.expense_account_mappings where account_code not like 'EJEMPLO-%')
+  and not exists (select 1 from public.expense_reports) and not exists (select 1 from public.accounting_batches),
+  'Semilla: el mapeo contable es de ejemplo y no hay informes ni lotes');
 set role authenticated;
 select test.act_as('5eed0000-0000-4000-8000-000000000001'); -- Gala, admin de grupo
 select test.ok((select count(*) from public.employees) = 6, 'Semilla: la administración de grupo ve ambas empresas');

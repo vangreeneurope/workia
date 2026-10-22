@@ -122,8 +122,6 @@ interpretar se descarta. Cada campo conserva su confianza.
 
 - Elegir proveedor de OCR (ADR) o confirmar que se trabaja sin OCR.
 - Trabajador programado para la cola (con la clave de servicio y su ADR).
-- Flujo de aprobación por el responsable y validación por Contabilidad (enviar, aprobar, liquidar)
-  y exportación contable.
 - Plazo de conservación de tickets con la asesoría (referencias habituales de 4 a 6 años) y tarea
   de borrado al vencer.
 - Catálogos de clientes, proyectos y centros de coste (ahora son texto libre).

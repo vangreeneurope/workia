@@ -137,6 +137,12 @@ automática (OCR, intercambiable y desactivada mientras no haya un proveedor apr
 datos, que la persona revisa (los dudosos, uno a uno) y confirma. Incluye kilometraje y las reglas
 de la política de cada empresa. Detalle en [docs/GASTOS.md](docs/GASTOS.md).
 
+Cada mes, la persona envía sus gastos listos en un **informe** (`/gastos/informes`) que aprueba su
+responsable línea a línea en la **bandeja** (`/gastos/bandeja`), con pasos adicionales por reglas.
+**Contabilidad** (`/gastos/contabilidad`) concilia, cierra el periodo en lotes numerados e
+inmutables y descarga el paquete: PDF de liquidación, CSV, XLSX y ZIP de justificantes. Detalle y
+esquema de exportación en [docs/LIQUIDACION_GASTOS.md](docs/LIQUIDACION_GASTOS.md).
+
 ## Horarios y calendarios laborales
 
 **Horario** (`/horario`) muestra el horario planificado en vista semanal o mensual: la propia
@@ -168,7 +174,7 @@ desplegarse en cualquier plataforma compatible con Next.js. Requisitos:
 [CLAUDE.md](CLAUDE.md) (convenciones y reglas) · [PRD](docs/PRD.md) ·
 [Arquitectura](docs/ARQUITECTURA.md) · [Base de datos](docs/BASE_DATOS.md) ·
 [Permisos](docs/PERMISOS.md) · [Vigencia y bajas](docs/VIGENCIA_Y_BAJAS.md) ·
-[Horarios](docs/HORARIOS.md) · [Control horario](docs/CONTROL_HORARIO.md) · [Ausencias](docs/AUSENCIAS.md) · [Gastos](docs/GASTOS.md) ·
+[Horarios](docs/HORARIOS.md) · [Control horario](docs/CONTROL_HORARIO.md) · [Ausencias](docs/AUSENCIAS.md) · [Gastos](docs/GASTOS.md) · [Liquidación](docs/LIQUIDACION_GASTOS.md) ·
 [Normativa](docs/NORMATIVA.md) ·
 [Plan de desarrollo](docs/PLAN_DESARROLLO.md) · [Decisiones](docs/DECISIONES.md) ·
 [Estado del proyecto](docs/ESTADO_PROYECTO.md)

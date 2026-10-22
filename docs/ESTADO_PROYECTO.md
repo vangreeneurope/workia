@@ -1,8 +1,8 @@
 # Estado del proyecto
 
-**Última actualización**: 2026-10-27 · **Fase actual**: 1 y 2 implementadas en local
-(administración, horarios, control horario, vacaciones y ausencias) y fase 3 iniciada (captura de
-gastos con OCR intercambiable). Nada se ha validado aún contra
+**Última actualización**: 2026-10-28 · **Fase actual**: 1 y 2 implementadas en local
+(administración, horarios, control horario, vacaciones y ausencias) y fase 3 casi completa (gastos
+con OCR intercambiable, informes, aprobación y liquidación contable; falta el proveedor de OCR). Nada se ha validado aún contra
 un proyecto Supabase real ni en GitHub Actions (sin remoto): los tres trabajos del CI se han
 ejecutado en local. Los módulos se han construido por petición expresa sin validar antes los
 anteriores con sesión real (excepción a la regla de CLAUDE.md, registrada aquí).
@@ -145,27 +145,43 @@ anteriores con sesión real (excepción a la regla de CLAUDE.md, registrada aqu�
 - Límite de Server Actions subido a 11 MB (antes, 1 MB por defecto: afectaba también a
   justificantes y selfies de más de 1 MB).
 
-## 2. Resultados de verificación (2026-10-27)
+### Informes, aprobación y liquidación (2026-10-28)
+
+- Migración `20261028100000_informes_gastos` con reversión verificada: reglas de aprobación, mapeo
+  contable, informes con snapshot y versiones, instancias y pasos de aprobación, lotes contables,
+  líneas, exclusiones, exportaciones y su registro; bucket privado `accounting-exports`.
+- Estados explícitos (`draft` → `ready` → `submitted` → `in_review` → `returned`/`approved` →
+  `included_in_batch` → `accounted`) con transiciones en trigger; gastos bloqueados mientras están en
+  un informe vigente.
+- Aprobación por líneas (aprobar, rechazar, devolver con comentario) y pasos por reglas;
+  delegación registrada; sin autoaprobación ni dos pasos por la misma persona (ADR-045, ADR-046).
+- Consola contable con conciliación, pendientes y bloqueos; cierre idempotente con secuencia sin
+  huecos y exclusión motivada; lote corrector; totales por empleado, categoría, cuenta, centro y
+  proyecto; PDF, CSV, XLSX y ZIP deterministas con SHA-256, descargas registradas (ADR-047).
+  Dependencias nuevas: `pdf-lib` 1.17.1 y `fflate` 0.8.3 (sin vulnerabilidades conocidas).
+
+## 2. Resultados de verificación (2026-10-28)
 
 | Verificación               | Comando                                           | Resultado                                                                                                  |
 | -------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | Tipos                      | `npm run typecheck`                               | Sin errores                                                                                                |
 | Lint                       | `npm run lint`                                    | 0 errores, 0 avisos                                                                                        |
 | Formato                    | `npm run format:check`                            | Correcto                                                                                                   |
-| Unitarias                  | `npm test`                                        | 19 archivos, 214 pruebas superadas (33 de gastos: archivos maliciosos, OCR caído, reintento, móvil)        |
+| Unitarias                  | `npm test`                                        | 20 archivos, 224 pruebas superadas (incluidos los generadores de liquidación)                              |
 | Aislamiento multiempresa   | `npm run test:db` → `10_aislamiento_multiempresa` | 134 aserciones superadas                                                                                   |
 | Integridad y escalada      | `npm run test:db` → `20_integridad_y_escalada`    | 26 aserciones superadas                                                                                    |
-| Semillas sintéticas        | `npm run test:db` → `30_seed_sintetico`           | 23 aserciones superadas                                                                                    |
+| Semillas sintéticas        | `npm run test:db` → `30_seed_sintetico`           | 24 aserciones superadas                                                                                    |
 | Administración             | `npm run test:db` → `40_administracion`           | 81 aserciones superadas                                                                                    |
 | Horarios                   | `npm run test:db` → `50_horarios`                 | 101 aserciones superadas                                                                                   |
 | Control horario            | `npm run test:db` → `60_control_horario`          | 115 aserciones superadas                                                                                   |
 | Ausencias                  | `npm run test:db` → `70_ausencias`                | 81 aserciones superadas                                                                                    |
 | Gastos                     | `npm run test:db` → `80_gastos`                   | 81 aserciones superadas                                                                                    |
-| Concurrencia               | `npm run test:db` → `test-db-concurrency.sh`      | 6 escenarios con dos sesiones simultáneas (mismo saldo, mismo ticket, mismo trabajo de OCR)                |
-| Reversibilidad             | `npm run test:db`                                 | 7 reversiones restauran el esquema exacto, reaplicar lo reproduce, 7 exigen autorización para perder datos |
+| Liquidación                | `npm run test:db` → `90_liquidacion`              | 76 aserciones superadas                                                                                    |
+| Concurrencia               | `npm run test:db` → `test-db-concurrency.sh`      | 8 escenarios con dos sesiones simultáneas (mismo saldo, ticket, trabajo de OCR y cierre contable)          |
+| Reversibilidad             | `npm run test:db`                                 | 8 reversiones restauran el esquema exacto, reaplicar lo reproduce, 8 exigen autorización para perder datos |
 | Tipos frente a esquema     | `npm run db:types:check`                          | Al día (incluye las funciones RPC)                                                                         |
-| Build de producción        | `npm run build`                                   | Correcto (incluye /gastos, /gastos/nuevo, /gastos/[id], /gastos/ticket/[id] y /admin/gastos)               |
-| E2E                        | `npm run test:e2e`                                | 34 pruebas superadas (móvil y escritorio)                                                                  |
+| Build de producción        | `npm run build`                                   | Correcto (incluye informes, bandeja, consola contable, lotes y descargas)                                  |
+| E2E                        | `npm run test:e2e`                                | 36 pruebas superadas (móvil y escritorio)                                                                  |
 | Dependencias de producción | `npm audit --omit=dev`                            | 0 vulnerabilidades                                                                                         |
 
 **CI**: los pasos de los tres trabajos de `.github/workflows/ci.yml` se han ejecutado en local
@@ -182,7 +198,8 @@ bandeja; las pruebas detectaron que React restablecía la clave de idempotencia 
 en los reintentos (corregido guardándola en memoria).
 
 **Lo que no se ha podido verificar**: las pantallas de administración, horarios, fichaje,
-ausencias y gastos con una sesión y datos reales, la subida real de tickets a Storage y la cámara
+ausencias, gastos y liquidación con una sesión y datos reales (incluida la generación del paquete
+contable con datos leídos por PostgREST y su subida a Storage), la subida real de tickets a Storage y la cámara
 del móvil al fotografiar tickets, la subida real de selfies a Storage, la geolocalización y la cámara en
 dispositivos físicos
 (requiere un proyecto Supabase), la invitación por correo (requiere `SUPABASE_SECRET_KEY` y Auth
@@ -211,9 +228,9 @@ cada operación está cubierta por las pruebas SQL contra PostgreSQL 16 con la e
    cambio de contrato a mitad de periodo no reprorratea el saldo abierto (se regulariza con un
    ajuste).
 9. **Gastos**: no hay proveedor de OCR (decisión pendiente, ADR-043); sin trabajador programado
-   para la cola; falta el flujo de aprobación, validación por Contabilidad, liquidación y
-   exportación; plazo de conservación de tickets con la asesoría; clientes, proyectos y centros de
-   coste son texto libre.
+   para la cola; plazo de conservación de tickets, lotes y paquetes con la asesoría; clientes,
+   proyectos y centros de coste son texto libre; la exportación es genérica (sin mapeo a un ERP
+   concreto); sin avisos por correo de informes pendientes o devueltos.
 10. Riesgos heredados: CSP con `'unsafe-inline'`, componentes shadcn escritos a mano,
     vulnerabilidades en herramientas de lint, revisión normativa pendiente.
 
@@ -225,5 +242,5 @@ cada operación está cubierta por las pruebas SQL contra PostgreSQL 16 con la e
 3. Probar el horario con las semillas sintéticas (`supabase db reset`) y sesión real.
 4. Tareas programadas del control horario, exportación para la Inspección y visor de auditoría
    (resto de la fase 1); reglas de clasificación de excesos de jornada aprobadas por la asesoría.
-5. Gastos: decidir el proveedor de OCR (o trabajar sin OCR) y, después, notas de gasto, aprobación,
-   validación por Contabilidad y exportación contable (resto de la fase 3).
+5. Gastos: decidir el proveedor de OCR (o trabajar sin OCR) y, si se elige un ERP, su mapeo de
+   importación a partir del CSV/XLSX genérico.

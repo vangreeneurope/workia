@@ -232,3 +232,6 @@ insert into public.expense_categories (company_id, code, name, is_mileage, max_a
   ('5eed2000-0000-4000-8000-00000000000a', 'COMIDA', 'Comidas con clientes (ejemplo)', false, 6000, true, false),
   ('5eed2000-0000-4000-8000-00000000000a', 'VIAJE', 'Viajes y alojamiento (ejemplo)', false, 25000, false, true),
   ('5eed2000-0000-4000-8000-00000000000a', 'KM', 'Kilometraje (ejemplo)', true, null, false, false);
+-- Cuenta contable por defecto de EJEMPLO (los códigos reales los define Contabilidad).
+insert into public.expense_account_mappings (company_id, category_id, account_code)
+values ('5eed2000-0000-4000-8000-00000000000a', null, 'EJEMPLO-629');

@@ -381,6 +381,519 @@ export type Database = {
           },
         ];
       };
+      accounting_batch_exclusions: {
+        Row: {
+          authorized_by: string | null;
+          batch_id: string;
+          company_id: string;
+          created_at: string;
+          id: string;
+          reason: string;
+          report_id: string;
+        };
+        Insert: {
+          authorized_by?: string | null;
+          batch_id: string;
+          company_id: string;
+          created_at?: string;
+          id?: string;
+          reason: string;
+          report_id: string;
+        };
+        Update: {
+          authorized_by?: string | null;
+          batch_id?: string;
+          company_id?: string;
+          created_at?: string;
+          id?: string;
+          reason?: string;
+          report_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "accounting_batch_exclusions_authorized_by_fkey";
+            columns: ["authorized_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "accounting_batch_exclusions_batch_id_company_id_fkey";
+            columns: ["batch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "accounting_batches";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "accounting_batch_exclusions_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "accounting_batch_exclusions_report_id_company_id_fkey";
+            columns: ["report_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "expense_reports";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      accounting_batch_lines: {
+        Row: {
+          account_code: string;
+          adjustment_reason: string | null;
+          base_cents: number | null;
+          batch_id: string;
+          category_code: string;
+          category_id: string | null;
+          category_name: string;
+          company_id: string;
+          cost_center: string | null;
+          counterpart_account_code: string | null;
+          currency: string;
+          document_number: string | null;
+          employee_code: string;
+          employee_id: string;
+          employee_name: string;
+          expense_date: string;
+          expense_id: string | null;
+          id: number;
+          line_no: number;
+          merchant_name: string | null;
+          merchant_tax_id: string | null;
+          project_code: string | null;
+          report_id: string | null;
+          report_item_id: string | null;
+          tax_account_code: string | null;
+          tax_cents: number | null;
+          total_cents: number;
+        };
+        Insert: {
+          account_code: string;
+          adjustment_reason?: string | null;
+          base_cents?: number | null;
+          batch_id: string;
+          category_code: string;
+          category_id?: string | null;
+          category_name: string;
+          company_id: string;
+          cost_center?: string | null;
+          counterpart_account_code?: string | null;
+          currency: string;
+          document_number?: string | null;
+          employee_code: string;
+          employee_id: string;
+          employee_name: string;
+          expense_date: string;
+          expense_id?: string | null;
+          id?: never;
+          line_no: number;
+          merchant_name?: string | null;
+          merchant_tax_id?: string | null;
+          project_code?: string | null;
+          report_id?: string | null;
+          report_item_id?: string | null;
+          tax_account_code?: string | null;
+          tax_cents?: number | null;
+          total_cents: number;
+        };
+        Update: {
+          account_code?: string;
+          adjustment_reason?: string | null;
+          base_cents?: number | null;
+          batch_id?: string;
+          category_code?: string;
+          category_id?: string | null;
+          category_name?: string;
+          company_id?: string;
+          cost_center?: string | null;
+          counterpart_account_code?: string | null;
+          currency?: string;
+          document_number?: string | null;
+          employee_code?: string;
+          employee_id?: string;
+          employee_name?: string;
+          expense_date?: string;
+          expense_id?: string | null;
+          id?: never;
+          line_no?: number;
+          merchant_name?: string | null;
+          merchant_tax_id?: string | null;
+          project_code?: string | null;
+          report_id?: string | null;
+          report_item_id?: string | null;
+          tax_account_code?: string | null;
+          tax_cents?: number | null;
+          total_cents?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "accounting_batch_lines_batch_id_company_id_fkey";
+            columns: ["batch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "accounting_batches";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "accounting_batch_lines_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "accounting_batch_lines_employee_id_company_id_fkey";
+            columns: ["employee_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "accounting_batch_lines_report_id_company_id_fkey";
+            columns: ["report_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "expense_reports";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      accounting_batches: {
+        Row: {
+          accounted_at: string | null;
+          accounted_by: string | null;
+          closed_at: string;
+          closed_by: string | null;
+          company_id: string;
+          corrects_batch_id: string | null;
+          id: string;
+          idempotency_key: string;
+          kind: Database["public"]["Enums"]["accounting_batch_kind"];
+          note: string | null;
+          period_month: string;
+          sequence: number;
+          status: string;
+        };
+        Insert: {
+          accounted_at?: string | null;
+          accounted_by?: string | null;
+          closed_at?: string;
+          closed_by?: string | null;
+          company_id: string;
+          corrects_batch_id?: string | null;
+          id?: string;
+          idempotency_key: string;
+          kind?: Database["public"]["Enums"]["accounting_batch_kind"];
+          note?: string | null;
+          period_month: string;
+          sequence: number;
+          status?: string;
+        };
+        Update: {
+          accounted_at?: string | null;
+          accounted_by?: string | null;
+          closed_at?: string;
+          closed_by?: string | null;
+          company_id?: string;
+          corrects_batch_id?: string | null;
+          id?: string;
+          idempotency_key?: string;
+          kind?: Database["public"]["Enums"]["accounting_batch_kind"];
+          note?: string | null;
+          period_month?: string;
+          sequence?: number;
+          status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "accounting_batches_accounted_by_fkey";
+            columns: ["accounted_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "accounting_batches_closed_by_fkey";
+            columns: ["closed_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "accounting_batches_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "accounting_batches_corrects_batch_id_company_id_fkey";
+            columns: ["corrects_batch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "accounting_batches";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      accounting_export_events: {
+        Row: {
+          action: string;
+          actor_id: string | null;
+          company_id: string;
+          created_at: string;
+          export_id: string;
+          id: number;
+        };
+        Insert: {
+          action: string;
+          actor_id?: string | null;
+          company_id: string;
+          created_at?: string;
+          export_id: string;
+          id?: never;
+        };
+        Update: {
+          action?: string;
+          actor_id?: string | null;
+          company_id?: string;
+          created_at?: string;
+          export_id?: string;
+          id?: never;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "accounting_export_events_actor_id_fkey";
+            columns: ["actor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "accounting_export_events_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "accounting_export_events_export_id_company_id_fkey";
+            columns: ["export_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "accounting_exports";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      accounting_exports: {
+        Row: {
+          batch_id: string;
+          company_id: string;
+          file_name: string;
+          format: Database["public"]["Enums"]["accounting_export_format"];
+          generated_at: string;
+          generated_by: string | null;
+          id: string;
+          sha256: string;
+          size_bytes: number;
+          storage_path: string;
+        };
+        Insert: {
+          batch_id: string;
+          company_id: string;
+          file_name: string;
+          format: Database["public"]["Enums"]["accounting_export_format"];
+          generated_at?: string;
+          generated_by?: string | null;
+          id?: string;
+          sha256: string;
+          size_bytes: number;
+          storage_path: string;
+        };
+        Update: {
+          batch_id?: string;
+          company_id?: string;
+          file_name?: string;
+          format?: Database["public"]["Enums"]["accounting_export_format"];
+          generated_at?: string;
+          generated_by?: string | null;
+          id?: string;
+          sha256?: string;
+          size_bytes?: number;
+          storage_path?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "accounting_exports_batch_id_company_id_fkey";
+            columns: ["batch_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "accounting_batches";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "accounting_exports_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "accounting_exports_generated_by_fkey";
+            columns: ["generated_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      approval_instances: {
+        Row: {
+          company_id: string;
+          completed_at: string | null;
+          created_at: string;
+          current_step: number;
+          employee_id: string;
+          id: string;
+          report_id: string;
+          status: string;
+          subject_type: string;
+        };
+        Insert: {
+          company_id: string;
+          completed_at?: string | null;
+          created_at?: string;
+          current_step?: number;
+          employee_id: string;
+          id?: string;
+          report_id: string;
+          status?: string;
+          subject_type?: string;
+        };
+        Update: {
+          company_id?: string;
+          completed_at?: string | null;
+          created_at?: string;
+          current_step?: number;
+          employee_id?: string;
+          id?: string;
+          report_id?: string;
+          status?: string;
+          subject_type?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "approval_instances_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "approval_instances_report_id_company_id_employee_id_fkey";
+            columns: ["report_id", "company_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "expense_reports";
+            referencedColumns: ["id", "company_id", "employee_id"];
+          },
+        ];
+      };
+      approval_steps: {
+        Row: {
+          acted_at: string | null;
+          acted_by: string | null;
+          assigned_role: Database["public"]["Enums"]["app_role"] | null;
+          assigned_user_id: string | null;
+          comment: string | null;
+          company_id: string;
+          delegated_from_user_id: string | null;
+          employee_id: string;
+          id: string;
+          instance_id: string;
+          kind: string;
+          routing: string;
+          rule_id: string | null;
+          status: Database["public"]["Enums"]["approval_step_status"];
+          step_order: number;
+        };
+        Insert: {
+          acted_at?: string | null;
+          acted_by?: string | null;
+          assigned_role?: Database["public"]["Enums"]["app_role"] | null;
+          assigned_user_id?: string | null;
+          comment?: string | null;
+          company_id: string;
+          delegated_from_user_id?: string | null;
+          employee_id: string;
+          id?: string;
+          instance_id: string;
+          kind: string;
+          routing: string;
+          rule_id?: string | null;
+          status?: Database["public"]["Enums"]["approval_step_status"];
+          step_order: number;
+        };
+        Update: {
+          acted_at?: string | null;
+          acted_by?: string | null;
+          assigned_role?: Database["public"]["Enums"]["app_role"] | null;
+          assigned_user_id?: string | null;
+          comment?: string | null;
+          company_id?: string;
+          delegated_from_user_id?: string | null;
+          employee_id?: string;
+          id?: string;
+          instance_id?: string;
+          kind?: string;
+          routing?: string;
+          rule_id?: string | null;
+          status?: Database["public"]["Enums"]["approval_step_status"];
+          step_order?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "approval_steps_acted_by_fkey";
+            columns: ["acted_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "approval_steps_assigned_user_id_fkey";
+            columns: ["assigned_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "approval_steps_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "approval_steps_delegated_from_user_id_fkey";
+            columns: ["delegated_from_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "approval_steps_instance_id_company_id_employee_id_fkey";
+            columns: ["instance_id", "company_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "approval_instances";
+            referencedColumns: ["id", "company_id", "employee_id"];
+          },
+          {
+            foreignKeyName: "approval_steps_rule_id_company_id_fkey";
+            columns: ["rule_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "expense_approval_rules";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
       approver_substitutions: {
         Row: {
           absent_user_id: string;
@@ -851,6 +1364,121 @@ export type Database = {
           },
         ];
       };
+      expense_account_mappings: {
+        Row: {
+          account_code: string;
+          category_id: string | null;
+          company_id: string;
+          counterpart_account_code: string | null;
+          created_at: string;
+          id: string;
+          tax_account_code: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          account_code: string;
+          category_id?: string | null;
+          company_id: string;
+          counterpart_account_code?: string | null;
+          created_at?: string;
+          id?: string;
+          tax_account_code?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          account_code?: string;
+          category_id?: string | null;
+          company_id?: string;
+          counterpart_account_code?: string | null;
+          created_at?: string;
+          id?: string;
+          tax_account_code?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "expense_account_mappings_category_id_company_id_fkey";
+            columns: ["category_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "expense_categories";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "expense_account_mappings_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      expense_approval_rules: {
+        Row: {
+          approver_role: Database["public"]["Enums"]["app_role"] | null;
+          approver_user_id: string | null;
+          category_id: string | null;
+          company_id: string;
+          created_at: string;
+          currency: string;
+          id: string;
+          min_total_cents: number;
+          name: string;
+          status: string;
+          step_order: number;
+          updated_at: string;
+        };
+        Insert: {
+          approver_role?: Database["public"]["Enums"]["app_role"] | null;
+          approver_user_id?: string | null;
+          category_id?: string | null;
+          company_id: string;
+          created_at?: string;
+          currency?: string;
+          id?: string;
+          min_total_cents?: number;
+          name: string;
+          status?: string;
+          step_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          approver_role?: Database["public"]["Enums"]["app_role"] | null;
+          approver_user_id?: string | null;
+          category_id?: string | null;
+          company_id?: string;
+          created_at?: string;
+          currency?: string;
+          id?: string;
+          min_total_cents?: number;
+          name?: string;
+          status?: string;
+          step_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "expense_approval_rules_approver_user_id_fkey";
+            columns: ["approver_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expense_approval_rules_category_id_company_id_fkey";
+            columns: ["category_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "expense_categories";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "expense_approval_rules_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       expense_categories: {
         Row: {
           code: string;
@@ -1076,6 +1704,195 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "expenses";
             referencedColumns: ["id", "company_id", "employee_id"];
+          },
+        ];
+      };
+      expense_report_items: {
+        Row: {
+          base_cents: number | null;
+          carried_from_item_id: string | null;
+          category_id: string;
+          company_id: string;
+          cost_center: string | null;
+          currency: string;
+          decided_at: string | null;
+          decided_by: string | null;
+          decision: Database["public"]["Enums"]["report_line_decision"];
+          decision_comment: string | null;
+          employee_id: string;
+          expense_date: string;
+          expense_id: string;
+          id: string;
+          project_code: string | null;
+          report_id: string;
+          snapshot: Json;
+          snapshot_hash: string;
+          tax_cents: number | null;
+          total_cents: number;
+        };
+        Insert: {
+          base_cents?: number | null;
+          carried_from_item_id?: string | null;
+          category_id: string;
+          company_id: string;
+          cost_center?: string | null;
+          currency: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          decision?: Database["public"]["Enums"]["report_line_decision"];
+          decision_comment?: string | null;
+          employee_id: string;
+          expense_date: string;
+          expense_id: string;
+          id?: string;
+          project_code?: string | null;
+          report_id: string;
+          snapshot: Json;
+          snapshot_hash: string;
+          tax_cents?: number | null;
+          total_cents: number;
+        };
+        Update: {
+          base_cents?: number | null;
+          carried_from_item_id?: string | null;
+          category_id?: string;
+          company_id?: string;
+          cost_center?: string | null;
+          currency?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          decision?: Database["public"]["Enums"]["report_line_decision"];
+          decision_comment?: string | null;
+          employee_id?: string;
+          expense_date?: string;
+          expense_id?: string;
+          id?: string;
+          project_code?: string | null;
+          report_id?: string;
+          snapshot?: Json;
+          snapshot_hash?: string;
+          tax_cents?: number | null;
+          total_cents?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "expense_report_items_carried_from_item_id_fkey";
+            columns: ["carried_from_item_id"];
+            isOneToOne: false;
+            referencedRelation: "expense_report_items";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expense_report_items_category_id_company_id_fkey";
+            columns: ["category_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "expense_categories";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "expense_report_items_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expense_report_items_decided_by_fkey";
+            columns: ["decided_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expense_report_items_expense_id_company_id_employee_id_fkey";
+            columns: ["expense_id", "company_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "expenses";
+            referencedColumns: ["id", "company_id", "employee_id"];
+          },
+          {
+            foreignKeyName: "expense_report_items_report_id_company_id_employee_id_fkey";
+            columns: ["report_id", "company_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "expense_reports";
+            referencedColumns: ["id", "company_id", "employee_id"];
+          },
+        ];
+      };
+      expense_reports: {
+        Row: {
+          company_id: string;
+          created_at: string;
+          decided_at: string | null;
+          employee_id: string;
+          id: string;
+          idempotency_key: string;
+          period_month: string;
+          previous_version_id: string | null;
+          status: Database["public"]["Enums"]["expense_report_status"];
+          submitted_at: string;
+          submitted_by: string | null;
+          updated_at: string;
+          version: number;
+        };
+        Insert: {
+          company_id: string;
+          created_at?: string;
+          decided_at?: string | null;
+          employee_id: string;
+          id?: string;
+          idempotency_key: string;
+          period_month: string;
+          previous_version_id?: string | null;
+          status?: Database["public"]["Enums"]["expense_report_status"];
+          submitted_at?: string;
+          submitted_by?: string | null;
+          updated_at?: string;
+          version: number;
+        };
+        Update: {
+          company_id?: string;
+          created_at?: string;
+          decided_at?: string | null;
+          employee_id?: string;
+          id?: string;
+          idempotency_key?: string;
+          period_month?: string;
+          previous_version_id?: string | null;
+          status?: Database["public"]["Enums"]["expense_report_status"];
+          submitted_at?: string;
+          submitted_by?: string | null;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "expense_reports_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expense_reports_employee_id_company_id_fkey";
+            columns: ["employee_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "expense_reports_previous_version_id_company_id_employee_id_fkey";
+            columns: ["previous_version_id", "company_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "expense_reports";
+            referencedColumns: ["id", "company_id", "employee_id"];
+          },
+          {
+            foreignKeyName: "expense_reports_submitted_by_fkey";
+            columns: ["submitted_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -3425,6 +4242,23 @@ export type Database = {
           relation: string;
         }[];
       };
+      accounting_batch_totals: {
+        Args: { p_batch: string };
+        Returns: {
+          dimension: string;
+          key: string;
+          label: string;
+          currency: string;
+          base_cents: number;
+          tax_cents: number;
+          total_cents: number;
+          lines: number;
+        }[];
+      };
+      accounting_close_blockers: {
+        Args: { p_company: string; p_period: string };
+        Returns: { kind: string; report_id: string; category_id: string; detail: string }[];
+      };
       add_absence_attachment: {
         Args: { p_request: string; p_path: string; p_mime: string; p_size: number };
         Returns: string;
@@ -3456,10 +4290,34 @@ export type Database = {
         Args: { p_job: string; p_provider: string };
         Returns: { run_id: string; attempt: number; storage_path: string; mime_type: string }[];
       };
+      close_accounting_period: {
+        Args: {
+          p_company: string;
+          p_period: string;
+          p_idempotency_key: string;
+          p_excluded?: unknown;
+          p_reason?: string;
+        };
+        Returns: string;
+      };
       close_shift_assignment: { Args: { p_id: string; p_last_day: string }; Returns: undefined };
+      complete_report_step: {
+        Args: { p_report: string; p_action: string; p_comment?: string };
+        Returns: Database["public"]["Enums"]["expense_report_status"];
+      };
       confirm_expense: {
         Args: { p_expense: string; p_reviewed_fields: unknown; p_duplicate_ack: boolean };
         Returns: unknown;
+      };
+      create_corrective_batch: {
+        Args: {
+          p_batch: string;
+          p_idempotency_key: string;
+          p_include_late_reports: boolean;
+          p_adjustments?: Json;
+          p_note?: string;
+        };
+        Returns: string;
       };
       create_expense: {
         Args: {
@@ -3471,6 +4329,14 @@ export type Database = {
       };
       decide_absence_request: {
         Args: { p_request: string; p_decision: string; p_message?: string };
+        Returns: undefined;
+      };
+      decide_report_line: {
+        Args: {
+          p_item: string;
+          p_decision: Database["public"]["Enums"]["report_line_decision"];
+          p_comment?: string;
+        };
         Returns: undefined;
       };
       decide_time_correction: {
@@ -3526,6 +4392,8 @@ export type Database = {
         };
         Returns: undefined;
       };
+      log_export_download: { Args: { p_export: string }; Returns: string };
+      mark_batch_accounted: { Args: { p_batch: string }; Returns: undefined };
       mark_punch_selfie_purged: { Args: { p_punch: string }; Returns: undefined };
       my_absence_access: {
         Args: { p_company: string };
@@ -3543,6 +4411,10 @@ export type Database = {
       my_expense_access: {
         Args: { p_company: string };
         Returns: { action: string; scope_type: string; work_center_id: string; team_id: string }[];
+      };
+      my_pending_expense_approvals: {
+        Args: { p_company: string };
+        Returns: { report_id: string; step_order: number; routing: string }[];
       };
       my_schedule_access: {
         Args: { p_company: string };
@@ -3632,6 +4504,17 @@ export type Database = {
           p_selfie_path?: string;
         };
         Returns: Json;
+      };
+      register_accounting_export: {
+        Args: {
+          p_batch: string;
+          p_format: Database["public"]["Enums"]["accounting_export_format"];
+          p_file_name: string;
+          p_path: string;
+          p_sha256: string;
+          p_size: number;
+        };
+        Returns: string;
       };
       register_expense_receipt: {
         Args: {
@@ -3747,14 +4630,21 @@ export type Database = {
         };
         Returns: Json;
       };
+      submit_expense_report: {
+        Args: { p_company: string; p_period: string; p_idempotency_key: string };
+        Returns: string;
+      };
       terminate_employee: { Args: { p_employee: string; p_last_day: string }; Returns: undefined };
     };
     Enums: {
       absence_request_status:
         "pending" | "info_requested" | "approved" | "rejected" | "cancelled" | "withdrawn";
       absence_unit: "day" | "half_day" | "hour";
+      accounting_batch_kind: "regular" | "corrective";
+      accounting_export_format: "pdf" | "csv" | "xlsx" | "zip";
       accrual_method: "upfront" | "monthly";
       app_role: "company_admin" | "hr" | "manager" | "accounting" | "employee" | "auditor";
+      approval_step_status: "waiting" | "pending" | "approved" | "returned" | "skipped";
       approval_type: "all" | "absences" | "expenses" | "time_corrections";
       assignment_scope: "employee" | "team";
       balance_movement_kind:
@@ -3775,6 +4665,8 @@ export type Database = {
       correction_status: "pending" | "approved" | "rejected" | "cancelled";
       day_count_basis: "working_days" | "calendar_days";
       entity_status: "active" | "inactive";
+      expense_report_status:
+        "submitted" | "in_review" | "returned" | "approved" | "included_in_batch" | "accounted";
       expense_source: "receipt" | "manual" | "mileage";
       expense_status: "draft" | "ready" | "discarded";
       grant_status: "active" | "revoked";
@@ -3788,6 +4680,7 @@ export type Database = {
       proration_method: "none" | "by_employment";
       punch_kind: "start" | "break_start" | "break_end" | "end";
       punch_source: "mobile" | "web" | "kiosk";
+      report_line_decision: "pending" | "approved" | "rejected" | "returned";
       role_scope: "company" | "work_center" | "team";
       rounding_mode: "down" | "up" | "nearest";
       schedule_status: "draft" | "published" | "revoked";

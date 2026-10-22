@@ -90,6 +90,12 @@ proveedor de OCR configurado; elegir uno exige ADR, contrato de encargo de trata
 RGPD) y comprobar dónde trata los datos. No se guarda el texto completo del ticket. **Pendiente**:
 plazo de conservación de tickets con la asesoría y su borrado.
 
+Liquidación (2026-10-28, `docs/LIQUIDACION_GASTOS.md`): los lotes contables y su paquete (PDF, CSV,
+XLSX y ZIP de justificantes) son inmutables, se guardan en un bucket privado y solo los descarga
+Contabilidad con enlace firmado de 60 s; cada descarga queda registrada. Los tickets no se envían por
+correo. **Pendiente**: plazo de conservación de lotes y paquetes (referencias habituales de 4 a 6
+años, a validar con la asesoría).
+
 ## 5. Conservación (propuesta a validar)
 
 | Dato                                | Plazo mínimo propuesto                                          | Motivo                   |

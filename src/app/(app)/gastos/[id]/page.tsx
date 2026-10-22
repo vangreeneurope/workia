@@ -60,7 +60,7 @@ export default async function GastoPage({ params }: PageProps<"/gastos/[id]">) {
   const { data: expense } = await supabase.from("expenses").select("*").eq("id", id).maybeSingle();
   if (!expense) notFound();
   const companyId = ctx.activeCompanyId as string;
-  const [ownId, receiptRes, categoriesRes, policyRes, eventsRes] = await Promise.all([
+  const [ownId, receiptRes, categoriesRes, policyRes, eventsRes, reportRes] = await Promise.all([
     getOwnEmployeeId(),
     supabase.from("expense_receipts").select("id, mime_type").eq("expense_id", id).maybeSingle(),
     supabase
@@ -80,7 +80,15 @@ export default async function GastoPage({ params }: PageProps<"/gastos/[id]">) {
       .select("id, action, detail, created_at")
       .eq("expense_id", id)
       .order("id"),
+    supabase
+      .from("expense_report_items")
+      .select("decision, report_id, expense_reports (status, period_month, version)")
+      .eq("expense_id", id),
   ]);
+  // Bloqueado si está en un informe no devuelto o se rechazó (docs/LIQUIDACION_GASTOS.md).
+  const reportLink = (reportRes.data ?? []).find(
+    (i) => i.decision === "rejected" || i.expense_reports?.status !== "returned",
+  );
   const receipt = receiptRes.data;
   const [runsRes, jobRes] = receipt
     ? await Promise.all([
@@ -312,7 +320,17 @@ export default async function GastoPage({ params }: PageProps<"/gastos/[id]">) {
             )}
             {owner ? (
               <div className="flex flex-wrap gap-2">
-                {status === "ready" ? (
+                {reportLink ? (
+                  <a
+                    className="text-sm underline"
+                    href={`/gastos/informes/${reportLink.report_id}`}
+                  >
+                    {reportLink.decision === "rejected"
+                      ? "Rechazado en su informe: no se puede volver a enviar"
+                      : "Incluido en un informe enviado: ver el informe"}
+                  </a>
+                ) : null}
+                {status === "ready" && !reportLink ? (
                   <ActionButton
                     action={reopenExpense.bind(null, expense.id)}
                     label="Corregir"

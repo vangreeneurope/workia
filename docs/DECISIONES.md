@@ -520,3 +520,39 @@ revelar de quién es. La similitud (mismo proveedor normalizado, fecha, total y 
 gastos de la persona) no bloquea: al confirmar pide marcar "no es un duplicado" y queda registrada
 como desviación. Clave de idempotencia por gasto y nombre de archivo igual a la clave: reenviar no
 duplica ni el objeto ni el gasto (probado con dos sesiones simultáneas).
+
+## ADR-045 · Aprobación y cierre de gastos: permisos
+
+**Fecha**: 2026-10-28 · **Estado**: aceptada
+
+**Decisión**: se amplía la matriz de gastos con `approve` (administración de empresa: respaldo sin
+manager o por autoaprobación y pasos por rol) y `close` (solo Contabilidad, a nivel de empresa:
+cerrar periodos, generar y descargar el paquete). El paso 1 lo decide el manager vigente para
+"gastos" con el resolvedor de aprobadores existente (suplencias incluidas, registradas como
+delegación). Reglas configurables añaden pasos por umbral de importe y moneda (y categoría opcional).
+Nadie actúa sobre sus propios gastos ni en dos pasos del mismo informe.
+
+## ADR-046 · Informes con snapshot y versiones
+
+**Fecha**: 2026-10-28 · **Estado**: aceptada
+
+**Decisión**: al enviar, cada gasto se copia en `expense_report_items.snapshot` con su huella
+SHA-256; la copia es inmutable (trigger). Una devolución congela esa versión; el reenvío crea la
+versión siguiente enlazada (`previous_version_id`) y hereda las aprobaciones de las líneas cuya
+huella no ha cambiado. Los estados del informe y sus transiciones están en un trigger, no en la
+aplicación. Un rechazo de línea es definitivo.
+**Alternativa descartada**: editar el informe devuelto en el sitio (se perdería lo que se revisó).
+
+## ADR-047 · Lotes contables y exportación determinista
+
+**Fecha**: 2026-10-28 · **Estado**: aceptada
+
+**Decisión**: cierre transaccional por empresa y periodo con bloqueo consultivo, secuencia sin
+huecos y clave de idempotencia; un único cierre ordinario por periodo (índice único parcial). Las
+líneas del lote son inmutables y llevan copiados empleado, categoría y cuentas del mapeo genérico
+por categoría; los ajustes van en lotes correctores. PDF (pdf-lib), CSV, XLSX (escrito a mano) y ZIP
+(fflate) se generan con fecha fija y orden estable, de modo que son reproducibles; se registra su
+SHA-256 y la base de datos rechaza un archivo distinto para el mismo lote y formato. Los totales se
+calculan en la base de datos y la aplicación comprueba que cuadran con las líneas antes de generar.
+Dependencias nuevas fijadas a versión exacta: `pdf-lib` 1.17.1 y `fflate` 0.8.3.
+**Alternativa descartada**: formato de un ERP concreto (no está decidido; no se inventa su esquema).

@@ -1,4 +1,4 @@
-import { Camera, ChevronRight, Info } from "lucide-react";
+import { Calculator, Camera, ChevronRight, FileStack, Inbox, Info } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -110,14 +110,45 @@ export default async function GastosPage() {
         title="Gastos"
         description="Fotografía tus tickets, revisa los datos y marca cada gasto como listo."
         actions={
-          employeeId ? (
-            <Link
-              href="/gastos/nuevo"
-              className="bg-primary text-primary-foreground inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium"
-            >
-              <Camera className="size-4" aria-hidden /> Nuevo gasto
-            </Link>
-          ) : null
+          <div className="flex flex-wrap gap-2">
+            {employeeId ? (
+              <>
+                <Link
+                  href="/gastos/nuevo"
+                  className="bg-primary text-primary-foreground inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium"
+                >
+                  <Camera className="size-4" aria-hidden /> Nuevo gasto
+                </Link>
+                <Link
+                  href="/gastos/informes"
+                  className="hover:bg-accent inline-flex min-h-11 items-center gap-2 rounded-lg border px-3 text-sm font-medium"
+                >
+                  <FileStack className="size-4" aria-hidden /> Informes
+                </Link>
+              </>
+            ) : null}
+            {access.approve ? (
+              <Link
+                href="/gastos/bandeja"
+                className="hover:bg-accent inline-flex min-h-11 items-center gap-2 rounded-lg border px-3 text-sm font-medium"
+              >
+                <Inbox className="size-4" aria-hidden /> Bandeja
+                {access.pendingApprovals > 0 ? (
+                  <span className="bg-primary text-primary-foreground rounded-full px-2 text-xs">
+                    {access.pendingApprovals}
+                  </span>
+                ) : null}
+              </Link>
+            ) : null}
+            {access.accounting ? (
+              <Link
+                href="/gastos/contabilidad"
+                className="hover:bg-accent inline-flex min-h-11 items-center gap-2 rounded-lg border px-3 text-sm font-medium"
+              >
+                <Calculator className="size-4" aria-hidden /> Contabilidad
+              </Link>
+            ) : null}
+          </div>
         }
       />
       {!employeeId ? (
