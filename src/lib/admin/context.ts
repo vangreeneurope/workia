@@ -27,13 +27,20 @@ export const getAdminContext = cache(async (): Promise<AdminContext | null> => {
   const companyId = user.activeCompanyId;
   if (!companyId) return null;
   const supabase = await createClient();
-  const [permissionsRes, scheduleRes, timeRes, absenceRes] = await Promise.all([
+  const [permissionsRes, scheduleRes, timeRes, absenceRes, expenseRes] = await Promise.all([
     supabase.rpc("my_company_permissions", { p_company: companyId }),
     supabase.rpc("my_schedule_access", { p_company: companyId }),
     supabase.rpc("my_time_access", { p_company: companyId }),
     supabase.rpc("my_absence_access", { p_company: companyId }),
+    supabase.rpc("my_expense_access", { p_company: companyId }),
   ]);
-  if (permissionsRes.error || scheduleRes.error || timeRes.error || absenceRes.error) {
+  if (
+    permissionsRes.error ||
+    scheduleRes.error ||
+    timeRes.error ||
+    absenceRes.error ||
+    expenseRes.error
+  ) {
     throw new Error("No se pudieron cargar tus permisos.");
   }
   const toPermissions = (
@@ -50,6 +57,7 @@ export const getAdminContext = cache(async (): Promise<AdminContext | null> => {
     ...toPermissions("schedule", scheduleRes.data),
     ...toPermissions("time", timeRes.data),
     ...toPermissions("absence", absenceRes.data),
+    ...toPermissions("expense", expenseRes.data),
   ];
   return {
     user,

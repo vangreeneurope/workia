@@ -851,6 +851,372 @@ export type Database = {
           },
         ];
       };
+      expense_categories: {
+        Row: {
+          code: string;
+          company_id: string;
+          created_at: string;
+          id: string;
+          is_mileage: boolean;
+          max_amount_cents: number | null;
+          name: string;
+          requires_client: boolean;
+          requires_cost_center: boolean;
+          requires_notes: boolean;
+          requires_project: boolean;
+          status: string;
+          updated_at: string;
+        };
+        Insert: {
+          code: string;
+          company_id: string;
+          created_at?: string;
+          id?: string;
+          is_mileage?: boolean;
+          max_amount_cents?: number | null;
+          name: string;
+          requires_client?: boolean;
+          requires_cost_center?: boolean;
+          requires_notes?: boolean;
+          requires_project?: boolean;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          code?: string;
+          company_id?: string;
+          created_at?: string;
+          id?: string;
+          is_mileage?: boolean;
+          max_amount_cents?: number | null;
+          name?: string;
+          requires_client?: boolean;
+          requires_cost_center?: boolean;
+          requires_notes?: boolean;
+          requires_project?: boolean;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "expense_categories_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      expense_events: {
+        Row: {
+          action: string;
+          actor_id: string | null;
+          company_id: string;
+          created_at: string;
+          detail: string | null;
+          employee_id: string;
+          expense_id: string;
+          id: number;
+        };
+        Insert: {
+          action: string;
+          actor_id?: string | null;
+          company_id: string;
+          created_at?: string;
+          detail?: string | null;
+          employee_id: string;
+          expense_id: string;
+          id?: never;
+        };
+        Update: {
+          action?: string;
+          actor_id?: string | null;
+          company_id?: string;
+          created_at?: string;
+          detail?: string | null;
+          employee_id?: string;
+          expense_id?: string;
+          id?: never;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "expense_events_actor_id_fkey";
+            columns: ["actor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expense_events_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expense_events_expense_id_company_id_employee_id_fkey";
+            columns: ["expense_id", "company_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "expenses";
+            referencedColumns: ["id", "company_id", "employee_id"];
+          },
+        ];
+      };
+      expense_policies: {
+        Row: {
+          allowed_currencies: string[];
+          company_id: string;
+          created_at: string;
+          default_currency: string;
+          id: string;
+          legal_reference: string | null;
+          max_days_past: number;
+          mileage_rate_milli: number | null;
+          ocr_total_tolerance_cents: number;
+          receipt_required: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          allowed_currencies?: string[];
+          company_id: string;
+          created_at?: string;
+          default_currency?: string;
+          id?: string;
+          legal_reference?: string | null;
+          max_days_past?: number;
+          mileage_rate_milli?: number | null;
+          ocr_total_tolerance_cents?: number;
+          receipt_required?: boolean;
+          updated_at?: string;
+        };
+        Update: {
+          allowed_currencies?: string[];
+          company_id?: string;
+          created_at?: string;
+          default_currency?: string;
+          id?: string;
+          legal_reference?: string | null;
+          max_days_past?: number;
+          mileage_rate_milli?: number | null;
+          ocr_total_tolerance_cents?: number;
+          receipt_required?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "expense_policies_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: true;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      expense_receipts: {
+        Row: {
+          company_id: string;
+          created_at: string;
+          created_by: string | null;
+          employee_id: string;
+          expense_id: string;
+          height: number | null;
+          id: string;
+          mime_type: string;
+          sha256: string;
+          size_bytes: number;
+          storage_path: string;
+          width: number | null;
+        };
+        Insert: {
+          company_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          employee_id: string;
+          expense_id: string;
+          height?: number | null;
+          id?: string;
+          mime_type: string;
+          sha256: string;
+          size_bytes: number;
+          storage_path: string;
+          width?: number | null;
+        };
+        Update: {
+          company_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          employee_id?: string;
+          expense_id?: string;
+          height?: number | null;
+          id?: string;
+          mime_type?: string;
+          sha256?: string;
+          size_bytes?: number;
+          storage_path?: string;
+          width?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "expense_receipts_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expense_receipts_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expense_receipts_expense_id_company_id_employee_id_fkey";
+            columns: ["expense_id", "company_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "expenses";
+            referencedColumns: ["id", "company_id", "employee_id"];
+          },
+        ];
+      };
+      expenses: {
+        Row: {
+          base_cents: number | null;
+          category_id: string | null;
+          client_name: string | null;
+          company_id: string;
+          confirmed_at: string | null;
+          confirmed_by: string | null;
+          cost_center: string | null;
+          created_at: string;
+          created_by: string | null;
+          currency: string | null;
+          deviations: string[];
+          distance_km_tenths: number | null;
+          document_number: string | null;
+          duplicate_ack: boolean;
+          employee_id: string;
+          expense_date: string | null;
+          id: string;
+          idempotency_key: string;
+          merchant_key: string | null;
+          merchant_name: string | null;
+          merchant_tax_id: string | null;
+          mileage_rate_milli: number | null;
+          notes: string | null;
+          payment_method: Database["public"]["Enums"]["payment_method"] | null;
+          project_code: string | null;
+          reviewed_fields: string[];
+          source: Database["public"]["Enums"]["expense_source"];
+          status: Database["public"]["Enums"]["expense_status"];
+          tax_cents: number | null;
+          total_cents: number | null;
+          updated_at: string;
+        };
+        Insert: {
+          base_cents?: number | null;
+          category_id?: string | null;
+          client_name?: string | null;
+          company_id: string;
+          confirmed_at?: string | null;
+          confirmed_by?: string | null;
+          cost_center?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          currency?: string | null;
+          deviations?: string[];
+          distance_km_tenths?: number | null;
+          document_number?: string | null;
+          duplicate_ack?: boolean;
+          employee_id: string;
+          expense_date?: string | null;
+          id?: string;
+          idempotency_key: string;
+          merchant_key?: never;
+          merchant_name?: string | null;
+          merchant_tax_id?: string | null;
+          mileage_rate_milli?: number | null;
+          notes?: string | null;
+          payment_method?: Database["public"]["Enums"]["payment_method"] | null;
+          project_code?: string | null;
+          reviewed_fields?: string[];
+          source: Database["public"]["Enums"]["expense_source"];
+          status?: Database["public"]["Enums"]["expense_status"];
+          tax_cents?: number | null;
+          total_cents?: number | null;
+          updated_at?: string;
+        };
+        Update: {
+          base_cents?: number | null;
+          category_id?: string | null;
+          client_name?: string | null;
+          company_id?: string;
+          confirmed_at?: string | null;
+          confirmed_by?: string | null;
+          cost_center?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          currency?: string | null;
+          deviations?: string[];
+          distance_km_tenths?: number | null;
+          document_number?: string | null;
+          duplicate_ack?: boolean;
+          employee_id?: string;
+          expense_date?: string | null;
+          id?: string;
+          idempotency_key?: string;
+          merchant_key?: never;
+          merchant_name?: string | null;
+          merchant_tax_id?: string | null;
+          mileage_rate_milli?: number | null;
+          notes?: string | null;
+          payment_method?: Database["public"]["Enums"]["payment_method"] | null;
+          project_code?: string | null;
+          reviewed_fields?: string[];
+          source?: Database["public"]["Enums"]["expense_source"];
+          status?: Database["public"]["Enums"]["expense_status"];
+          tax_cents?: number | null;
+          total_cents?: number | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "expenses_category_id_company_id_fkey";
+            columns: ["category_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "expense_categories";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "expenses_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expenses_confirmed_by_fkey";
+            columns: ["confirmed_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expenses_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "expenses_employee_id_company_id_fkey";
+            columns: ["employee_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
       group_admins: {
         Row: {
           created_at: string;
@@ -1041,6 +1407,85 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];
+          },
+        ];
+      };
+      jobs: {
+        Row: {
+          attempts: number;
+          company_id: string;
+          created_at: string;
+          created_by: string | null;
+          dedupe_key: string;
+          employee_id: string;
+          id: string;
+          kind: string;
+          last_error_code: string | null;
+          locked_at: string | null;
+          max_attempts: number;
+          payload: Json;
+          requeues: number;
+          run_after: string;
+          status: Database["public"]["Enums"]["job_status"];
+          updated_at: string;
+        };
+        Insert: {
+          attempts?: number;
+          company_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          dedupe_key: string;
+          employee_id: string;
+          id?: string;
+          kind: string;
+          last_error_code?: string | null;
+          locked_at?: string | null;
+          max_attempts?: number;
+          payload?: Json;
+          requeues?: number;
+          run_after?: string;
+          status?: Database["public"]["Enums"]["job_status"];
+          updated_at?: string;
+        };
+        Update: {
+          attempts?: number;
+          company_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          dedupe_key?: string;
+          employee_id?: string;
+          id?: string;
+          kind?: string;
+          last_error_code?: string | null;
+          locked_at?: string | null;
+          max_attempts?: number;
+          payload?: Json;
+          requeues?: number;
+          run_after?: string;
+          status?: Database["public"]["Enums"]["job_status"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "jobs_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "jobs_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "jobs_employee_id_company_id_fkey";
+            columns: ["employee_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id", "company_id"];
           },
         ];
       };
@@ -1321,6 +1766,73 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "teams";
             referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      ocr_runs: {
+        Row: {
+          attempt: number;
+          company_id: string;
+          employee_id: string;
+          error_code: string | null;
+          finished_at: string | null;
+          id: string;
+          job_id: string;
+          provider: string;
+          receipt_id: string;
+          result: Json | null;
+          started_at: string;
+          status: Database["public"]["Enums"]["ocr_status"];
+        };
+        Insert: {
+          attempt: number;
+          company_id: string;
+          employee_id: string;
+          error_code?: string | null;
+          finished_at?: string | null;
+          id?: string;
+          job_id: string;
+          provider: string;
+          receipt_id: string;
+          result?: Json | null;
+          started_at?: string;
+          status?: Database["public"]["Enums"]["ocr_status"];
+        };
+        Update: {
+          attempt?: number;
+          company_id?: string;
+          employee_id?: string;
+          error_code?: string | null;
+          finished_at?: string | null;
+          id?: string;
+          job_id?: string;
+          provider?: string;
+          receipt_id?: string;
+          result?: Json | null;
+          started_at?: string;
+          status?: Database["public"]["Enums"]["ocr_status"];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ocr_runs_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ocr_runs_job_id_company_id_employee_id_fkey";
+            columns: ["job_id", "company_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "jobs";
+            referencedColumns: ["id", "company_id", "employee_id"];
+          },
+          {
+            foreignKeyName: "ocr_runs_receipt_id_company_id_employee_id_fkey";
+            columns: ["receipt_id", "company_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "expense_receipts";
+            referencedColumns: ["id", "company_id", "employee_id"];
           },
         ];
       };
@@ -2940,7 +3452,23 @@ export type Database = {
         };
         Returns: string;
       };
+      claim_ocr_job: {
+        Args: { p_job: string; p_provider: string };
+        Returns: { run_id: string; attempt: number; storage_path: string; mime_type: string }[];
+      };
       close_shift_assignment: { Args: { p_id: string; p_last_day: string }; Returns: undefined };
+      confirm_expense: {
+        Args: { p_expense: string; p_reviewed_fields: unknown; p_duplicate_ack: boolean };
+        Returns: unknown;
+      };
+      create_expense: {
+        Args: {
+          p_company: string;
+          p_idempotency_key: string;
+          p_source: Database["public"]["Enums"]["expense_source"];
+        };
+        Returns: string;
+      };
       decide_absence_request: {
         Args: { p_request: string; p_decision: string; p_message?: string };
         Returns: undefined;
@@ -2954,6 +3482,19 @@ export type Database = {
         Returns: { punch_id: string; selfie_path: string }[];
       };
       find_group_user_by_email: { Args: { p_company: string; p_email: string }; Returns: string };
+      find_receipt_duplicate: {
+        Args: { p_company: string; p_sha256: string };
+        Returns: { expense_id: string; owner: string }[];
+      };
+      finish_ocr_run: {
+        Args: {
+          p_run: string;
+          p_status: Database["public"]["Enums"]["ocr_status"];
+          p_result?: Json;
+          p_error_code?: string;
+        };
+        Returns: Database["public"]["Enums"]["ocr_status"];
+      };
       generate_time_reminders: { Args: { p_now?: string }; Returns: number };
       group_user_labels: {
         Args: { p_company: string; p_users: unknown };
@@ -2998,6 +3539,10 @@ export type Database = {
           work_center_id: string;
           team_id: string;
         }[];
+      };
+      my_expense_access: {
+        Args: { p_company: string };
+        Returns: { action: string; scope_type: string; work_center_id: string; team_id: string }[];
       };
       my_schedule_access: {
         Args: { p_company: string };
@@ -3088,7 +3633,22 @@ export type Database = {
         };
         Returns: Json;
       };
+      register_expense_receipt: {
+        Args: {
+          p_company: string;
+          p_idempotency_key: string;
+          p_path: string;
+          p_sha256: string;
+          p_mime: string;
+          p_size: number;
+          p_enqueue_ocr: boolean;
+          p_width?: number;
+          p_height?: number;
+        };
+        Returns: { expense_id: string; job_id: string; created: boolean }[];
+      };
       register_kiosk_device: { Args: { p_work_center: string; p_name: string }; Returns: string };
+      reopen_expense: { Args: { p_expense: string }; Returns: undefined };
       request_time_correction: {
         Args: {
           p_employee: string;
@@ -3101,6 +3661,7 @@ export type Database = {
         };
         Returns: string;
       };
+      requeue_receipt_ocr: { Args: { p_expense: string }; Returns: string };
       reset_kiosk_pin: { Args: { p_employee: string }; Returns: undefined };
       resolve_approver: {
         Args: {
@@ -3152,6 +3713,10 @@ export type Database = {
           p_flex_end?: number;
         };
         Returns: string;
+      };
+      set_expense_discarded: {
+        Args: { p_expense: string; p_discarded: boolean };
+        Returns: undefined;
       };
       set_my_kiosk_pin: { Args: { p_company: string; p_pin: string }; Returns: undefined };
       settle_vacation_balances: { Args: Record<PropertyKey, never>; Returns: number };
@@ -3210,10 +3775,15 @@ export type Database = {
       correction_status: "pending" | "approved" | "rejected" | "cancelled";
       day_count_basis: "working_days" | "calendar_days";
       entity_status: "active" | "inactive";
+      expense_source: "receipt" | "manual" | "mileage";
+      expense_status: "draft" | "ready" | "discarded";
       grant_status: "active" | "revoked";
+      job_status: "pending" | "processing" | "succeeded" | "failed";
       location_mode: "off" | "optional" | "required";
       location_status: "not_requested" | "granted" | "denied" | "unavailable" | "timeout";
       membership_status: "invited" | "active" | "suspended" | "ended";
+      ocr_status: "pending" | "processing" | "succeeded" | "needs_review" | "failed";
+      payment_method: "company_card" | "personal_card" | "cash" | "transfer" | "other";
       policy_scope: "company" | "work_center" | "team" | "employee";
       proration_method: "none" | "by_employment";
       punch_kind: "start" | "break_start" | "break_end" | "end";

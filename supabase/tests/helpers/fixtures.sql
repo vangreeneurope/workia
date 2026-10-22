@@ -164,3 +164,8 @@ insert into public.time_tracking_policies (company_id) values ('aaaaaaaa-0000-00
 -- se pierden datos sin autorización).
 insert into public.absence_types (id, company_id, code, name) values
   ('7f000000-0000-4000-8000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'FX', 'Tipo de pruebas');
+
+-- Gastos: una categoría en A (las pruebas de reversión comprueban que no se
+-- pierden datos sin autorización).
+insert into public.expense_categories (id, company_id, code, name) values
+  ('9c000000-0000-4000-8000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'FX', 'Categoría de pruebas');

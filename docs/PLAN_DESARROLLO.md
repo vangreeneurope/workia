@@ -49,6 +49,12 @@ equipo.
 Decisión de proveedor OCR (ADR), captura con cámara, extracción y revisión, políticas de gasto,
 flujo de aprobación y validación por Contabilidad, exportación contable, tickets privados.
 
+Hecho (2026-10-27, docs/GASTOS.md): captura con cámara o archivo, validación y duplicados, bucket
+privado, adaptador de OCR con proveedor falso para pruebas (sin proveedor real: pendiente de ADR),
+cola con reintentos, revisión con confianza por campo, política y categorías, kilometraje.
+Pendiente: proveedor de OCR, notas de gasto, aprobación, validación por Contabilidad, liquidación
+y exportación.
+
 ## Fase 4 · Informes y notificaciones
 
 Informes por empresa y grupo, exportaciones, notificaciones por correo y push en la PWA respetando

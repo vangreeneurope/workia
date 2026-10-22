@@ -141,3 +141,21 @@ test("las ausencias, la bandeja y los justificantes exigen sesión", async ({ pa
   expect(response.status()).toBe(307);
   expect(response.headers()["location"]).toContain("/acceder");
 });
+
+test("los gastos, la revisión y los tickets exigen sesión", async ({ page, request }) => {
+  for (const path of [
+    "/gastos",
+    "/gastos/nuevo",
+    "/gastos/00000000-0000-4000-8000-000000000000",
+    "/admin/gastos",
+  ]) {
+    await page.goto(path);
+    await expect(page).toHaveURL(/\/acceder\?siguiente=/);
+  }
+  // El ticket nunca se sirve sin sesión (ni URL permanente ni pública).
+  const response = await request.get("/gastos/ticket/00000000-0000-4000-8000-000000000000", {
+    maxRedirects: 0,
+  });
+  expect(response.status()).toBe(307);
+  expect(response.headers()["location"]).toContain("/acceder");
+});

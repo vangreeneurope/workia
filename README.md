@@ -129,6 +129,14 @@ calendario propio y del equipo (de los compañeros solo "Ausente"). La **bandeja
 configuran tipos, políticas versionadas, asignaciones y ajustes. Reglas y privacidad en
 [docs/AUSENCIAS.md](docs/AUSENCIAS.md).
 
+## Gastos
+
+**Gastos** (`/gastos`) permite fotografiar el ticket con la cámara del móvil o subir una foto o un
+PDF. El servidor valida el archivo, detecta duplicados y lo guarda en privado; la lectura
+automática (OCR, intercambiable y desactivada mientras no haya un proveedor aprobado) solo propone
+datos, que la persona revisa (los dudosos, uno a uno) y confirma. Incluye kilometraje y las reglas
+de la política de cada empresa. Detalle en [docs/GASTOS.md](docs/GASTOS.md).
+
 ## Horarios y calendarios laborales
 
 **Horario** (`/horario`) muestra el horario planificado en vista semanal o mensual: la propia
@@ -160,7 +168,7 @@ desplegarse en cualquier plataforma compatible con Next.js. Requisitos:
 [CLAUDE.md](CLAUDE.md) (convenciones y reglas) · [PRD](docs/PRD.md) ·
 [Arquitectura](docs/ARQUITECTURA.md) · [Base de datos](docs/BASE_DATOS.md) ·
 [Permisos](docs/PERMISOS.md) · [Vigencia y bajas](docs/VIGENCIA_Y_BAJAS.md) ·
-[Horarios](docs/HORARIOS.md) · [Control horario](docs/CONTROL_HORARIO.md) · [Ausencias](docs/AUSENCIAS.md) ·
+[Horarios](docs/HORARIOS.md) · [Control horario](docs/CONTROL_HORARIO.md) · [Ausencias](docs/AUSENCIAS.md) · [Gastos](docs/GASTOS.md) ·
 [Normativa](docs/NORMATIVA.md) ·
 [Plan de desarrollo](docs/PLAN_DESARROLLO.md) · [Decisiones](docs/DECISIONES.md) ·
 [Estado del proyecto](docs/ESTADO_PROYECTO.md)

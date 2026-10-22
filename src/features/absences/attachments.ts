@@ -6,6 +6,7 @@
  */
 
 import { sanitizeJpeg } from "@/features/time-tracking/selfie";
+import { stripJpegMetadata } from "@/lib/files/images";
 
 export const ATTACHMENT_MAX_BYTES = 5 * 1024 * 1024;
 
@@ -36,40 +37,10 @@ export function checkAttachment(input: Uint8Array): AttachmentCheck {
   }
   if (head[0] === 0xff && head[1] === 0xd8) {
     // sanitizeJpeg limita a 2 MB para selfies; aquí se aplica el límite de 5 MB.
-    const result = input.length <= 2 * 1024 * 1024 ? sanitizeJpeg(input) : stripLargeJpeg(input);
+    const result = input.length <= 2 * 1024 * 1024 ? sanitizeJpeg(input) : stripJpegMetadata(input);
     return result.ok
       ? { ok: true, bytes: result.bytes, mime: "image/jpeg", extension: "jpg" }
       : { ok: false, error: result.error };
   }
   return { ok: false, error: "Solo se admiten PDF, JPEG o PNG." };
-}
-
-/** Mismo saneado que sanitizeJpeg, troceado para archivos de más de 2 MB. */
-function stripLargeJpeg(
-  input: Uint8Array,
-): { ok: true; bytes: Uint8Array } | { ok: false; error: string } {
-  let i = 2;
-  const parts: Uint8Array[] = [input.slice(0, 2)];
-  while (i < input.length) {
-    if (input[i] !== 0xff) return { ok: false, error: "La imagen está dañada." };
-    const marker = input[i + 1] ?? 0;
-    if (marker === 0xda || marker === 0xd9) {
-      parts.push(input.slice(i));
-      break;
-    }
-    const length = ((input[i + 2] ?? 0) << 8) + (input[i + 3] ?? 0);
-    if (length < 2 || i + 2 + length > input.length)
-      return { ok: false, error: "La imagen está dañada." };
-    const isMetadata = (marker >= 0xe1 && marker <= 0xef) || marker === 0xfe;
-    if (!isMetadata) parts.push(input.slice(i, i + 2 + length));
-    i += 2 + length;
-  }
-  const total = parts.reduce((s, p) => s + p.length, 0);
-  const out = new Uint8Array(total);
-  let offset = 0;
-  for (const p of parts) {
-    out.set(p, offset);
-    offset += p.length;
-  }
-  return { ok: true, bytes: out };
 }

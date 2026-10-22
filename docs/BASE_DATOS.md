@@ -191,6 +191,25 @@ RPC: `quote_absence_request`, `submit_absence_request`, `decide_absence_request`
 `publish_vacation_policy_version` (authenticated); `settle_vacation_balances` (solo service_role).
 Bucket privado `absence-attachments` (PDF, JPEG, PNG; 5 MB).
 
+### Gastos (migración `20261027100000_gastos`)
+
+Flujo, reglas y privacidad en [GASTOS.md](GASTOS.md).
+
+| Tabla                | Propósito                            | Claves y restricciones relevantes                                                       |
+| -------------------- | ------------------------------------ | --------------------------------------------------------------------------------------- |
+| `expense_policies`   | Política de gastos (una por empresa) | moneda por defecto entre las admitidas; €/km en milésimas                               |
+| `expense_categories` | Categorías                           | código único por empresa; `is_mileage` inmutable                                        |
+| `expenses`           | Gastos                               | idempotentes por persona; importes en céntimos; `ready` exige los datos completos       |
+| `expense_receipts`   | Tickets (metadatos)                  | inmutables; huella SHA-256 única por empresa; uno por gasto                             |
+| `jobs`               | Cola de trabajos                     | un trabajo por (empresa, tipo, `dedupe_key`); intentos ≤ máximo; solo ids en el payload |
+| `ocr_runs`           | Intentos de OCR                      | resultado limitado a campos conocidos (≤ 8 KB); terminado = inmutable                   |
+| `expense_events`     | Historial                            | inmutable; solo códigos                                                                 |
+
+RPC: `find_receipt_duplicate`, `register_expense_receipt`, `create_expense`, `claim_ocr_job`,
+`finish_ocr_run`, `requeue_receipt_ocr`, `confirm_expense`, `reopen_expense`,
+`set_expense_discarded`, `my_expense_access` (authenticated). Bucket privado `expense-receipts`
+(PDF, JPEG, PNG; 10 MB), ruta `<empresa>/<persona>/<año>/<mes>/<uuid>.<ext>`.
+
 ### Auditoría y almacenamiento
 
 - `audit_log`: append-only. Columnas `actor_id` (`auth.uid()`), `company_id`, `group_id`,
@@ -304,7 +323,7 @@ npx supabase gen types typescript --local --schema public > src/types/database.t
 
 - **Control horario**: exportación para la Inspección (sin tablas nuevas).
 - **Ausencias**: plazo de conservación y borrado de justificantes. (justificantes en bucket privado `leave-attachments`).
-- **Gastos (fase 3)**: `expense_policies`, `expense_reports`, `expenses`, `expense_receipts`
-  (bucket privado `expense-receipts`, resultado OCR y campos confirmados por la persona).
+- **Gastos**: notas de gasto (`expense_reports`), aprobación, validación por Contabilidad,
+  liquidación y exportación; borrado de tickets al vencer su plazo de conservación.
 
 Cada tabla nueva seguirá las convenciones de la sección 1, con pruebas de aislamiento y reversión.

@@ -83,6 +83,13 @@ con la asesoría.
 - Los tickets pueden contener datos personales (nombre, tarjeta parcial): almacenamiento privado y
   acceso solo para la persona, su responsable y Contabilidad de la empresa.
 
+Implementación (2026-10-27, `docs/GASTOS.md`): bucket privado `expense-receipts` con URL firmada de
+60 s; metadatos de las fotos eliminados; el ticket original no se modifica ni se borra al corregir.
+El OCR solo propone datos y la persona confirma. **Ningún ticket se envía a terceros**: no hay
+proveedor de OCR configurado; elegir uno exige ADR, contrato de encargo de tratamiento (art. 28
+RGPD) y comprobar dónde trata los datos. No se guarda el texto completo del ticket. **Pendiente**:
+plazo de conservación de tickets con la asesoría y su borrado.
+
 ## 5. Conservación (propuesta a validar)
 
 | Dato                                | Plazo mínimo propuesto                                          | Motivo                   |

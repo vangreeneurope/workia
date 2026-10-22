@@ -11,6 +11,8 @@
 #   3. Aplicación y terminal a la vez para la misma persona: uno gana.
 #   4. Dos solicitudes de vacaciones a la vez que solo caben de una en una:
 #      una reserva el saldo y la otra se rechaza (nunca saldo consumido dos veces).
+#   5. Mismo ticket registrado dos veces a la vez (reintento): un solo gasto.
+#   6. Dos sesiones reclaman a la vez el mismo trabajo de OCR: una sola ejecución.
 
 concurrency_session() {
   # $1 = base, $2 = usuario (uuid), $3 = sentencia, $4 = segundos de espera antes de confirmar
@@ -113,6 +115,35 @@ SQL
     echo "FALLO: dos solicitudes simultáneas sobre el mismo saldo (solicitudes/reservado=$n)" >&2; cat "$out_a" "$out_b" >&2; return 1
   fi
   echo "  ok - Dos solicitudes simultáneas: una reserva el saldo y la otra se rechaza por saldo insuficiente"
+
+  # Gastos: el mismo registro de ticket dos veces a la vez.
+  local ekey=9e000000-0000-4000-8000-000000000001 epath
+  epath="$(pg_sql "$db" -At -c "select '$company/e0000000-0000-0000-0000-000000000007/' || to_char((now() at time zone 'Europe/Madrid')::date, 'YYYY/MM') || '/$ekey.jpg'")"
+  pg_sql "$db" -At -o /dev/null -c "insert into storage.objects (bucket_id, name) values ('expense-receipts', '$epath')"
+  local register="select created from public.register_expense_receipt('$company', '$ekey', '$epath', repeat('e', 64), 'image/jpeg', 20000, true, 1200, 1600)"
+  concurrency_session "$db" 00000000-0000-0000-0000-000000000007 "$register" 2 >"$out_a" &
+  sleep 0.5
+  concurrency_session "$db" 00000000-0000-0000-0000-000000000007 "$register" 0 >"$out_b"
+  wait
+  n="$(pg_sql "$db" -At -c "select count(*) || '/' || (select count(*) from public.jobs) from public.expenses where idempotency_key = '$ekey'")"
+  if [[ "$n" != "1/1" ]] || ! grep -qx "t" "$out_a" || ! grep -qx "f" "$out_b"; then
+    echo "FALLO: registro simultáneo del mismo ticket (gastos/trabajos=$n)" >&2; cat "$out_a" "$out_b" >&2; return 1
+  fi
+  echo "  ok - Mismo ticket registrado a la vez: un solo gasto y un solo trabajo de OCR"
+
+  local job
+  job="$(pg_sql "$db" -At -c "select id from public.jobs limit 1")"
+  concurrency_session "$db" 00000000-0000-0000-0000-000000000007 \
+    "select 'run:' || attempt from public.claim_ocr_job('$job', 'fake')" 2 >"$out_a" &
+  sleep 0.5
+  concurrency_session "$db" 00000000-0000-0000-0000-000000000007 \
+    "select 'run:' || attempt from public.claim_ocr_job('$job', 'fake')" 0 >"$out_b"
+  wait
+  n="$(pg_sql "$db" -At -c "select count(*) from public.ocr_runs where job_id = '$job'")"
+  if [[ "$n" != "1" ]] || ! grep -qx "run:1" "$out_a" || grep -q "run:" "$out_b"; then
+    echo "FALLO: dos sesiones reclaman el mismo trabajo (ejecuciones=$n)" >&2; cat "$out_a" "$out_b" >&2; return 1
+  fi
+  echo "  ok - Dos sesiones reclaman el mismo trabajo de OCR: una sola ejecución"
   rm -f "$out_a" "$out_b"
   pg_drop_db "$db"
 }

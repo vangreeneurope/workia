@@ -61,6 +61,10 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
+  experimental: {
+    // Tickets de gasto (hasta 10 MB) y justificantes: el límite por defecto es 1 MB.
+    serverActions: { bodySizeLimit: "11mb" },
+  },
   partialPrefetching: true,
   poweredByHeader: false,
   turbopack: {

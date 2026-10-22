@@ -1,7 +1,8 @@
 # Estado del proyecto
 
-**Última actualización**: 2026-10-26 · **Fase actual**: 1 y 2 implementadas en local
-(administración, horarios, control horario, vacaciones y ausencias). Nada se ha validado aún contra
+**Última actualización**: 2026-10-27 · **Fase actual**: 1 y 2 implementadas en local
+(administración, horarios, control horario, vacaciones y ausencias) y fase 3 iniciada (captura de
+gastos con OCR intercambiable). Nada se ha validado aún contra
 un proyecto Supabase real ni en GitHub Actions (sin remoto): los tres trabajos del CI se han
 ejecutado en local. Los módulos se han construido por petición expresa sin validar antes los
 anteriores con sesión real (excepción a la regla de CLAUDE.md, registrada aquí).
@@ -127,31 +128,51 @@ anteriores con sesión real (excepción a la regla de CLAUDE.md, registrada aqu�
 - Ausencias: anillo de progreso por saldo y barras de uso mensual (`src/components/charts`), sin
   librerías, con el dato también en texto y tabla para lectores de pantalla.
 
-## 2. Resultados de verificación (2026-10-26)
+### Gastos: captura y OCR (2026-10-27)
+
+- Migración `20261027100000_gastos` con reversión verificada: `expense_policies`,
+  `expense_categories`, `expenses`, `expense_receipts`, `jobs`, `ocr_runs`, `expense_events`;
+  bucket privado `expense-receipts` con políticas de Storage; permisos de gastos (ADR-042).
+- Captura móvil con cámara o archivo, vista previa y reducción legible en el navegador; validación
+  en servidor (extensión, firma, MIME, tamaño, dimensiones, PDF sin contenido activo), metadatos
+  eliminados, SHA-256 y duplicados exactos (ADR-044).
+- `OcrProvider` con proveedor falso determinista (solo fuera de producción) y normalización común;
+  **sin proveedor real** (ADR-043). Cola idempotente, estados `pending`, `processing`,
+  `succeeded`, `needs_review`, `failed`, 3 intentos con espera y 2 reintentos manuales.
+- Revisión con campos de baja confianza resaltados y comprobación obligatoria; reglas de la
+  política (fechas, importes, moneda, obligatorios, desviaciones), similitud que pide confirmación,
+  kilometraje, corrección sin tocar el ticket original. Administración de política y categorías.
+- Límite de Server Actions subido a 11 MB (antes, 1 MB por defecto: afectaba también a
+  justificantes y selfies de más de 1 MB).
+
+## 2. Resultados de verificación (2026-10-27)
 
 | Verificación               | Comando                                           | Resultado                                                                                                  |
 | -------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | Tipos                      | `npm run typecheck`                               | Sin errores                                                                                                |
 | Lint                       | `npm run lint`                                    | 0 errores, 0 avisos                                                                                        |
 | Formato                    | `npm run format:check`                            | Correcto                                                                                                   |
-| Unitarias                  | `npm test`                                        | 18 archivos, 180 pruebas superadas                                                                         |
+| Unitarias                  | `npm test`                                        | 19 archivos, 214 pruebas superadas (33 de gastos: archivos maliciosos, OCR caído, reintento, móvil)        |
 | Aislamiento multiempresa   | `npm run test:db` → `10_aislamiento_multiempresa` | 134 aserciones superadas                                                                                   |
 | Integridad y escalada      | `npm run test:db` → `20_integridad_y_escalada`    | 26 aserciones superadas                                                                                    |
-| Semillas sintéticas        | `npm run test:db` → `30_seed_sintetico`           | 22 aserciones superadas                                                                                    |
+| Semillas sintéticas        | `npm run test:db` → `30_seed_sintetico`           | 23 aserciones superadas                                                                                    |
 | Administración             | `npm run test:db` → `40_administracion`           | 81 aserciones superadas                                                                                    |
 | Horarios                   | `npm run test:db` → `50_horarios`                 | 101 aserciones superadas                                                                                   |
 | Control horario            | `npm run test:db` → `60_control_horario`          | 115 aserciones superadas                                                                                   |
 | Ausencias                  | `npm run test:db` → `70_ausencias`                | 81 aserciones superadas                                                                                    |
-| Concurrencia               | `npm run test:db` → `test-db-concurrency.sh`      | 4 escenarios con dos sesiones simultáneas (incluidas dos solicitudes sobre el mismo saldo)                 |
-| Reversibilidad             | `npm run test:db`                                 | 6 reversiones restauran el esquema exacto, reaplicar lo reproduce, 6 exigen autorización para perder datos |
+| Gastos                     | `npm run test:db` → `80_gastos`                   | 81 aserciones superadas                                                                                    |
+| Concurrencia               | `npm run test:db` → `test-db-concurrency.sh`      | 6 escenarios con dos sesiones simultáneas (mismo saldo, mismo ticket, mismo trabajo de OCR)                |
+| Reversibilidad             | `npm run test:db`                                 | 7 reversiones restauran el esquema exacto, reaplicar lo reproduce, 7 exigen autorización para perder datos |
 | Tipos frente a esquema     | `npm run db:types:check`                          | Al día (incluye las funciones RPC)                                                                         |
-| Build de producción        | `npm run build`                                   | Correcto, 49 rutas                                                                                         |
-| E2E                        | `npm run test:e2e`                                | 32 pruebas superadas (móvil y escritorio)                                                                  |
+| Build de producción        | `npm run build`                                   | Correcto (incluye /gastos, /gastos/nuevo, /gastos/[id], /gastos/ticket/[id] y /admin/gastos)               |
+| E2E                        | `npm run test:e2e`                                | 34 pruebas superadas (móvil y escritorio)                                                                  |
 | Dependencias de producción | `npm audit --omit=dev`                            | 0 vulnerabilidades                                                                                         |
 
-**CI**: los tres trabajos de `.github/workflows/ci.yml` se han ejecutado en local tras `npm ci`
-(calidad; base de datos en modo externo contra PostgreSQL 16 por TCP, como el servicio del CI;
-build y E2E). No se ha podido ejecutar en GitHub Actions porque el repositorio no tiene remoto.
+**CI**: los pasos de los tres trabajos de `.github/workflows/ci.yml` se han ejecutado en local
+(calidad; base de datos con PostgreSQL desechable; build y E2E con las variables de marcador del CI).
+`npm audit` completo avisa de 5 vulnerabilidades altas en `braces`, dentro de las herramientas de
+lint (no en producción); la corrección automática rebajaría `eslint-config-next` a la versión 14 y
+no se ha aplicado. No se ha podido ejecutar en GitHub Actions porque el repositorio no tiene remoto.
 
 Comprobaciones adicionales: revisión visual a 360 px y en escritorio del panel de fichaje y del
 terminal, y antes del calendario y el editor de plantillas, con páginas temporales ya eliminadas
@@ -160,8 +181,9 @@ durante el renderizado. En ausencias, revisión visual a 360 px del formulario d
 bandeja; las pruebas detectaron que React restablecía la clave de idempotencia de un campo oculto
 en los reintentos (corregido guardándola en memoria).
 
-**Lo que no se ha podido verificar**: las pantallas de administración, horarios y fichaje con una
-sesión y datos reales, la subida real de selfies a Storage, la geolocalización y la cámara en
+**Lo que no se ha podido verificar**: las pantallas de administración, horarios, fichaje,
+ausencias y gastos con una sesión y datos reales, la subida real de tickets a Storage y la cámara
+del móvil al fotografiar tickets, la subida real de selfies a Storage, la geolocalización y la cámara en
 dispositivos físicos
 (requiere un proyecto Supabase), la invitación por correo (requiere `SUPABASE_SECRET_KEY` y Auth
 real) y la ejecución del workflow de CI en GitHub (el repositorio no tiene remoto). La lógica de
@@ -188,8 +210,12 @@ cada operación está cubierta por las pruebas SQL contra PostgreSQL 16 con la e
    de conservación de justificantes y los valores reales de tipos y políticas de cada empresa; un
    cambio de contrato a mitad de periodo no reprorratea el saldo abierto (se regulariza con un
    ajuste).
-9. Riesgos heredados: CSP con `'unsafe-inline'`, componentes shadcn escritos a mano,
-   vulnerabilidades en herramientas de lint, revisión normativa pendiente.
+9. **Gastos**: no hay proveedor de OCR (decisión pendiente, ADR-043); sin trabajador programado
+   para la cola; falta el flujo de aprobación, validación por Contabilidad, liquidación y
+   exportación; plazo de conservación de tickets con la asesoría; clientes, proyectos y centros de
+   coste son texto libre.
+10. Riesgos heredados: CSP con `'unsafe-inline'`, componentes shadcn escritos a mano,
+    vulnerabilidades en herramientas de lint, revisión normativa pendiente.
 
 ## 4. Próximos pasos
 
@@ -199,3 +225,5 @@ cada operación está cubierta por las pruebas SQL contra PostgreSQL 16 con la e
 3. Probar el horario con las semillas sintéticas (`supabase db reset`) y sesión real.
 4. Tareas programadas del control horario, exportación para la Inspección y visor de auditoría
    (resto de la fase 1); reglas de clasificación de excesos de jornada aprobadas por la asesoría.
+5. Gastos: decidir el proveedor de OCR (o trabajar sin OCR) y, después, notas de gasto, aprobación,
+   validación por Contabilidad y exportación contable (resto de la fase 3).

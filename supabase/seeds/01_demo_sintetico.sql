@@ -218,3 +218,17 @@ where policy_id = '5eed8100-0000-4000-8000-000000000001';
 insert into public.policy_assignments (company_id, policy_id, absence_type_id, scope_type, valid_from)
 values ('5eed2000-0000-4000-8000-00000000000a', '5eed8100-0000-4000-8000-000000000001',
   '5eed8000-0000-4000-8000-000000000001', 'company', current_date);
+
+-- -----------------------------------------------------------------------------
+-- Gastos sintéticos de Alfa: política y categorías de EJEMPLO (los límites y el
+-- precio por km los decide cada empresa). Sin tickets: se prueban subiendo
+-- fotos en local con OCR_PROVIDER=fake.
+-- -----------------------------------------------------------------------------
+insert into public.expense_policies (company_id, max_days_past, allowed_currencies, mileage_rate_milli,
+  legal_reference)
+values ('5eed2000-0000-4000-8000-00000000000a', 90, '{EUR}', 260, 'Ejemplo sintético: configurar según convenio');
+insert into public.expense_categories (company_id, code, name, is_mileage, max_amount_cents, requires_client,
+  requires_project) values
+  ('5eed2000-0000-4000-8000-00000000000a', 'COMIDA', 'Comidas con clientes (ejemplo)', false, 6000, true, false),
+  ('5eed2000-0000-4000-8000-00000000000a', 'VIAJE', 'Viajes y alojamiento (ejemplo)', false, 25000, false, true),
+  ('5eed2000-0000-4000-8000-00000000000a', 'KM', 'Kilometraje (ejemplo)', true, null, false, false);

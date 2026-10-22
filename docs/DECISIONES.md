@@ -473,3 +473,50 @@ política de Storage lo permite. Compañeros: solo "Ausente" en ausencias aproba
 avisos. Las solicitudes no se copian a `audit_log` (el comentario podría contener datos sensibles
 pese al aviso); su rastro es `absence_request_events`. La configuración y los ajustes manuales sí
 van a `audit_log`.
+
+## ADR-042 · Permisos de gastos y tickets
+
+**Fecha**: 2026-10-27 · **Estado**: aceptada
+
+**Decisión**: matriz propia `private.role_has_expense_permission` con dos acciones: `read`
+(administración de empresa y Contabilidad) y `manage` (administración de empresa). La
+administración de grupo tiene `manage` (configura categorías y política) pero **no** `read`: no
+abre tickets de las personas. Leen un gasto y su ticket la persona, quien la supervisa (o su
+suplente) y Contabilidad de su ámbito; RR. HH. y auditoría no, salvo que tengan además uno de esos
+roles. Solo la persona edita sus borradores (columnas concretas, RLS sobre `status = 'draft'`); el
+estado, los tickets, los trabajos y el OCR cambian solo mediante funciones `security definer`.
+
+## ADR-043 · OCR intercambiable, sin proveedor elegido
+
+**Fecha**: 2026-10-27 · **Estado**: aceptada
+
+**Contexto**: el proveedor de OCR no está decidido y los tickets contienen datos personales y
+fiscales.
+
+**Decisión**: interfaz `OcrProvider` (`src/features/expenses/ocr/types.ts`) que devuelve textos por
+campo con confianza; la normalización (fecha, importes en céntimos, moneda, NIF) es común. Hay un
+proveedor falso determinista para desarrollo y pruebas, que nunca se activa en producción. Sin
+proveedor aprobado (`OCR_PROVIDER` vacío) no hay OCR: el ticket no sale de la plataforma y el gasto
+se completa a mano. No se ha implementado ningún adaptador real: elegirlo requiere un ADR con
+contrato de encargo, ubicación de los datos y credenciales.
+El OCR se ejecuta en el servidor con la **sesión de la persona** (reclamar trabajo, descargar su
+ticket y guardar el resultado mediante funciones que comprueban que es suyo), sin clave de
+servicio: el resultado es solo una propuesta que la misma persona confirma, así que no concede nada
+que no pudiera escribir a mano.
+Cola `jobs` con un trabajo por ticket (`dedupe_key`), bloqueo de fila al reclamar (dos sesiones a la
+vez: una sola ejecución, probado), hasta 3 intentos con espera creciente y 2 reintentos manuales.
+Se guardan solo campos normalizados con su confianza (nunca el texto completo) y el resultado no
+pasa a `audit_log`.
+**Pendiente**: un trabajador programado que procese la cola sin que la persona abra la pantalla
+(necesitaría la clave de servicio y su propio ADR).
+
+## ADR-044 · Duplicados de tickets
+
+**Fecha**: 2026-10-27 · **Estado**: aceptada
+
+**Decisión**: huella SHA-256 del archivo guardado (tras quitar metadatos), única por empresa. El
+mismo archivo de la misma persona devuelve su gasto (reintento); de otra persona se bloquea sin
+revelar de quién es. La similitud (mismo proveedor normalizado, fecha, total y moneda entre los
+gastos de la persona) no bloquea: al confirmar pide marcar "no es un duplicado" y queda registrada
+como desviación. Clave de idempotencia por gasto y nombre de archivo igual a la clave: reenviar no
+duplica ni el objeto ni el gasto (probado con dos sesiones simultáneas).

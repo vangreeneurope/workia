@@ -2,7 +2,8 @@
  * Qué áreas de administración ve cada usuario en la empresa activa. Se basa en
  * los permisos reales que devuelve la base de datos (my_company_permissions y,
  * para horarios y control horario, my_schedule_access, my_time_access y
- * my_absence_access como "schedule.*", "time.*" y "absence.*"),
+ * my_absence_access y my_expense_access como "schedule.*", "time.*", "absence.*" y
+ * "expense.*"),
  * así que no duplica la matriz de roles. La autorización definitiva es RLS.
  */
 
@@ -25,7 +26,8 @@ export type AdminArea =
   | "horarios"
   | "calendarios"
   | "fichajes"
-  | "ausencias";
+  | "ausencias"
+  | "gastos";
 
 export const ADMIN_AREAS: { key: AdminArea; label: string; href: string; description: string }[] = [
   {
@@ -95,6 +97,12 @@ export const ADMIN_AREAS: { key: AdminArea; label: string; href: string; descrip
     href: "/admin/ausencias",
     description: "Tipos de ausencia, políticas con vigencia, asignaciones y ajustes de saldo.",
   },
+  {
+    key: "gastos",
+    label: "Gastos",
+    href: "/admin/gastos",
+    description: "Política de gastos, categorías, kilometraje y campos obligatorios.",
+  },
 ];
 
 export function hasPermission(
@@ -136,6 +144,8 @@ export function canUseArea(
       return hasPermission(permissions, "time.manage");
     case "ausencias":
       return hasPermission(permissions, "absence.manage");
+    case "gastos":
+      return hasPermission(permissions, "expense.manage", "company");
   }
 }
 
