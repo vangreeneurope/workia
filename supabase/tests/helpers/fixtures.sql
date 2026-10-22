@@ -159,3 +159,8 @@ insert into public.shift_templates (id, company_id, code, name) values
 
 -- Control horario: política por defecto de A (sin ubicación ni selfie).
 insert into public.time_tracking_policies (company_id) values ('aaaaaaaa-0000-0000-0000-000000000001');
+
+-- Ausencias: un tipo sin saldo en A (las pruebas de reversión comprueban que no
+-- se pierden datos sin autorización).
+insert into public.absence_types (id, company_id, code, name) values
+  ('7f000000-0000-4000-8000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'FX', 'Tipo de pruebas');

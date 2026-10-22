@@ -37,6 +37,9 @@ real en un proyecto de pruebas, revisión de NORMATIVA con la asesoría.
 
 ## Fase 2 · Vacaciones y ausencias
 
+Estado (2026-10-26): **implementado y probado en local** (docs/AUSENCIAS.md). Pendiente: valores
+reales de cada empresa, tareas programadas y validación en un proyecto Supabase real.
+
 Tipos de ausencia (los calendarios laborales ya existen y las aprobadas alimentarán `leave_periods`) y políticas por empresa, saldos, solicitudes y
 aprobaciones (incluido el responsable de otra empresa), justificantes privados, calendario de
 equipo.

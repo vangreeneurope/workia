@@ -53,6 +53,8 @@ select test.ok(not exists (select 1 from public.holidays where name not like '%s
 select test.ok((select status = 'closed' and worked_seconds = (7 * 60 + 13) * 60 from public.time_entries
   where employee_id = '5eed6000-0000-4000-8000-000000000005'), 'Semilla: jornada sintética de ayer recalculada');
 select test.ok(not exists (select 1 from public.kiosk_pins), 'Semilla: sin PIN en el repositorio');
+select test.ok(not exists (select 1 from public.absence_types where legal_reference not like 'Ejemplo sintético%'),
+  'Semilla: el catálogo de ausencias se declara como ejemplo, no como lista legal');
 set role authenticated;
 select test.act_as('5eed0000-0000-4000-8000-000000000001'); -- Gala, admin de grupo
 select test.ok((select count(*) from public.employees) = 6, 'Semilla: la administración de grupo ve ambas empresas');

@@ -195,3 +195,26 @@ select private.insert_punch('5eed6000-0000-4000-8000-000000000005', k.kind::publ
 from (values ('start', time '08:02'), ('break_start', time '11:00'), ('break_end', time '11:20'),
   ('end', time '15:35')) as k(kind, at)
 order by k.at;
+
+-- -----------------------------------------------------------------------------
+-- Ausencias sintéticas de Alfa: el catálogo es un EJEMPLO, no el legal. Cada
+-- empresa configura sus tipos y políticas según su convenio y asesoría.
+-- -----------------------------------------------------------------------------
+insert into public.absence_types (id, company_id, code, name, allowed_units, uses_balance, requires_attachment,
+  attachment_sensitive, is_private, max_past_days, legal_reference) values
+  ('5eed8000-0000-4000-8000-000000000001', '5eed2000-0000-4000-8000-00000000000a', 'VAC', 'Vacaciones',
+    '{day,half_day}', true, false, true, false, 0, 'Ejemplo sintético: configurar según convenio'),
+  ('5eed8000-0000-4000-8000-000000000002', '5eed2000-0000-4000-8000-00000000000a', 'MED', 'Ausencia con justificante médico',
+    '{day,half_day,hour}', false, true, true, true, 7, 'Ejemplo sintético');
+
+insert into public.vacation_policies (id, company_id, absence_type_id, code, name)
+values ('5eed8100-0000-4000-8000-000000000001', '5eed2000-0000-4000-8000-00000000000a',
+  '5eed8000-0000-4000-8000-000000000001', 'VAC-GEN', 'Vacaciones (ejemplo sintético)');
+insert into public.vacation_policy_versions (company_id, policy_id, version, entitlement, carryover_max, carryover_expiry_months)
+values ('5eed2000-0000-4000-8000-00000000000a', '5eed8100-0000-4000-8000-000000000001', 1, 44, 10, 3);
+update public.vacation_policy_versions set status = 'published', valid_from = date_trunc('year', current_date)::date,
+  published_at = now()
+where policy_id = '5eed8100-0000-4000-8000-000000000001';
+insert into public.policy_assignments (company_id, policy_id, absence_type_id, scope_type, valid_from)
+values ('5eed2000-0000-4000-8000-00000000000a', '5eed8100-0000-4000-8000-000000000001',
+  '5eed8000-0000-4000-8000-000000000001', 'company', current_date);

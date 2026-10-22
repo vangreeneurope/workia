@@ -65,7 +65,13 @@ Principios de diseño adoptados:
 Estatuto de los Trabajadores, artículo 38 (vacaciones anuales, mínimo de 30 días naturales) y
 artículo 37 (permisos retribuidos), además del convenio colectivo de cada empresa. Los tipos de
 ausencia, su duración y el cómputo serán configurables por empresa, no fijados en el código.
-**Verificar** los permisos vigentes y los del convenio de cada empresa al construir la fase 2.
+**Verificar** los permisos vigentes y los del convenio de cada empresa.
+
+Implementación (2026-10-26, `docs/AUSENCIAS.md`): no hay catálogo legal en el código; cada empresa
+crea sus tipos y políticas e indica su fuente. Los justificantes pueden contener datos de salud
+(categoría especial, art. 9 RGPD): bucket separado, acceso solo de la persona y de RR. HH. con
+permiso específico, sin copia en registros. **Pendiente**: plazo de conservación de justificantes
+con la asesoría.
 
 ## 4. Gastos y justificantes
 

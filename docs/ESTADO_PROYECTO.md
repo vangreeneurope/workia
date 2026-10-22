@@ -1,10 +1,10 @@
 # Estado del proyecto
 
-**Última actualización**: 2026-10-25 · **Fase actual**: 1 en curso. Administración, horarios
-planificados y control horario (fichaje móvil, web y terminal) implementados y probados en local.
-Nada se ha validado aún contra un proyecto Supabase real: los módulos anteriores siguen sin
-verificarse con sesión real y los dos últimos se han construido por petición expresa (excepción a
-la regla de CLAUDE.md, registrada aquí).
+**Última actualización**: 2026-10-26 · **Fase actual**: 1 y 2 implementadas en local
+(administración, horarios, control horario, vacaciones y ausencias). Nada se ha validado aún contra
+un proyecto Supabase real ni en GitHub Actions (sin remoto): los tres trabajos del CI se han
+ejecutado en local. Los módulos se han construido por petición expresa sin validar antes los
+anteriores con sesión real (excepción a la regla de CLAUDE.md, registrada aquí).
 
 ## 1. Qué está hecho
 
@@ -100,31 +100,55 @@ la regla de CLAUDE.md, registrada aquí).
 - Documentación: docs/CONTROL_HORARIO.md, ADR-035 a ADR-038, BASE_DATOS, PERMISOS, NORMATIVA,
   ARQUITECTURA, PRD, plan y README.
 
-## 2. Resultados de verificación (2026-10-25)
+### Vacaciones y ausencias (2026-10-26)
 
-| Verificación               | Comando                                           | Resultado                                                                                                              |
-| -------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Tipos                      | `npm run typecheck`                               | Sin errores                                                                                                            |
-| Lint                       | `npm run lint`                                    | 0 errores, 0 avisos                                                                                                    |
-| Formato                    | `npm run format:check`                            | Correcto                                                                                                               |
-| Unitarias                  | `npm test`                                        | 17 archivos, 165 pruebas superadas (incluye estados, cola sin conexión, selfie y pantallas de fichaje)                 |
-| Aislamiento multiempresa   | `npm run test:db` → `10_aislamiento_multiempresa` | 134 aserciones superadas                                                                                               |
-| Integridad y escalada      | `npm run test:db` → `20_integridad_y_escalada`    | 26 aserciones superadas                                                                                                |
-| Semillas sintéticas        | `npm run test:db` → `30_seed_sintetico`           | 21 aserciones superadas                                                                                                |
-| Administración             | `npm run test:db` → `40_administracion`           | 81 aserciones superadas                                                                                                |
-| Horarios                   | `npm run test:db` → `50_horarios`                 | 101 aserciones superadas                                                                                               |
-| Control horario            | `npm run test:db` → `60_control_horario`          | 115 aserciones superadas                                                                                               |
-| Concurrencia               | `npm run test:db` → `test-db-concurrency.sh`      | 3 escenarios con dos sesiones simultáneas superados                                                                    |
-| Reversibilidad             | `npm run test:db`                                 | 5 reversiones restauran el esquema exacto, reaplicar lo reproduce, 5 reversiones exigen autorización para perder datos |
-| Tipos frente a esquema     | `npm run db:types:check`                          | Al día (incluye las funciones RPC)                                                                                     |
-| Build de producción        | `npm run build`                                   | Correcto, 45 rutas                                                                                                     |
-| E2E                        | `npm run test:e2e`                                | 30 pruebas superadas (móvil y escritorio)                                                                              |
-| Dependencias de producción | `npm audit --omit=dev`                            | 0 vulnerabilidades                                                                                                     |
+- Migración `20261026100000_ausencias` con reversión verificada: tipos configurables (sin catálogo
+  legal en el código), políticas versionadas (derecho, devengo, prorrateo, redondeo, arrastre,
+  caducidad, unidad, negativo autorizado), asignaciones persona › equipo › centro › empresa, saldo
+  como libro de movimientos inmutable, solicitudes por días, medios días u horas con validación de
+  contrato, política, saldo, solapes, festivos y turno, y reserva bajo bloqueo.
+- Aprobación con el manager vigente o su suplente, escalado a RR. HH. sin aprobador o con
+  autoaprobación, reglas expresas de aprobación automática; aprobar, rechazar con motivo, pedir
+  información, cancelar y retirar.
+- Justificantes en bucket separado con acceso de RR. HH. por permiso específico; calendario con
+  privacidad (compañeros: "Ausente"); integración con horarios (`leave_periods`).
+- Pantallas: saldo, solicitud con cálculo previo, mis solicitudes, calendario, bandeja de
+  aprobación y administración de tipos, políticas, versiones, asignaciones y ajustes.
+- Documentación: docs/AUSENCIAS.md, ADR-039 a ADR-041, BASE_DATOS, PERMISOS, NORMATIVA, PRD, plan
+  y README.
+
+## 2. Resultados de verificación (2026-10-26)
+
+| Verificación               | Comando                                           | Resultado                                                                                                  |
+| -------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Tipos                      | `npm run typecheck`                               | Sin errores                                                                                                |
+| Lint                       | `npm run lint`                                    | 0 errores, 0 avisos                                                                                        |
+| Formato                    | `npm run format:check`                            | Correcto                                                                                                   |
+| Unitarias                  | `npm test`                                        | 18 archivos, 180 pruebas superadas                                                                         |
+| Aislamiento multiempresa   | `npm run test:db` → `10_aislamiento_multiempresa` | 134 aserciones superadas                                                                                   |
+| Integridad y escalada      | `npm run test:db` → `20_integridad_y_escalada`    | 26 aserciones superadas                                                                                    |
+| Semillas sintéticas        | `npm run test:db` → `30_seed_sintetico`           | 22 aserciones superadas                                                                                    |
+| Administración             | `npm run test:db` → `40_administracion`           | 81 aserciones superadas                                                                                    |
+| Horarios                   | `npm run test:db` → `50_horarios`                 | 101 aserciones superadas                                                                                   |
+| Control horario            | `npm run test:db` → `60_control_horario`          | 115 aserciones superadas                                                                                   |
+| Ausencias                  | `npm run test:db` → `70_ausencias`                | 81 aserciones superadas                                                                                    |
+| Concurrencia               | `npm run test:db` → `test-db-concurrency.sh`      | 4 escenarios con dos sesiones simultáneas (incluidas dos solicitudes sobre el mismo saldo)                 |
+| Reversibilidad             | `npm run test:db`                                 | 6 reversiones restauran el esquema exacto, reaplicar lo reproduce, 6 exigen autorización para perder datos |
+| Tipos frente a esquema     | `npm run db:types:check`                          | Al día (incluye las funciones RPC)                                                                         |
+| Build de producción        | `npm run build`                                   | Correcto, 49 rutas                                                                                         |
+| E2E                        | `npm run test:e2e`                                | 32 pruebas superadas (móvil y escritorio)                                                                  |
+| Dependencias de producción | `npm audit --omit=dev`                            | 0 vulnerabilidades                                                                                         |
+
+**CI**: los tres trabajos de `.github/workflows/ci.yml` se han ejecutado en local tras `npm ci`
+(calidad; base de datos en modo externo contra PostgreSQL 16 por TCP, como el servicio del CI;
+build y E2E). No se ha podido ejecutar en GitHub Actions porque el repositorio no tiene remoto.
 
 Comprobaciones adicionales: revisión visual a 360 px y en escritorio del panel de fichaje y del
 terminal, y antes del calendario y el editor de plantillas, con páginas temporales ya eliminadas
 (sin desbordamiento horizontal). Esa revisión detectó y corrigió una clave del terminal generada
-durante el renderizado.
+durante el renderizado. En ausencias, revisión visual a 360 px del formulario de solicitud y la
+bandeja; las pruebas detectaron que React restablecía la clave de idempotencia de un campo oculto
+en los reintentos (corregido guardándola en memoria).
 
 **Lo que no se ha podido verificar**: las pantallas de administración, horarios y fichaje con una
 sesión y datos reales, la subida real de selfies a Storage, la geolocalización y la cámara en
@@ -150,7 +174,11 @@ cada operación está cubierta por las pruebas SQL contra PostgreSQL 16 con la e
    selfies caducadas con la API de Storage; no hay adaptador de correo para los eventos de
    trabajo; falta la exportación para la Inspección; validar con la asesoría el plazo de selfies y,
    con el DPD, la activación de la ubicación en cada empresa.
-8. Riesgos heredados: CSP con `'unsafe-inline'`, componentes shadcn escritos a mano,
+8. **Ausencias**: programar `settle_vacation_balances` (diaria); definir con la asesoría el plazo
+   de conservación de justificantes y los valores reales de tipos y políticas de cada empresa; un
+   cambio de contrato a mitad de periodo no reprorratea el saldo abierto (se regulariza con un
+   ajuste).
+9. Riesgos heredados: CSP con `'unsafe-inline'`, componentes shadcn escritos a mano,
    vulnerabilidades en herramientas de lint, revisión normativa pendiente.
 
 ## 4. Próximos pasos

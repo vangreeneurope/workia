@@ -126,3 +126,18 @@ test("una cookie de terminal falsa no da acceso al fichaje", async ({ page, cont
   await expect(page.getByRole("heading", { name: "Activar terminal de fichaje" })).toBeVisible();
   await expect(page.getByLabel("PIN")).toHaveCount(0);
 });
+
+test("las ausencias, la bandeja y los justificantes exigen sesión", async ({ page, request }) => {
+  for (const path of ["/ausencias", "/ausencias/bandeja", "/admin/ausencias"]) {
+    await page.goto(path);
+    await expect(page).toHaveURL(/\/acceder\?siguiente=/);
+  }
+  const response = await request.get(
+    "/ausencias/justificante/00000000-0000-4000-8000-000000000000",
+    {
+      maxRedirects: 0,
+    },
+  );
+  expect(response.status()).toBe(307);
+  expect(response.headers()["location"]).toContain("/acceder");
+});

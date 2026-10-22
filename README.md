@@ -120,6 +120,15 @@ con código de empleado y PIN. Historial, incidencias y correcciones (que nunca 
 original) en `/fichajes/historial` y `/fichajes/revision`. Operación y soporte en
 [docs/CONTROL_HORARIO.md](docs/CONTROL_HORARIO.md).
 
+## Vacaciones y ausencias
+
+**Ausencias** (`/ausencias`) muestra el saldo (derivado de un libro de movimientos), permite
+solicitar por días, medios días u horas con cálculo previo y justificante privado, y enseña el
+calendario propio y del equipo (de los compañeros solo "Ausente"). La **bandeja**
+(`/ausencias/bandeja`) permite aprobar, rechazar o pedir información. En Administración se
+configuran tipos, políticas versionadas, asignaciones y ajustes. Reglas y privacidad en
+[docs/AUSENCIAS.md](docs/AUSENCIAS.md).
+
 ## Horarios y calendarios laborales
 
 **Horario** (`/horario`) muestra el horario planificado en vista semanal o mensual: la propia
@@ -151,7 +160,7 @@ desplegarse en cualquier plataforma compatible con Next.js. Requisitos:
 [CLAUDE.md](CLAUDE.md) (convenciones y reglas) · [PRD](docs/PRD.md) ·
 [Arquitectura](docs/ARQUITECTURA.md) · [Base de datos](docs/BASE_DATOS.md) ·
 [Permisos](docs/PERMISOS.md) · [Vigencia y bajas](docs/VIGENCIA_Y_BAJAS.md) ·
-[Horarios](docs/HORARIOS.md) · [Control horario](docs/CONTROL_HORARIO.md) ·
+[Horarios](docs/HORARIOS.md) · [Control horario](docs/CONTROL_HORARIO.md) · [Ausencias](docs/AUSENCIAS.md) ·
 [Normativa](docs/NORMATIVA.md) ·
 [Plan de desarrollo](docs/PLAN_DESARROLLO.md) · [Decisiones](docs/DECISIONES.md) ·
 [Estado del proyecto](docs/ESTADO_PROYECTO.md)

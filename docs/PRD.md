@@ -95,7 +95,8 @@ complejos (pendiente de confirmar si se necesita), app nativa en tiendas (se usa
    (no se registra / opcional / exigida), lectura puntual con aviso previo y nunca seguimiento
    (docs/CONTROL_HORARIO.md). Pendiente: que cada empresa decida y documente su uso con la
    asesoría y el DPD antes de activarla.
-4. **Políticas por empresa**: convenios aplicables, jornada, cómputo de vacaciones (días naturales o
+4. **Políticas por empresa** (el modelo ya es configurable, docs/AUSENCIAS.md; faltan los valores
+   reales de cada empresa): convenios aplicables, jornada, cómputo de vacaciones (días naturales o
    laborables), tipos de ausencia, límites de gasto, precio por kilómetro y dietas.
 5. **Integraciones**: ¿exportación a nómina o a un ERP/contabilidad concreto?
 6. **Turnos**: ¿hay personal con turnos rotativos o jornadas irregulares?

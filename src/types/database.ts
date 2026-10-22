@@ -8,6 +8,379 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      absence_approvals: {
+        Row: {
+          approver_user_id: string | null;
+          company_id: string;
+          created_at: string;
+          decided_at: string | null;
+          decided_by: string | null;
+          employee_id: string;
+          id: string;
+          request_id: string;
+          routing: string;
+          status: string;
+        };
+        Insert: {
+          approver_user_id?: string | null;
+          company_id: string;
+          created_at?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          employee_id: string;
+          id?: string;
+          request_id: string;
+          routing: string;
+          status?: string;
+        };
+        Update: {
+          approver_user_id?: string | null;
+          company_id?: string;
+          created_at?: string;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          employee_id?: string;
+          id?: string;
+          request_id?: string;
+          routing?: string;
+          status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "absence_approvals_approver_user_id_fkey";
+            columns: ["approver_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "absence_approvals_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "absence_approvals_decided_by_fkey";
+            columns: ["decided_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "absence_approvals_request_id_company_id_employee_id_fkey";
+            columns: ["request_id", "company_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "absence_requests";
+            referencedColumns: ["id", "company_id", "employee_id"];
+          },
+        ];
+      };
+      absence_attachments: {
+        Row: {
+          company_id: string;
+          created_at: string;
+          employee_id: string;
+          id: string;
+          mime_type: string;
+          request_id: string;
+          sensitive: boolean;
+          size_bytes: number;
+          storage_path: string;
+          uploaded_by: string | null;
+        };
+        Insert: {
+          company_id: string;
+          created_at?: string;
+          employee_id: string;
+          id?: string;
+          mime_type: string;
+          request_id: string;
+          sensitive: boolean;
+          size_bytes: number;
+          storage_path: string;
+          uploaded_by?: string | null;
+        };
+        Update: {
+          company_id?: string;
+          created_at?: string;
+          employee_id?: string;
+          id?: string;
+          mime_type?: string;
+          request_id?: string;
+          sensitive?: boolean;
+          size_bytes?: number;
+          storage_path?: string;
+          uploaded_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "absence_attachments_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "absence_attachments_request_id_company_id_employee_id_fkey";
+            columns: ["request_id", "company_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "absence_requests";
+            referencedColumns: ["id", "company_id", "employee_id"];
+          },
+          {
+            foreignKeyName: "absence_attachments_uploaded_by_fkey";
+            columns: ["uploaded_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      absence_request_events: {
+        Row: {
+          action: string;
+          actor_id: string | null;
+          company_id: string;
+          created_at: string;
+          employee_id: string;
+          id: number;
+          message: string | null;
+          request_id: string;
+        };
+        Insert: {
+          action: string;
+          actor_id?: string | null;
+          company_id: string;
+          created_at?: string;
+          employee_id: string;
+          id?: never;
+          message?: string | null;
+          request_id: string;
+        };
+        Update: {
+          action?: string;
+          actor_id?: string | null;
+          company_id?: string;
+          created_at?: string;
+          employee_id?: string;
+          id?: never;
+          message?: string | null;
+          request_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "absence_request_events_actor_id_fkey";
+            columns: ["actor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "absence_request_events_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "absence_request_events_request_id_company_id_employee_id_fkey";
+            columns: ["request_id", "company_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "absence_requests";
+            referencedColumns: ["id", "company_id", "employee_id"];
+          },
+        ];
+      };
+      absence_requests: {
+        Row: {
+          absence_type_id: string;
+          amount: number;
+          amount_unit: Database["public"]["Enums"]["balance_unit"];
+          balance_id: string | null;
+          company_id: string;
+          created_by: string | null;
+          decided_at: string | null;
+          decided_by: string | null;
+          employee_id: string;
+          employee_note: string | null;
+          end_date: string;
+          end_minute: number | null;
+          half: string | null;
+          id: string;
+          idempotency_key: string;
+          period: unknown;
+          routing: string;
+          start_date: string;
+          start_minute: number | null;
+          status: Database["public"]["Enums"]["absence_request_status"];
+          submitted_at: string;
+          unit: Database["public"]["Enums"]["absence_unit"];
+          updated_at: string;
+        };
+        Insert: {
+          absence_type_id: string;
+          amount: number;
+          amount_unit: Database["public"]["Enums"]["balance_unit"];
+          balance_id?: string | null;
+          company_id: string;
+          created_by?: string | null;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          employee_id: string;
+          employee_note?: string | null;
+          end_date: string;
+          end_minute?: number | null;
+          half?: string | null;
+          id?: string;
+          idempotency_key: string;
+          period: unknown;
+          routing: string;
+          start_date: string;
+          start_minute?: number | null;
+          status?: Database["public"]["Enums"]["absence_request_status"];
+          submitted_at?: string;
+          unit: Database["public"]["Enums"]["absence_unit"];
+          updated_at?: string;
+        };
+        Update: {
+          absence_type_id?: string;
+          amount?: number;
+          amount_unit?: Database["public"]["Enums"]["balance_unit"];
+          balance_id?: string | null;
+          company_id?: string;
+          created_by?: string | null;
+          decided_at?: string | null;
+          decided_by?: string | null;
+          employee_id?: string;
+          employee_note?: string | null;
+          end_date?: string;
+          end_minute?: number | null;
+          half?: string | null;
+          id?: string;
+          idempotency_key?: string;
+          period?: unknown;
+          routing?: string;
+          start_date?: string;
+          start_minute?: number | null;
+          status?: Database["public"]["Enums"]["absence_request_status"];
+          submitted_at?: string;
+          unit?: Database["public"]["Enums"]["absence_unit"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "absence_requests_absence_type_id_company_id_fkey";
+            columns: ["absence_type_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "absence_types";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "absence_requests_balance_id_company_id_employee_id_fkey";
+            columns: ["balance_id", "company_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "vacation_balances";
+            referencedColumns: ["id", "company_id", "employee_id"];
+          },
+          {
+            foreignKeyName: "absence_requests_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "absence_requests_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "absence_requests_decided_by_fkey";
+            columns: ["decided_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "absence_requests_employee_id_company_id_fkey";
+            columns: ["employee_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      absence_types: {
+        Row: {
+          allowed_units: Database["public"]["Enums"]["absence_unit"][];
+          approval_exemption_ref: string | null;
+          attachment_sensitive: boolean;
+          code: string;
+          company_id: string;
+          count_basis: Database["public"]["Enums"]["day_count_basis"];
+          created_at: string;
+          id: string;
+          is_private: boolean;
+          legal_reference: string | null;
+          max_past_days: number;
+          name: string;
+          requires_approval: boolean;
+          requires_attachment: boolean;
+          status: Database["public"]["Enums"]["entity_status"];
+          updated_at: string;
+          uses_balance: boolean;
+        };
+        Insert: {
+          allowed_units?: Database["public"]["Enums"]["absence_unit"][];
+          approval_exemption_ref?: string | null;
+          attachment_sensitive?: boolean;
+          code: string;
+          company_id: string;
+          count_basis?: Database["public"]["Enums"]["day_count_basis"];
+          created_at?: string;
+          id?: string;
+          is_private?: boolean;
+          legal_reference?: string | null;
+          max_past_days?: number;
+          name: string;
+          requires_approval?: boolean;
+          requires_attachment?: boolean;
+          status?: Database["public"]["Enums"]["entity_status"];
+          updated_at?: string;
+          uses_balance?: boolean;
+        };
+        Update: {
+          allowed_units?: Database["public"]["Enums"]["absence_unit"][];
+          approval_exemption_ref?: string | null;
+          attachment_sensitive?: boolean;
+          code?: string;
+          company_id?: string;
+          count_basis?: Database["public"]["Enums"]["day_count_basis"];
+          created_at?: string;
+          id?: string;
+          is_private?: boolean;
+          legal_reference?: string | null;
+          max_past_days?: number;
+          name?: string;
+          requires_approval?: boolean;
+          requires_attachment?: boolean;
+          status?: Database["public"]["Enums"]["entity_status"];
+          updated_at?: string;
+          uses_balance?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "absence_types_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       approver_substitutions: {
         Row: {
           absent_user_id: string;
@@ -162,6 +535,83 @@ export type Database = {
           table_name?: string;
         };
         Relationships: [];
+      };
+      balance_movements: {
+        Row: {
+          amount: number;
+          balance_id: string;
+          company_id: string;
+          created_at: string;
+          created_by: string | null;
+          dedupe_key: string;
+          effective_date: string;
+          employee_id: string;
+          expires_on: string | null;
+          id: string;
+          kind: Database["public"]["Enums"]["balance_movement_kind"];
+          note: string | null;
+          request_id: string | null;
+        };
+        Insert: {
+          amount: number;
+          balance_id: string;
+          company_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          dedupe_key: string;
+          effective_date: string;
+          employee_id: string;
+          expires_on?: string | null;
+          id?: string;
+          kind: Database["public"]["Enums"]["balance_movement_kind"];
+          note?: string | null;
+          request_id?: string | null;
+        };
+        Update: {
+          amount?: number;
+          balance_id?: string;
+          company_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          dedupe_key?: string;
+          effective_date?: string;
+          employee_id?: string;
+          expires_on?: string | null;
+          id?: string;
+          kind?: Database["public"]["Enums"]["balance_movement_kind"];
+          note?: string | null;
+          request_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "balance_movements_balance_id_company_id_employee_id_fkey";
+            columns: ["balance_id", "company_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "vacation_balances";
+            referencedColumns: ["id", "company_id", "employee_id"];
+          },
+          {
+            foreignKeyName: "balance_movements_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "balance_movements_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "balance_movements_request_id_company_id_employee_id_fkey";
+            columns: ["request_id", "company_id", "employee_id"];
+            isOneToOne: false;
+            referencedRelation: "absence_requests";
+            referencedColumns: ["id", "company_id", "employee_id"];
+          },
+        ];
       };
       companies: {
         Row: {
@@ -744,6 +1194,7 @@ export type Database = {
       };
       leave_periods: {
         Row: {
+          absence_request_id: string | null;
           company_id: string;
           created_at: string;
           employee_id: string;
@@ -753,6 +1204,7 @@ export type Database = {
           status: string;
         };
         Insert: {
+          absence_request_id?: string | null;
           company_id: string;
           created_at?: string;
           employee_id: string;
@@ -762,6 +1214,7 @@ export type Database = {
           status?: string;
         };
         Update: {
+          absence_request_id?: string | null;
           company_id?: string;
           created_at?: string;
           employee_id?: string;
@@ -771,6 +1224,13 @@ export type Database = {
           status?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "leave_periods_absence_request_fkey";
+            columns: ["absence_request_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "absence_requests";
+            referencedColumns: ["id", "company_id"];
+          },
           {
             foreignKeyName: "leave_periods_company_id_fkey";
             columns: ["company_id"];
@@ -882,6 +1342,100 @@ export type Database = {
             isOneToOne: true;
             referencedRelation: "profiles";
             referencedColumns: ["id"];
+          },
+        ];
+      };
+      policy_assignments: {
+        Row: {
+          absence_type_id: string;
+          company_id: string;
+          created_at: string;
+          created_by: string | null;
+          employee_id: string | null;
+          id: string;
+          policy_id: string;
+          scope_type: Database["public"]["Enums"]["policy_scope"];
+          status: Database["public"]["Enums"]["grant_status"];
+          team_id: string | null;
+          updated_at: string;
+          valid_from: string;
+          valid_to: string | null;
+          work_center_id: string | null;
+        };
+        Insert: {
+          absence_type_id: string;
+          company_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          employee_id?: string | null;
+          id?: string;
+          policy_id: string;
+          scope_type: Database["public"]["Enums"]["policy_scope"];
+          status?: Database["public"]["Enums"]["grant_status"];
+          team_id?: string | null;
+          updated_at?: string;
+          valid_from: string;
+          valid_to?: string | null;
+          work_center_id?: string | null;
+        };
+        Update: {
+          absence_type_id?: string;
+          company_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          employee_id?: string | null;
+          id?: string;
+          policy_id?: string;
+          scope_type?: Database["public"]["Enums"]["policy_scope"];
+          status?: Database["public"]["Enums"]["grant_status"];
+          team_id?: string | null;
+          updated_at?: string;
+          valid_from?: string;
+          valid_to?: string | null;
+          work_center_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "policy_assignments_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "policy_assignments_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "policy_assignments_employee_id_company_id_fkey";
+            columns: ["employee_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "policy_assignments_policy_id_absence_type_id_company_id_fkey";
+            columns: ["policy_id", "absence_type_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "vacation_policies";
+            referencedColumns: ["id", "absence_type_id", "company_id"];
+          },
+          {
+            foreignKeyName: "policy_assignments_team_id_company_id_fkey";
+            columns: ["team_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "teams";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "policy_assignments_work_center_id_company_id_fkey";
+            columns: ["work_center_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "work_centers";
+            referencedColumns: ["id", "company_id"];
           },
         ];
       };
@@ -1939,6 +2493,235 @@ export type Database = {
           },
         ];
       };
+      vacation_balances: {
+        Row: {
+          closed_at: string | null;
+          company_id: string;
+          created_at: string;
+          employee_id: string;
+          id: string;
+          period_end: string;
+          period_start: string;
+          policy_id: string;
+          policy_version_id: string;
+          status: string;
+          unit: Database["public"]["Enums"]["balance_unit"];
+        };
+        Insert: {
+          closed_at?: string | null;
+          company_id: string;
+          created_at?: string;
+          employee_id: string;
+          id?: string;
+          period_end: string;
+          period_start: string;
+          policy_id: string;
+          policy_version_id: string;
+          status?: string;
+          unit: Database["public"]["Enums"]["balance_unit"];
+        };
+        Update: {
+          closed_at?: string | null;
+          company_id?: string;
+          created_at?: string;
+          employee_id?: string;
+          id?: string;
+          period_end?: string;
+          period_start?: string;
+          policy_id?: string;
+          policy_version_id?: string;
+          status?: string;
+          unit?: Database["public"]["Enums"]["balance_unit"];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "vacation_balances_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "vacation_balances_employee_id_company_id_fkey";
+            columns: ["employee_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "vacation_balances_policy_id_company_id_fkey";
+            columns: ["policy_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "vacation_policies";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "vacation_balances_policy_version_id_company_id_fkey";
+            columns: ["policy_version_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "vacation_policy_versions";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      vacation_policies: {
+        Row: {
+          absence_type_id: string;
+          code: string;
+          company_id: string;
+          created_at: string;
+          id: string;
+          name: string;
+          period_start_month: number;
+          status: Database["public"]["Enums"]["entity_status"];
+          updated_at: string;
+        };
+        Insert: {
+          absence_type_id: string;
+          code: string;
+          company_id: string;
+          created_at?: string;
+          id?: string;
+          name: string;
+          period_start_month?: number;
+          status?: Database["public"]["Enums"]["entity_status"];
+          updated_at?: string;
+        };
+        Update: {
+          absence_type_id?: string;
+          code?: string;
+          company_id?: string;
+          created_at?: string;
+          id?: string;
+          name?: string;
+          period_start_month?: number;
+          status?: Database["public"]["Enums"]["entity_status"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "vacation_policies_absence_type_id_company_id_fkey";
+            columns: ["absence_type_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "absence_types";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "vacation_policies_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      vacation_policy_versions: {
+        Row: {
+          accrual_method: Database["public"]["Enums"]["accrual_method"];
+          allow_negative: boolean;
+          carryover_expiry_months: number | null;
+          carryover_max: number;
+          company_id: string;
+          created_at: string;
+          created_by: string | null;
+          entitlement: number;
+          id: string;
+          negative_limit: number;
+          negative_reason: string | null;
+          policy_id: string;
+          proration: Database["public"]["Enums"]["proration_method"];
+          published_at: string | null;
+          published_by: string | null;
+          rounding_mode: Database["public"]["Enums"]["rounding_mode"];
+          rounding_step: number;
+          status: Database["public"]["Enums"]["schedule_status"];
+          unit: Database["public"]["Enums"]["balance_unit"];
+          updated_at: string;
+          valid_from: string | null;
+          valid_to: string | null;
+          version: number;
+        };
+        Insert: {
+          accrual_method?: Database["public"]["Enums"]["accrual_method"];
+          allow_negative?: boolean;
+          carryover_expiry_months?: number | null;
+          carryover_max?: number;
+          company_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          entitlement: number;
+          id?: string;
+          negative_limit?: number;
+          negative_reason?: string | null;
+          policy_id: string;
+          proration?: Database["public"]["Enums"]["proration_method"];
+          published_at?: string | null;
+          published_by?: string | null;
+          rounding_mode?: Database["public"]["Enums"]["rounding_mode"];
+          rounding_step?: number;
+          status?: Database["public"]["Enums"]["schedule_status"];
+          unit?: Database["public"]["Enums"]["balance_unit"];
+          updated_at?: string;
+          valid_from?: string | null;
+          valid_to?: string | null;
+          version: number;
+        };
+        Update: {
+          accrual_method?: Database["public"]["Enums"]["accrual_method"];
+          allow_negative?: boolean;
+          carryover_expiry_months?: number | null;
+          carryover_max?: number;
+          company_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          entitlement?: number;
+          id?: string;
+          negative_limit?: number;
+          negative_reason?: string | null;
+          policy_id?: string;
+          proration?: Database["public"]["Enums"]["proration_method"];
+          published_at?: string | null;
+          published_by?: string | null;
+          rounding_mode?: Database["public"]["Enums"]["rounding_mode"];
+          rounding_step?: number;
+          status?: Database["public"]["Enums"]["schedule_status"];
+          unit?: Database["public"]["Enums"]["balance_unit"];
+          updated_at?: string;
+          valid_from?: string | null;
+          valid_to?: string | null;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "vacation_policy_versions_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "vacation_policy_versions_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "vacation_policy_versions_policy_id_company_id_fkey";
+            columns: ["policy_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "vacation_policies";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "vacation_policy_versions_published_by_fkey";
+            columns: ["published_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       work_center_holiday_calendars: {
         Row: {
           calendar_id: string;
@@ -2114,6 +2897,37 @@ export type Database = {
     };
     Views: { [_ in never]: never };
     Functions: {
+      absence_calendar: {
+        Args: { p_company: string; p_from: string; p_to: string };
+        Returns: {
+          employee_id: string;
+          employee_label: string;
+          start_date: string;
+          end_date: string;
+          unit: Database["public"]["Enums"]["absence_unit"];
+          half: string;
+          start_minute: number;
+          end_minute: number;
+          status: Database["public"]["Enums"]["absence_request_status"];
+          label: string;
+          relation: string;
+        }[];
+      };
+      add_absence_attachment: {
+        Args: { p_request: string; p_path: string; p_mime: string; p_size: number };
+        Returns: string;
+      };
+      adjust_vacation_balance: {
+        Args: {
+          p_employee: string;
+          p_policy: string;
+          p_day: string;
+          p_amount: number;
+          p_reason: string;
+        };
+        Returns: undefined;
+      };
+      cancel_absence_request: { Args: { p_request: string }; Returns: string };
       cancel_time_correction: { Args: { p_request: string }; Returns: undefined };
       change_employment_terms: {
         Args: {
@@ -2127,6 +2941,10 @@ export type Database = {
         Returns: string;
       };
       close_shift_assignment: { Args: { p_id: string; p_last_day: string }; Returns: undefined };
+      decide_absence_request: {
+        Args: { p_request: string; p_decision: string; p_message?: string };
+        Returns: undefined;
+      };
       decide_time_correction: {
         Args: { p_request: string; p_approve: boolean; p_note?: string };
         Returns: string;
@@ -2168,6 +2986,10 @@ export type Database = {
         Returns: undefined;
       };
       mark_punch_selfie_purged: { Args: { p_punch: string }; Returns: undefined };
+      my_absence_access: {
+        Args: { p_company: string };
+        Returns: { action: string; scope_type: string; work_center_id: string; team_id: string }[];
+      };
       my_company_permissions: {
         Args: { p_company: string };
         Returns: {
@@ -2199,6 +3021,25 @@ export type Database = {
           has_kiosk_pin: boolean;
         }[];
       };
+      my_vacation_balances: {
+        Args: { p_company: string; p_day?: string };
+        Returns: {
+          balance_id: string;
+          policy_id: string;
+          policy_name: string;
+          absence_type_id: string;
+          period_start: string;
+          period_end: string;
+          unit: Database["public"]["Enums"]["balance_unit"];
+          entitled: number;
+          carried: number;
+          reserved: number;
+          used: number;
+          adjusted: number;
+          expired: number;
+          available: number;
+        }[];
+      };
       publish_shift_assignment: {
         Args: { p_id: string; p_accept_warnings?: boolean };
         Returns: number;
@@ -2206,6 +3047,29 @@ export type Database = {
       publish_shift_template_version: {
         Args: { p_version: string; p_valid_from: string };
         Returns: number;
+      };
+      publish_vacation_policy_version: {
+        Args: { p_version: string; p_valid_from: string };
+        Returns: undefined;
+      };
+      quote_absence_request: {
+        Args: {
+          p_company: string;
+          p_type: string;
+          p_unit: Database["public"]["Enums"]["absence_unit"];
+          p_start: string;
+          p_end: string;
+          p_half?: string;
+          p_start_minute?: number;
+          p_end_minute?: number;
+        };
+        Returns: {
+          amount: number;
+          amount_unit: Database["public"]["Enums"]["balance_unit"];
+          available: number;
+          errors: unknown;
+          warnings: unknown;
+        }[];
       };
       reactivate_employee: { Args: { p_employee: string }; Returns: undefined };
       record_punch: {
@@ -2259,6 +3123,7 @@ export type Database = {
         };
         Returns: undefined;
       };
+      respond_absence_info: { Args: { p_request: string; p_message: string }; Returns: undefined };
       save_shift_assignment: {
         Args: {
           p_scope: Database["public"]["Enums"]["shift_assignment_scope"];
@@ -2289,6 +3154,7 @@ export type Database = {
         Returns: string;
       };
       set_my_kiosk_pin: { Args: { p_company: string; p_pin: string }; Returns: undefined };
+      settle_vacation_balances: { Args: Record<PropertyKey, never>; Returns: number };
       shift_assignment_conflicts: {
         Args: { p_assignment: string };
         Returns: {
@@ -2301,25 +3167,59 @@ export type Database = {
           message: string;
         }[];
       };
+      submit_absence_request: {
+        Args: {
+          p_company: string;
+          p_type: string;
+          p_unit: Database["public"]["Enums"]["absence_unit"];
+          p_start: string;
+          p_end: string;
+          p_idempotency_key: string;
+          p_half?: string;
+          p_start_minute?: number;
+          p_end_minute?: number;
+          p_note?: string;
+        };
+        Returns: Json;
+      };
       terminate_employee: { Args: { p_employee: string; p_last_day: string }; Returns: undefined };
     };
     Enums: {
+      absence_request_status:
+        "pending" | "info_requested" | "approved" | "rejected" | "cancelled" | "withdrawn";
+      absence_unit: "day" | "half_day" | "hour";
+      accrual_method: "upfront" | "monthly";
       app_role: "company_admin" | "hr" | "manager" | "accounting" | "employee" | "auditor";
       approval_type: "all" | "absences" | "expenses" | "time_corrections";
       assignment_scope: "employee" | "team";
+      balance_movement_kind:
+        | "opening"
+        | "accrual"
+        | "carryover"
+        | "expiry"
+        | "reservation"
+        | "reservation_release"
+        | "usage"
+        | "usage_reversal"
+        | "adjustment";
+      balance_unit: "half_days" | "minutes";
       calendar_scope: "national" | "regional" | "local" | "company";
       contract_type:
         "permanent" | "temporary" | "seasonal_permanent" | "internship" | "training" | "other";
       correction_action: "add" | "change" | "void";
       correction_status: "pending" | "approved" | "rejected" | "cancelled";
+      day_count_basis: "working_days" | "calendar_days";
       entity_status: "active" | "inactive";
       grant_status: "active" | "revoked";
       location_mode: "off" | "optional" | "required";
       location_status: "not_requested" | "granted" | "denied" | "unavailable" | "timeout";
       membership_status: "invited" | "active" | "suspended" | "ended";
+      policy_scope: "company" | "work_center" | "team" | "employee";
+      proration_method: "none" | "by_employment";
       punch_kind: "start" | "break_start" | "break_end" | "end";
       punch_source: "mobile" | "web" | "kiosk";
       role_scope: "company" | "work_center" | "team";
+      rounding_mode: "down" | "up" | "nearest";
       schedule_status: "draft" | "published" | "revoked";
       segment_kind: "work" | "break";
       shift_assignment_scope: "exception" | "employee" | "team" | "contract";

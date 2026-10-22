@@ -438,3 +438,38 @@ consultivo por persona para serializar fichajes (probado con sesiones simultáne
 del día local de su entrada en la zona del centro. Una jornada abierta más de 16 h se cierra como
 incompleta al fichar una nueva entrada (sin inventar la salida). Sin conexión, el cliente reintenta
 con la misma clave y sin ubicación ni foto.
+
+## ADR-039 · Permisos de ausencias y justificantes
+
+**Fecha**: 2026-10-26 · **Estado**: aceptada
+
+**Decisión**: matriz propia `private.role_has_absence_permission` con tres acciones: `read`
+(administración de empresa, RR. HH., auditoría), `manage` (administración de empresa y RR. HH.) y
+`attachments` (solo RR. HH.). La administración de grupo tiene `read` y `manage` en sus empresas,
+pero **no** `attachments`. El manager ve y decide por su asignación de aprobador (con suplencias);
+abre justificantes solo si el tipo los marca como no sensibles. Solicitudes, saldos, movimientos y
+justificantes se escriben solo mediante funciones `security definer`.
+
+## ADR-040 · Saldo como libro de movimientos
+
+**Fecha**: 2026-10-26 · **Estado**: aceptada
+
+**Decisión**: `vacation_balances` no guarda importes; el saldo es la suma de `balance_movements`
+(inmutable, con clave de deduplicación). Cantidades enteras en medios días o minutos; redondeo con
+aritmética entera. Cada periodo fija la versión de política con la que se abrió. Reservar exige
+bloquear el saldo (`FOR UPDATE`) y la persona (bloqueo consultivo); dos solicitudes simultáneas
+no consumen el mismo saldo (probado con dos sesiones). Arrastre FIFO con caducidad.
+**Alternativa descartada**: una columna de saldo actualizada con cada operación (difícil de
+auditar y propensa a descuadres).
+
+## ADR-041 · Privacidad de las ausencias
+
+**Fecha**: 2026-10-26 · **Estado**: aceptada
+
+**Decisión**: justificantes en un bucket separado (`absence-attachments`), contenido comprobado,
+metadatos de fotos eliminados y nombre original descartado; URL firmada de 60 s emitida solo si la
+política de Storage lo permite. Compañeros: solo "Ausente" en ausencias aprobadas (función
+`absence_calendar`, sin acceso a la tabla). Tipos reservados: "Ausencia" para managers y sin tipo en
+avisos. Las solicitudes no se copian a `audit_log` (el comentario podría contener datos sensibles
+pese al aviso); su rastro es `absence_request_events`. La configuración y los ajustes manuales sí
+van a `audit_log`.

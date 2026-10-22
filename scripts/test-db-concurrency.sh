@@ -9,6 +9,8 @@
 #   2. Distinta clave (doble toque): se registra una entrada y la otra se
 #      rechaza sin dejar dos jornadas abiertas.
 #   3. Aplicación y terminal a la vez para la misma persona: uno gana.
+#   4. Dos solicitudes de vacaciones a la vez que solo caben de una en una:
+#      una reserva el saldo y la otra se rechaza (nunca saldo consumido dos veces).
 
 concurrency_session() {
   # $1 = base, $2 = usuario (uuid), $3 = sentencia, $4 = segundos de espera antes de confirmar
@@ -79,6 +81,38 @@ SQL
     echo "FALLO: aplicación y terminal en paralelo (pausas=$n)" >&2; cat "$out_a" "$out_b" >&2; return 1
   fi
   echo "  ok - Aplicación y terminal a la vez: una pausa registrada y la otra rechazada"
+
+  # Saldo de 6 medios días; cada solicitud pide 2 días (4 medios días).
+  local monday
+  monday="$(pg_sql "$db" -At <<'SQL'
+insert into public.absence_types (id, company_id, code, name, allowed_units, uses_balance)
+values ('7f000000-0000-4000-8000-0000000000c1', 'aaaaaaaa-0000-0000-0000-000000000001', 'VACC', 'Vacaciones', '{day}', true);
+insert into public.vacation_policies (id, company_id, absence_type_id, code, name)
+values ('7a000000-0000-4000-8000-0000000000c1', 'aaaaaaaa-0000-0000-0000-000000000001',
+  '7f000000-0000-4000-8000-0000000000c1', 'PVC', 'Vacaciones');
+insert into public.vacation_policy_versions (company_id, policy_id, version, entitlement, proration)
+values ('aaaaaaaa-0000-0000-0000-000000000001', '7a000000-0000-4000-8000-0000000000c1', 1, 6, 'none');
+update public.vacation_policy_versions set status = 'published', valid_from = '2025-01-01', published_at = now()
+where policy_id = '7a000000-0000-4000-8000-0000000000c1';
+insert into public.policy_assignments (company_id, policy_id, absence_type_id, scope_type, valid_from)
+values ('aaaaaaaa-0000-0000-0000-000000000001', '7a000000-0000-4000-8000-0000000000c1',
+  '7f000000-0000-4000-8000-0000000000c1', 'company', (now() at time zone 'Europe/Madrid')::date);
+select case when extract(year from m) <> extract(year from m + 4) then m + 7 else m end
+from (select d + (8 - extract(isodow from d)::int) + 14 as m from (select (now() at time zone 'Europe/Madrid')::date as d) x) y;
+SQL
+)"
+  monday="$(tail -1 <<<"$monday")"
+  concurrency_session "$db" 00000000-0000-0000-0000-000000000007 \
+    "select public.submit_absence_request('$company', '7f000000-0000-4000-8000-0000000000c1', 'day', date '$monday', date '$monday' + 1, '7c000000-0000-4000-8000-000000000010') ->> 'status'" 2 >"$out_a" &
+  sleep 0.5
+  concurrency_session "$db" 00000000-0000-0000-0000-000000000007 \
+    "select public.submit_absence_request('$company', '7f000000-0000-4000-8000-0000000000c1', 'day', date '$monday' + 3, date '$monday' + 4, '7c000000-0000-4000-8000-000000000011') ->> 'status'" 0 >"$out_b"
+  wait
+  n="$(pg_sql "$db" -At -c "select count(*) || '/' || coalesce(sum(m.amount), 0) from public.absence_requests r join public.balance_movements m on m.request_id = r.id where r.absence_type_id = '7f000000-0000-4000-8000-0000000000c1'")"
+  if [[ "$n" != "1/-4" ]] || ! grep -qx "pending" "$out_a" || ! grep -q "Saldo insuficiente: disponible 2, solicitado 4" "$out_b"; then
+    echo "FALLO: dos solicitudes simultáneas sobre el mismo saldo (solicitudes/reservado=$n)" >&2; cat "$out_a" "$out_b" >&2; return 1
+  fi
+  echo "  ok - Dos solicitudes simultáneas: una reserva el saldo y la otra se rechaza por saldo insuficiente"
   rm -f "$out_a" "$out_b"
   pg_drop_db "$db"
 }

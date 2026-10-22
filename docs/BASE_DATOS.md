@@ -167,6 +167,30 @@ El horario planificado se recalcula en SQL con `private.planned_shift` (mismas r
 resolvedor TypeScript; las horas repetidas del cambio de hora se corrigen en
 `private.local_to_utc`).
 
+### Vacaciones y ausencias (migración `20261026100000_ausencias`)
+
+Reglas y privacidad en [AUSENCIAS.md](AUSENCIAS.md).
+
+| Tabla                      | Propósito                                      | Claves y restricciones relevantes                                                        |
+| -------------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `absence_types`            | Tipos configurables por empresa                | código único por empresa; sin aprobación solo con referencia de la regla                 |
+| `vacation_policies`        | Política de saldo de un tipo                   | mes de inicio del periodo inmutable                                                      |
+| `vacation_policy_versions` | Reglas versionadas por vigencia                | publicadas inmutables; una por día (exclusión); negativo solo con límite y justificación |
+| `policy_assignments`       | Política por persona, equipo, centro o empresa | una por tipo, nivel y sujeto en cada fecha (exclusión); solo desde hoy                   |
+| `vacation_balances`        | Saldo por persona, política y periodo          | sin importes; versión fijada al abrir                                                    |
+| `balance_movements`        | Libro de movimientos                           | inmutable; signo por tipo; deduplicación por saldo                                       |
+| `absence_requests`         | Solicitudes                                    | sin solapes activos (exclusión sobre `tstzrange`); idempotentes; solo cambia el estado   |
+| `absence_approvals`        | Instancia de aprobación                        | una por solicitud                                                                        |
+| `absence_request_events`   | Historial                                      | inmutable                                                                                |
+| `absence_attachments`      | Justificantes (metadatos)                      | inmutables; sensibilidad copiada del tipo                                                |
+| `leave_periods`            | (columna nueva) `absence_request_id`           | enlaza las ausencias aprobadas de día completo                                           |
+
+RPC: `quote_absence_request`, `submit_absence_request`, `decide_absence_request`,
+`respond_absence_info`, `cancel_absence_request`, `add_absence_attachment`,
+`adjust_vacation_balance`, `my_vacation_balances`, `absence_calendar`, `my_absence_access`,
+`publish_vacation_policy_version` (authenticated); `settle_vacation_balances` (solo service_role).
+Bucket privado `absence-attachments` (PDF, JPEG, PNG; 5 MB).
+
 ### Auditoría y almacenamiento
 
 - `audit_log`: append-only. Columnas `actor_id` (`auth.uid()`), `company_id`, `group_id`,
@@ -231,6 +255,7 @@ orden inverso con `psql` y borrar la fila correspondiente de
 | `20261023100000_administracion`         | Sí (generada desde el texto literal de las anteriores) | suplencias, `audit_events`, fechas de baja, asignaciones por equipo o por tipo                                                          |
 | `20261024100000_calendarios_turnos`     | Sí                                                     | calendarios, festivos, plantillas, asignaciones, ausencias integradas y eventos (la auditoría se conserva siempre)                      |
 | `20261025100000_control_horario`        | Sí                                                     | todo el registro de jornada (exportar antes: obligación de 4 años); exige vaciar antes el bucket de selfies                             |
+| `20261026100000_ausencias`              | Sí                                                     | tipos, políticas, saldos, solicitudes y justificantes; exige vaciar antes el bucket de justificantes                                    |
 
 Protecciones:
 
@@ -254,8 +279,10 @@ Protecciones:
    plataforma / empresa) y `50_horarios` (permisos por ámbito, versionado sin efecto retroactivo,
    validación de plantillas, conflictos, publicación y eventos) y `60_control_horario`
    (idempotencia, estados, medianoche, zona, ubicación, selfie, terminal, correcciones, incidencias,
-   permisos). Después, `scripts/test-db-concurrency.sh` lanza dos sesiones simultáneas (misma clave,
-   doble toque, aplicación y terminal a la vez).
+   permisos) y `70_ausencias` (libro de saldos, arrastre, caducidad, cambio de política, solapes,
+   decisiones, privacidad de justificantes y calendario). Después,
+   `scripts/test-db-concurrency.sh` lanza dos sesiones simultáneas (misma clave, doble toque,
+   aplicación y terminal a la vez, dos solicitudes sobre el mismo saldo).
 3. Comprueba reversibilidad y protección de datos de las reversiones.
 
 Cada prueba actúa como un usuario concreto (`set role authenticated` + claims del JWT). Limitación:
@@ -276,8 +303,7 @@ npx supabase gen types typescript --local --schema public > src/types/database.t
 ## 9. Previsto para fases siguientes (no implementado)
 
 - **Control horario**: exportación para la Inspección (sin tablas nuevas).
-- **Ausencias (fase 2)**: `leave_types`, `leave_balances`, `leave_requests` (las aprobadas
-  alimentarán `leave_periods`; los calendarios laborales ya existen) (justificantes en bucket privado `leave-attachments`).
+- **Ausencias**: plazo de conservación y borrado de justificantes. (justificantes en bucket privado `leave-attachments`).
 - **Gastos (fase 3)**: `expense_policies`, `expense_reports`, `expenses`, `expense_receipts`
   (bucket privado `expense-receipts`, resultado OCR y campos confirmados por la persona).
 

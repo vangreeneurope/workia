@@ -125,6 +125,7 @@ docs/               Documentación funcional y técnica
 - `docs/VIGENCIA_Y_BAJAS.md`: fechas de efecto, bajas, aprobadores y suplencias.
 - `docs/HORARIOS.md`: calendarios, plantillas de turno, precedencia, zonas horarias y cambios de hora.
 - `docs/CONTROL_HORARIO.md`: fichajes, terminal con PIN, correcciones, incidencias y operación.
+- `docs/AUSENCIAS.md`: tipos, políticas versionadas, libro de saldos, aprobación y privacidad.
 - `docs/NORMATIVA.md`: registro de jornada, RGPD/LOPDGDD, conservación.
 - `docs/PLAN_DESARROLLO.md`: fases y criterios de salida.
 - `docs/DECISIONES.md`: registro de decisiones de arquitectura (ADR).
