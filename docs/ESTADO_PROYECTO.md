@@ -1,8 +1,9 @@
 # Estado del proyecto
 
-**Última actualización**: 2026-10-28 · **Fase actual**: 1 y 2 implementadas en local
+**Última actualización**: 2026-10-29 · **Fase actual**: 1 y 2 implementadas en local
 (administración, horarios, control horario, vacaciones y ausencias) y fase 3 casi completa (gastos
-con OCR intercambiable, informes, aprobación y liquidación contable; falta el proveedor de OCR). Nada se ha validado aún contra
+con OCR intercambiable, informes, aprobación y liquidación contable; falta el proveedor de OCR) y
+avisos de la fase 4 (bandeja, correo y tareas programadas; falta el proveedor de correo). Nada se ha validado aún contra
 un proyecto Supabase real ni en GitHub Actions (sin remoto): los tres trabajos del CI se han
 ejecutado en local. Los módulos se han construido por petición expresa sin validar antes los
 anteriores con sesión real (excepción a la regla de CLAUDE.md, registrada aquí).
@@ -160,14 +161,28 @@ anteriores con sesión real (excepción a la regla de CLAUDE.md, registrada aqu�
   proyecto; PDF, CSV, XLSX y ZIP deterministas con SHA-256, descargas registradas (ADR-047).
   Dependencias nuevas: `pdf-lib` 1.17.1 y `fflate` 0.8.3 (sin vulnerabilidades conocidas).
 
-## 2. Resultados de verificación (2026-10-28)
+### Avisos, correo y tareas programadas (2026-10-29)
+
+- Migración `20261029100000_avisos` con reversión verificada: outbox transaccional alimentado por
+  triggers (ausencias, aprobación de gastos, fichajes, horarios), avisos, preferencias, cola de
+  correo con reintentos, eventos de webhook y registro de tareas (ADR-049).
+- Plantillas versionadas en español con contenido mínimo (empresa, acción, fecha, enlace) y enlace
+  que exige sesión y vuelve a comprobar el permiso; bandeja con contador; preferencias solo para
+  avisos no obligatorios; consola de soporte sin contenido.
+- `EmailProvider` con proveedor falso (sin proveedor real); webhook con firma HMAC y
+  deduplicación; rebotes con supresión; límite de 3 recordatorios por correo al día.
+- Tareas programadas en `/api/tareas` con `CRON_SECRET` y clave de servicio (ADR-048):
+  recordatorios por zona horaria y día laborable, avisos, correo, saldos de vacaciones y borrado de
+  selfies caducadas (pendientes desde fases anteriores).
+
+## 2. Resultados de verificación (2026-10-29)
 
 | Verificación               | Comando                                           | Resultado                                                                                                  |
 | -------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | Tipos                      | `npm run typecheck`                               | Sin errores                                                                                                |
 | Lint                       | `npm run lint`                                    | 0 errores, 0 avisos                                                                                        |
 | Formato                    | `npm run format:check`                            | Correcto                                                                                                   |
-| Unitarias                  | `npm test`                                        | 20 archivos, 224 pruebas superadas (incluidos los generadores de liquidación)                              |
+| Unitarias                  | `npm test`                                        | 21 archivos, 237 pruebas superadas (incluidos avisos: plantillas, firmas, reintentos)                      |
 | Aislamiento multiempresa   | `npm run test:db` → `10_aislamiento_multiempresa` | 134 aserciones superadas                                                                                   |
 | Integridad y escalada      | `npm run test:db` → `20_integridad_y_escalada`    | 26 aserciones superadas                                                                                    |
 | Semillas sintéticas        | `npm run test:db` → `30_seed_sintetico`           | 24 aserciones superadas                                                                                    |
@@ -177,11 +192,12 @@ anteriores con sesión real (excepción a la regla de CLAUDE.md, registrada aqu�
 | Ausencias                  | `npm run test:db` → `70_ausencias`                | 81 aserciones superadas                                                                                    |
 | Gastos                     | `npm run test:db` → `80_gastos`                   | 81 aserciones superadas                                                                                    |
 | Liquidación                | `npm run test:db` → `90_liquidacion`              | 76 aserciones superadas                                                                                    |
-| Concurrencia               | `npm run test:db` → `test-db-concurrency.sh`      | 8 escenarios con dos sesiones simultáneas (mismo saldo, ticket, trabajo de OCR y cierre contable)          |
-| Reversibilidad             | `npm run test:db`                                 | 8 reversiones restauran el esquema exacto, reaplicar lo reproduce, 8 exigen autorización para perder datos |
+| Avisos                     | `npm run test:db` → `95_avisos`                   | 53 aserciones superadas                                                                                    |
+| Concurrencia               | `npm run test:db` → `test-db-concurrency.sh`      | 9 escenarios con dos sesiones simultáneas (saldo, ticket, OCR, cierre contable y trabajadores de avisos)   |
+| Reversibilidad             | `npm run test:db`                                 | 9 reversiones restauran el esquema exacto, reaplicar lo reproduce, 9 exigen autorización para perder datos |
 | Tipos frente a esquema     | `npm run db:types:check`                          | Al día (incluye las funciones RPC)                                                                         |
-| Build de producción        | `npm run build`                                   | Correcto (incluye informes, bandeja, consola contable, lotes y descargas)                                  |
-| E2E                        | `npm run test:e2e`                                | 36 pruebas superadas (móvil y escritorio)                                                                  |
+| Build de producción        | `npm run build`                                   | Correcto (incluye avisos, preferencias, consola de soporte, tareas y webhook)                              |
+| E2E                        | `npm run test:e2e`                                | 38 pruebas superadas (móvil y escritorio; incluye rutas de máquina sin secreto)                            |
 | Dependencias de producción | `npm audit --omit=dev`                            | 0 vulnerabilidades                                                                                         |
 
 **CI**: los pasos de los tres trabajos de `.github/workflows/ci.yml` se han ejecutado en local
@@ -219,11 +235,10 @@ cada operación está cubierta por las pruebas SQL contra PostgreSQL 16 con la e
    festivo no genera avisos todavía; `leave_periods` no tiene aún quien la rellene (módulo de
    ausencias); el manager solo consulta horarios (ADR-030). Los festivos reales deben registrarse
    desde una fuente aprobada por la empresa.
-7. **Control horario**: falta programar `generate_time_reminders` (cada 15 min) y el borrado de
-   selfies caducadas con la API de Storage; no hay adaptador de correo para los eventos de
-   trabajo; falta la exportación para la Inspección; validar con la asesoría el plazo de selfies y,
+7. **Control horario**: la tarea programada ya ejecuta recordatorios y borrado de selfies, pero
+   falta configurar el planificador en el entorno real; falta la exportación para la Inspección; validar con la asesoría el plazo de selfies y,
    con el DPD, la activación de la ubicación en cada empresa.
-8. **Ausencias**: programar `settle_vacation_balances` (diaria); definir con la asesoría el plazo
+8. **Ausencias**: `settle_vacation_balances` va en la tarea programada (falta el planificador real); definir con la asesoría el plazo
    de conservación de justificantes y los valores reales de tipos y políticas de cada empresa; un
    cambio de contrato a mitad de periodo no reprorratea el saldo abierto (se regulariza con un
    ajuste).
@@ -231,7 +246,9 @@ cada operación está cubierta por las pruebas SQL contra PostgreSQL 16 con la e
    para la cola; plazo de conservación de tickets, lotes y paquetes con la asesoría; clientes,
    proyectos y centros de coste son texto libre; la exportación es genérica (sin mapeo a un ERP
    concreto); sin avisos por correo de informes pendientes o devueltos.
-10. Riesgos heredados: CSP con `'unsafe-inline'`, componentes shadcn escritos a mano,
+10. **Avisos**: sin proveedor de correo real (ADR pendiente) ni planificador configurado en un
+    entorno real; sin push en la PWA; plazo de conservación de avisos por validar.
+11. Riesgos heredados: CSP con `'unsafe-inline'`, componentes shadcn escritos a mano,
     vulnerabilidades en herramientas de lint, revisión normativa pendiente.
 
 ## 4. Próximos pasos
@@ -242,5 +259,6 @@ cada operación está cubierta por las pruebas SQL contra PostgreSQL 16 con la e
 3. Probar el horario con las semillas sintéticas (`supabase db reset`) y sesión real.
 4. Tareas programadas del control horario, exportación para la Inspección y visor de auditoría
    (resto de la fase 1); reglas de clasificación de excesos de jornada aprobadas por la asesoría.
-5. Gastos: decidir el proveedor de OCR (o trabajar sin OCR) y, si se elige un ERP, su mapeo de
+5. Elegir proveedor de correo (guía en docs/AVISOS.md) y configurar el planificador de `/api/tareas`.
+6. Gastos: decidir el proveedor de OCR (o trabajar sin OCR) y, si se elige un ERP, su mapeo de
    importación a partir del CSV/XLSX genérico.

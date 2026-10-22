@@ -15,6 +15,8 @@
 #   6. Dos sesiones reclaman a la vez el mismo trabajo de OCR: una sola ejecución.
 #   7. Dos cierres contables simultáneos del mismo periodo (misma clave y clave
 #      distinta): un solo lote; el reintento devuelve el mismo.
+#   8. Dos trabajadores procesan el outbox y toman correos a la vez: ningún aviso
+#      ni correo duplicado y cada entrega la toma un solo trabajador.
 
 concurrency_session() {
   # $1 = base, $2 = usuario (uuid), $3 = sentencia, $4 = segundos de espera antes de confirmar
@@ -186,6 +188,30 @@ SQL
     echo "FALLO: doble cierre con otra clave (lotes=$n)" >&2; cat "$out_b" >&2; return 1
   fi
   echo "  ok - Doble cierre con otra clave: rechazado, sigue habiendo un solo lote"
+
+  # Avisos: dos trabajadores a la vez (como la tarea programada, con service_role).
+  pg_sql "$db" -At -o /dev/null -c "select private.enqueue_notification('$company', 'shift_changed', 'schedule', null, 'e0000000-0000-0000-0000-000000000007', 'concurrencia:turno')"
+  local worker="select (select processed from public.process_notification_outbox()) || ':' || (select count(*) from public.claim_email_deliveries() where event_type = 'shift_changed')"
+  pg_sql "$db" -At >"$out_a" 2>&1 <<SQL &
+begin;
+set role service_role;
+$worker;
+select pg_sleep(2);
+commit;
+SQL
+  sleep 0.5
+  pg_sql "$db" -At >"$out_b" 2>&1 <<SQL
+begin;
+set role service_role;
+$worker;
+commit;
+SQL
+  wait
+  n="$(pg_sql "$db" -At -c "select (select count(*) from public.notifications where event_type = 'shift_changed') || '/' || (select count(*) from public.email_deliveries where event_type = 'shift_changed')")"
+  if [[ "$n" != "1/1" ]] || ! grep -qE "^[1-9][0-9]*:1$" "$out_a" || ! grep -qx "0:0" "$out_b"; then
+    echo "FALLO: trabajadores de avisos simultáneos (avisos/correos=$n)" >&2; cat "$out_a" "$out_b" >&2; return 1
+  fi
+  echo "  ok - Dos trabajadores de avisos a la vez: un aviso, un correo y una sola toma de la entrega"
   rm -f "$out_a" "$out_b"
   pg_drop_db "$db"
 }

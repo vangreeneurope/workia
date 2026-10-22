@@ -1227,6 +1227,145 @@ export type Database = {
           },
         ];
       };
+      email_deliveries: {
+        Row: {
+          attempts: number;
+          company_id: string;
+          created_at: string;
+          delivered_at: string | null;
+          event_type: string;
+          external_id: string | null;
+          id: string;
+          idempotency_key: string;
+          last_error_code: string | null;
+          locked_at: string | null;
+          manual_retries: number;
+          max_attempts: number;
+          next_attempt_at: string;
+          notification_id: string;
+          provider: string | null;
+          recipient_user_id: string;
+          sent_at: string | null;
+          status: string;
+          template_version: number;
+          updated_at: string;
+        };
+        Insert: {
+          attempts?: number;
+          company_id: string;
+          created_at?: string;
+          delivered_at?: string | null;
+          event_type: string;
+          external_id?: string | null;
+          id?: string;
+          idempotency_key: string;
+          last_error_code?: string | null;
+          locked_at?: string | null;
+          manual_retries?: number;
+          max_attempts?: number;
+          next_attempt_at?: string;
+          notification_id: string;
+          provider?: string | null;
+          recipient_user_id: string;
+          sent_at?: string | null;
+          status?: string;
+          template_version: number;
+          updated_at?: string;
+        };
+        Update: {
+          attempts?: number;
+          company_id?: string;
+          created_at?: string;
+          delivered_at?: string | null;
+          event_type?: string;
+          external_id?: string | null;
+          id?: string;
+          idempotency_key?: string;
+          last_error_code?: string | null;
+          locked_at?: string | null;
+          manual_retries?: number;
+          max_attempts?: number;
+          next_attempt_at?: string;
+          notification_id?: string;
+          provider?: string | null;
+          recipient_user_id?: string;
+          sent_at?: string | null;
+          status?: string;
+          template_version?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "email_deliveries_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "email_deliveries_notification_id_company_id_fkey";
+            columns: ["notification_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "notifications";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "email_deliveries_recipient_user_id_fkey";
+            columns: ["recipient_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      email_delivery_events: {
+        Row: {
+          company_id: string;
+          delivery_id: string;
+          event_type: string;
+          external_event_id: string;
+          id: number;
+          occurred_at: string;
+          provider: string;
+          received_at: string;
+        };
+        Insert: {
+          company_id: string;
+          delivery_id: string;
+          event_type: string;
+          external_event_id: string;
+          id?: never;
+          occurred_at: string;
+          provider: string;
+          received_at?: string;
+        };
+        Update: {
+          company_id?: string;
+          delivery_id?: string;
+          event_type?: string;
+          external_event_id?: string;
+          id?: never;
+          occurred_at?: string;
+          provider?: string;
+          received_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "email_delivery_events_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "email_delivery_events_delivery_id_company_id_fkey";
+            columns: ["delivery_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "email_deliveries";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
       employees: {
         Row: {
           company_id: string;
@@ -2583,6 +2722,193 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "teams";
             referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      notification_outbox: {
+        Row: {
+          attempts: number;
+          company_id: string;
+          employee_id: string | null;
+          entity_id: string | null;
+          entity_type: string;
+          event_type: string;
+          id: number;
+          last_error_code: string | null;
+          occurred_at: string;
+          payload: Json;
+          processed_at: string | null;
+          source_key: string;
+          status: string;
+        };
+        Insert: {
+          attempts?: number;
+          company_id: string;
+          employee_id?: string | null;
+          entity_id?: string | null;
+          entity_type: string;
+          event_type: string;
+          id?: never;
+          last_error_code?: string | null;
+          occurred_at?: string;
+          payload?: Json;
+          processed_at?: string | null;
+          source_key: string;
+          status?: string;
+        };
+        Update: {
+          attempts?: number;
+          company_id?: string;
+          employee_id?: string | null;
+          entity_id?: string | null;
+          entity_type?: string;
+          event_type?: string;
+          id?: never;
+          last_error_code?: string | null;
+          occurred_at?: string;
+          payload?: Json;
+          processed_at?: string | null;
+          source_key?: string;
+          status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notification_outbox_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notification_outbox_employee_id_company_id_fkey";
+            columns: ["employee_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      notification_preferences: {
+        Row: {
+          channel: string;
+          company_id: string;
+          created_at: string;
+          enabled: boolean;
+          event_type: string;
+          id: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          channel?: string;
+          company_id: string;
+          created_at?: string;
+          enabled: boolean;
+          event_type: string;
+          id?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          channel?: string;
+          company_id?: string;
+          created_at?: string;
+          enabled?: boolean;
+          event_type?: string;
+          id?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notification_preferences_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notification_preferences_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      notifications: {
+        Row: {
+          company_id: string;
+          created_at: string;
+          employee_id: string | null;
+          entity_id: string | null;
+          entity_type: string;
+          event_type: string;
+          id: string;
+          idempotency_key: string;
+          link_path: string;
+          mandatory: boolean;
+          outbox_id: number;
+          params: Json;
+          read_at: string | null;
+          recipient_user_id: string;
+          template_version: number;
+        };
+        Insert: {
+          company_id: string;
+          created_at?: string;
+          employee_id?: string | null;
+          entity_id?: string | null;
+          entity_type: string;
+          event_type: string;
+          id?: string;
+          idempotency_key: string;
+          link_path: string;
+          mandatory: boolean;
+          outbox_id: number;
+          params?: Json;
+          read_at?: string | null;
+          recipient_user_id: string;
+          template_version?: number;
+        };
+        Update: {
+          company_id?: string;
+          created_at?: string;
+          employee_id?: string | null;
+          entity_id?: string | null;
+          entity_type?: string;
+          event_type?: string;
+          id?: string;
+          idempotency_key?: string;
+          link_path?: string;
+          mandatory?: boolean;
+          outbox_id?: number;
+          params?: Json;
+          read_at?: string | null;
+          recipient_user_id?: string;
+          template_version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notifications_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notifications_outbox_id_company_id_fkey";
+            columns: ["outbox_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "notification_outbox";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "notifications_recipient_user_id_fkey";
+            columns: ["recipient_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -4286,6 +4612,19 @@ export type Database = {
         };
         Returns: string;
       };
+      claim_email_deliveries: {
+        Args: { p_limit?: number };
+        Returns: {
+          delivery_id: string;
+          to_email: string;
+          event_type: string;
+          template_version: number;
+          params: Json;
+          notification_id: string;
+          idempotency_key: string;
+          attempt: number;
+        }[];
+      };
       claim_ocr_job: {
         Args: { p_job: string; p_provider: string };
         Returns: { run_id: string; attempt: number; storage_path: string; mime_type: string }[];
@@ -4301,6 +4640,17 @@ export type Database = {
         Returns: string;
       };
       close_shift_assignment: { Args: { p_id: string; p_last_day: string }; Returns: undefined };
+      complete_email_delivery: {
+        Args: {
+          p_delivery: string;
+          p_status: string;
+          p_provider?: string;
+          p_external_id?: string;
+          p_error_code?: string;
+          p_retryable?: boolean;
+        };
+        Returns: string;
+      };
       complete_report_step: {
         Args: { p_report: string; p_action: string; p_comment?: string };
         Returns: Database["public"]["Enums"]["expense_report_status"];
@@ -4394,6 +4744,7 @@ export type Database = {
       };
       log_export_download: { Args: { p_export: string }; Returns: string };
       mark_batch_accounted: { Args: { p_batch: string }; Returns: undefined };
+      mark_notifications_read: { Args: { p_company: string; p_ids?: unknown }; Returns: number };
       mark_punch_selfie_purged: { Args: { p_punch: string }; Returns: undefined };
       my_absence_access: {
         Args: { p_company: string };
@@ -4457,6 +4808,18 @@ export type Database = {
           available: number;
         }[];
       };
+      notification_support_summary: {
+        Args: { p_company: string };
+        Returns: { kind: string; status: string; total: number }[];
+      };
+      open_notification: {
+        Args: { p_notification: string };
+        Returns: { allowed: boolean; link_path: string }[];
+      };
+      process_notification_outbox: {
+        Args: { p_limit?: number };
+        Returns: { processed: number; notifications: number; deliveries: number }[];
+      };
       publish_shift_assignment: {
         Args: { p_id: string; p_accept_warnings?: boolean };
         Returns: number;
@@ -4489,6 +4852,37 @@ export type Database = {
         }[];
       };
       reactivate_employee: { Args: { p_employee: string }; Returns: undefined };
+      recent_job_runs: {
+        Args: { p_limit?: number };
+        Returns: {
+          job: string;
+          started_at: string;
+          finished_at: string;
+          ok: boolean;
+          counts: Json;
+          error_code: string;
+        }[];
+      };
+      record_email_event: {
+        Args: {
+          p_provider: string;
+          p_event_id: string;
+          p_external_id: string;
+          p_event: string;
+          p_occurred_at: string;
+        };
+        Returns: boolean;
+      };
+      record_job_run: {
+        Args: {
+          p_job: string;
+          p_started_at: string;
+          p_ok: boolean;
+          p_counts?: Json;
+          p_error_code?: string;
+        };
+        Returns: undefined;
+      };
       record_punch: {
         Args: {
           p_company: string;
@@ -4568,6 +4962,8 @@ export type Database = {
         Returns: undefined;
       };
       respond_absence_info: { Args: { p_request: string; p_message: string }; Returns: undefined };
+      retry_email_delivery: { Args: { p_delivery: string }; Returns: undefined };
+      run_scheduled_reminders: { Args: { p_now?: string }; Returns: number };
       save_shift_assignment: {
         Args: {
           p_scope: Database["public"]["Enums"]["shift_assignment_scope"];

@@ -97,7 +97,8 @@ docs/               Documentación funcional y técnica
    verifica que restaura el esquema exacto. Después, `npm run db:types`.
 5. **Cada Server Action y Route Handler** obtiene la identidad con `getUserContext()` /
    `requireUserId()` / `requireSection()` de `src/lib/auth/dal.ts` (en administración,
-   `adminAction()` o `requireAdminArea()`). Única excepción: el terminal `/terminal` (ADR-036). El `company_id` de una escritura sale siempre de
+   `adminAction()` o `requireAdminArea()`). Excepciones: el terminal `/terminal` (ADR-036) y las rutas
+   de máquina `/api/tareas` (CRON_SECRET) y `/api/correo/webhook` (firma), ADR-048. El `company_id` de una escritura sale siempre de
    `ctx.companyId`, nunca del formulario. Nunca confíes en ids que lleguen del cliente.
 6. Usa `getClaims()` (valida el JWT), nunca `getSession()` en servidor para autorizar.
 7. **Sin secretos en el frontend ni en el repositorio.** Solo `NEXT_PUBLIC_SUPABASE_URL`,
@@ -129,6 +130,7 @@ docs/               Documentación funcional y técnica
 - `docs/GASTOS.md`: captura de tickets, OCR intercambiable, cola y reintentos, duplicados y reglas.
 - `docs/LIQUIDACION_GASTOS.md`: informes mensuales, aprobación por pasos, cierre en lotes y
   esquema de exportación (PDF, CSV, XLSX, ZIP).
+- `docs/AVISOS.md`: bandeja, correo, outbox, reintentos, tareas programadas y guía de proveedor.
 - `docs/NORMATIVA.md`: registro de jornada, RGPD/LOPDGDD, conservación.
 - `docs/PLAN_DESARROLLO.md`: fases y criterios de salida.
 - `docs/DECISIONES.md`: registro de decisiones de arquitectura (ADR).

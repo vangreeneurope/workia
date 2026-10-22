@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-import { HOME_PATH, LOGIN_PATH, isPublicPath } from "@/lib/auth/routes";
+import { HOME_PATH, LOGIN_PATH, isMachinePath, isPublicPath } from "@/lib/auth/routes";
 import { getPublicEnv } from "@/lib/env";
 import type { Database } from "@/types/database";
 
@@ -45,7 +45,7 @@ export async function updateSession(request: NextRequest) {
   const isAuthenticated = Boolean(data?.claims?.sub);
   const { pathname, search } = request.nextUrl;
 
-  if (!isAuthenticated && !isPublicPath(pathname)) {
+  if (!isAuthenticated && !isPublicPath(pathname) && !isMachinePath(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = LOGIN_PATH;
     url.search = "";

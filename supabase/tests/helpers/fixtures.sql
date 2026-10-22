@@ -174,3 +174,8 @@ insert into public.expense_categories (id, company_id, code, name) values
 -- comprueban que no se pierden datos sin autorización).
 insert into public.expense_account_mappings (company_id, category_id, account_code) values
   ('aaaaaaaa-0000-0000-0000-000000000001', null, '629');
+
+-- Avisos: E1 no quiere correo de las decisiones de ausencias (las pruebas de
+-- reversión comprueban que no se pierden datos sin autorización).
+insert into public.notification_preferences (company_id, user_id, event_type, channel, enabled) values
+  ('aaaaaaaa-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000007', 'absence_decided', 'email', false);

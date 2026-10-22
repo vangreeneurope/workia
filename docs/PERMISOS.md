@@ -150,6 +150,7 @@ Se calculan con los permisos reales de la base de datos (`my_company_permissions
 | Control horario                            | `time.manage` (políticas de empresa; terminales y PIN de su ámbito)      |
 | Vacaciones y ausencias                     | `absence.manage` (tipos y políticas de empresa; asignaciones y ajustes)  |
 | Gastos                                     | `expense.manage` (ámbito empresa: política y categorías)                 |
+| Avisos y correo                            | `audit.read` (ámbito empresa); reintentar entregas exige `org.manage`    |
 
 Permisos de gastos (`my_expense_access`, ADR-042 y ADR-045): `read` (administración de empresa y
 Contabilidad), `manage` (administración de empresa; la de grupo solo configura y no abre tickets),

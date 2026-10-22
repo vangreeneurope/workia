@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 
 import { getCompanyLogoUrl, getUserContext } from "@/lib/auth/dal";
+import { createClient } from "@/lib/supabase/server";
 import { brandForeground, safeBrandColor } from "@/lib/auth/permissions";
 import { visibleNavKeys } from "@/lib/navigation";
 
@@ -19,6 +20,17 @@ export async function AppShell({ children }: { children: ReactNode }) {
   const logoUrl = await getCompanyLogoUrl(activeCompany?.logoPath ?? null);
   const brand = safeBrandColor(activeCompany?.primaryColor);
   const navKeys = visibleNavKeys(ctx);
+  // Avisos sin leer de la empresa activa (RLS: solo los propios).
+  let unread = 0;
+  if (ctx.activeCompanyId) {
+    const supabase = await createClient();
+    const { count } = await supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("company_id", ctx.activeCompanyId)
+      .is("read_at", null);
+    unread = count ?? 0;
+  }
 
   const brandStyle = {
     "--brand": brand,
@@ -39,6 +51,7 @@ export async function AppShell({ children }: { children: ReactNode }) {
           user={{ fullName: ctx.fullName, email: ctx.email, isGlobalAdmin: ctx.isGlobalAdmin }}
           companies={ctx.companies.map(({ id, name }) => ({ id, name }))}
           activeCompanyId={ctx.activeCompanyId}
+          unread={unread}
           brand={
             <CompanyBrand name={activeCompany?.name ?? "Portal del empleado"} logoUrl={logoUrl} />
           }

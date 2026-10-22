@@ -182,3 +182,30 @@ test("informes, bandeja, contabilidad y descargas contables exigen sesión", asy
   expect(response.status()).toBe(307);
   expect(response.headers()["location"]).toContain("/acceder");
 });
+
+test("la bandeja de avisos exige sesión y las rutas de máquina se protegen solas", async ({
+  page,
+  request,
+}) => {
+  for (const path of ["/avisos", "/avisos/preferencias", "/admin/avisos"]) {
+    await page.goto(path);
+    await expect(page).toHaveURL(/\/acceder\?siguiente=/);
+  }
+  // El enlace de un correo no da acceso sin sesión.
+  const open = await request.get("/avisos/00000000-0000-4000-8000-000000000000", {
+    maxRedirects: 0,
+  });
+  expect(open.status()).toBe(307);
+  expect(open.headers()["location"]).toContain("/acceder");
+  // Tareas programadas: sin el secreto, 401 (no se ejecuta nada).
+  const cron = await request.post("/api/tareas", { maxRedirects: 0 });
+  expect(cron.status()).toBe(401);
+  const wrong = await request.post("/api/tareas", {
+    maxRedirects: 0,
+    headers: { authorization: `Bearer ${"x".repeat(40)}` },
+  });
+  expect(wrong.status()).toBe(401);
+  // Webhook sin proveedor configurado: no existe.
+  const hook = await request.post("/api/correo/webhook", { maxRedirects: 0, data: { events: [] } });
+  expect(hook.status()).toBe(404);
+});

@@ -34,6 +34,8 @@ describe("áreas de administración", () => {
       "membresias",
       "aprobadores",
       "importar",
+      // Con auditoría (audit.read) ve también la consola de avisos, sin contenido.
+      "avisos",
     ]);
   });
 

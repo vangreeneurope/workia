@@ -27,7 +27,8 @@ export type AdminArea =
   | "calendarios"
   | "fichajes"
   | "ausencias"
-  | "gastos";
+  | "gastos"
+  | "avisos";
 
 export const ADMIN_AREAS: { key: AdminArea; label: string; href: string; description: string }[] = [
   {
@@ -103,6 +104,12 @@ export const ADMIN_AREAS: { key: AdminArea; label: string; href: string; descrip
     href: "/admin/gastos",
     description: "Política de gastos, categorías, kilometraje y campos obligatorios.",
   },
+  {
+    key: "avisos",
+    label: "Avisos y correo",
+    href: "/admin/avisos",
+    description: "Estado de los avisos y de las entregas de correo, sin contenido.",
+  },
 ];
 
 export function hasPermission(
@@ -146,6 +153,8 @@ export function canUseArea(
       return hasPermission(permissions, "absence.manage");
     case "gastos":
       return hasPermission(permissions, "expense.manage", "company");
+    case "avisos":
+      return hasPermission(permissions, "audit.read", "company");
   }
 }
 

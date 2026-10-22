@@ -231,6 +231,26 @@ RPC: `submit_expense_report`, `decide_report_line`, `complete_report_step`,
 `create_corrective_batch`, `mark_batch_accounted`, `accounting_batch_totals`,
 `register_accounting_export`, `log_export_download`. Bucket privado `accounting-exports`.
 
+### Avisos (migración `20261029100000_avisos`)
+
+Flujo, catálogo y reintentos en [AVISOS.md](AVISOS.md).
+
+| Tabla                        | Propósito                                 | Claves y restricciones relevantes                                                                  |
+| ---------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `notification_outbox`        | Eventos de dominio pendientes de procesar | `source_key` único; payload con ids, fechas o recuentos (≤ 1 KB); no visible a usuarios            |
+| `notifications`              | Bandeja de cada persona                   | clave idempotente por evento, destinatario y canal; solo cambia `read_at`; enlace interno          |
+| `notification_preferences`   | Correo de avisos opcionales               | una por persona, empresa, evento y canal; prohibido en avisos obligatorios                         |
+| `email_deliveries`           | Cola de correo                            | clave idempotente; reintentos con espera; `(proveedor, id externo)` único; sin cuerpo ni dirección |
+| `email_delivery_events`      | Eventos de webhook                        | `(proveedor, id del evento)` único; inmutables                                                     |
+| `private.scheduled_job_runs` | Registro de tareas programadas            | fuera del API; solo recuentos y códigos                                                            |
+
+Triggers nuevos en `absence_request_events`, `approval_steps`, `expense_reports`, `work_events` y
+`schedule_events` (solo escriben en el outbox). RPC de usuario: `open_notification`,
+`mark_notifications_read`, `retry_email_delivery`, `notification_support_summary`,
+`recent_job_runs`; de tareas (solo service_role): `process_notification_outbox`,
+`claim_email_deliveries`, `complete_email_delivery`, `record_email_event`,
+`run_scheduled_reminders`, `record_job_run`.
+
 ### Auditoría y almacenamiento
 
 - `audit_log`: append-only. Columnas `actor_id` (`auth.uid()`), `company_id`, `group_id`,

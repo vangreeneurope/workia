@@ -61,6 +61,11 @@ lote corrector y paquete PDF, CSV, XLSX y ZIP. Pendiente: proveedor de OCR y map
 Informes por empresa y grupo, exportaciones, notificaciones por correo y push en la PWA respetando
 la desconexión digital.
 
+Hecho (2026-10-29, docs/AVISOS.md): bandeja interna, outbox transaccional, plantillas versionadas,
+cola de correo con reintentos y dead-letter, webhook firmado, recordatorios por zona horaria y días
+laborables, tareas programadas y consola de soporte. Pendiente: proveedor de correo real (ADR),
+push en la PWA e informes consolidados.
+
 ## Fase 5 · Endurecimiento y salida a producción
 
 CSP con nonce (ADR-009), revisión de seguridad completa, pruebas de carga básicas, copias de

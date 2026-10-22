@@ -90,6 +90,13 @@ proveedor de OCR configurado; elegir uno exige ADR, contrato de encargo de trata
 RGPD) y comprobar dónde trata los datos. No se guarda el texto completo del ticket. **Pendiente**:
 plazo de conservación de tickets con la asesoría y su borrado.
 
+Avisos (2026-10-29, `docs/AVISOS.md`): los correos solo dicen empresa, acción y fecha, y enlazan al
+portal (exige sesión). No incluyen motivos ni tipos de ausencia, importes, tickets, coordenadas ni
+imágenes. No se guardan sus cuerpos. Los recordatorios de aprobaciones solo se envían en día
+laborable entre las 9:00 y las 18:00 locales (desconexión digital, art. 88 LOPDGDD) y con límite
+diario. **Pendiente**: proveedor de correo con contrato de encargo de tratamiento y plazo de
+conservación de avisos.
+
 Liquidación (2026-10-28, `docs/LIQUIDACION_GASTOS.md`): los lotes contables y su paquete (PDF, CSV,
 XLSX y ZIP de justificantes) son inmutables, se guardan en un bucket privado y solo los descarga
 Contabilidad con enlace firmado de 60 s; cada descarga queda registrada. Los tickets no se envían por

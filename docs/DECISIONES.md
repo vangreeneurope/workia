@@ -556,3 +556,37 @@ SHA-256 y la base de datos rechaza un archivo distinto para el mismo lote y form
 calculan en la base de datos y la aplicación comprueba que cuadran con las líneas antes de generar.
 Dependencias nuevas fijadas a versión exacta: `pdf-lib` 1.17.1 y `fflate` 0.8.3.
 **Alternativa descartada**: formato de un ERP concreto (no está decidido; no se inventa su esquema).
+
+## ADR-048 · Tareas programadas y webhook de correo con clave de servicio
+
+**Fecha**: 2026-10-29 · **Estado**: aceptada
+
+**Contexto**: recordatorios, proceso de avisos, envío de correo, liquidación diaria de saldos y
+borrado de selfies no tienen sesión de usuario y cruzan empresas.
+
+**Decisión**: dos rutas de máquina, fuera de la redirección del proxy (`MACHINE_PATHS`):
+`/api/tareas`, autenticada con `CRON_SECRET` (mínimo 32 caracteres, comparación en tiempo
+constante) y llamada por un planificador externo; y `/api/correo/webhook`, que solo acepta eventos
+con firma HMAC válida. Ambas usan la clave de servicio (`createAdminClient`) **solo** para llamar a
+las funciones de tareas (`run_scheduled_reminders`, `process_notification_outbox`,
+`claim_email_deliveries`, `complete_email_delivery`, `record_email_event`, `record_job_run`,
+`settle_vacation_balances`, selfies caducadas). Esas funciones tienen `execute` únicamente para
+`service_role`. Nunca devuelven contenido ni datos personales en la respuesta, y el registro solo
+guarda recuentos y códigos. Es la segunda excepción a la regla de identidad de Server Actions y
+Route Handlers, tras `/terminal` (ADR-036).
+
+## ADR-049 · Avisos con outbox transaccional
+
+**Fecha**: 2026-10-29 · **Estado**: aceptada
+
+**Decisión**: los eventos de dominio (historial de ausencias, pasos e informes de gastos, eventos
+de fichaje y de horario) escriben una fila en `notification_outbox` desde un trigger en la misma
+transacción. Nada se envía dentro de ella. Un proceso posterior crea avisos y correos con claves
+de idempotencia por evento, destinatario y canal. Los parámetros de las plantillas los construye la
+base de datos con una lista cerrada (empresa, fecha, periodo, día, recuento, resultado). Las
+plantillas viven en el código, versionadas. Preferencias solo de correo y solo para avisos no
+obligatorios. Reintentos con espera exponencial y dead-letter; supresión tras rebote; deduplicación
+de webhooks por id externo. No hay proveedor de correo real: interfaz `EmailProvider` y proveedor
+falso fuera de producción.
+**Alternativa descartada**: enviar el correo desde la Server Action (acoplaría la operación al
+proveedor y duplicaría en los reintentos).
