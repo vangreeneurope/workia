@@ -63,6 +63,13 @@ export type UserContext = {
   activeCompanyId: string | null;
   /** Número de asignaciones vigentes como manager (pueden cruzar empresas). */
   supervisedCount: number;
+  /**
+   * Verificación en dos pasos (ADR-053): `required` si tiene roles de
+   * administración, RR. HH., contabilidad o auditoría (o administra grupo o
+   * plataforma); `satisfied` si la sesión actual es aal2. La base de datos no
+   * concede esos permisos sin aal2; esto solo decide qué mostrar.
+   */
+  mfa: { required: boolean; satisfied: boolean };
 };
 
 export type SectionKey =
@@ -128,6 +135,24 @@ export function canAccessSection(ctx: UserContext, section: SectionKey): boolean
     case "admin":
       return admin || hasAnyRole(roles, ["company_admin", "hr"]);
   }
+}
+
+/** Secciones que solo tienen sentido con los permisos que exigen MFA. */
+export const MFA_PROTECTED_SECTIONS: readonly SectionKey[] = [
+  "equipo",
+  "informes",
+  "auditoria",
+  "admin",
+];
+
+/** ¿Debe verificar el segundo factor antes de usar sus permisos? */
+export function mfaPending(ctx: UserContext): boolean {
+  return ctx.mfa.required && !ctx.mfa.satisfied;
+}
+
+/** ¿Hay que pedir el segundo factor para entrar en esta sección? */
+export function needsMfaStepUp(ctx: UserContext, section: SectionKey): boolean {
+  return mfaPending(ctx) && MFA_PROTECTED_SECTIONS.includes(section);
 }
 
 /**

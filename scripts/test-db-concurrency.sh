@@ -23,7 +23,7 @@ concurrency_session() {
   pg_sql "$1" -At <<SQL 2>&1
 begin;
 set role authenticated;
-select set_config('request.jwt.claims', json_build_object('sub', '$2', 'role', 'authenticated')::text, true);
+select set_config('request.jwt.claims', json_build_object('sub', '$2', 'role', 'authenticated', 'aal', 'aal2')::text, true);
 $3;
 select pg_sleep($4);
 commit;
@@ -67,14 +67,14 @@ run_concurrency_tests() {
   local token
   token="$(pg_sql "$db" -At <<'SQL'
 set role authenticated;
-select set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-000000000004", "role": "authenticated"}', false);
+select set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-000000000004", "role": "authenticated", "aal": "aal2"}', false);
 select public.register_kiosk_device('a1000000-0000-0000-0000-000000000001', 'Terminal de prueba');
 SQL
 )"
   token="$(tail -1 <<<"$token")"
   pg_sql "$db" -At -o /dev/null <<'SQL'
 set role authenticated;
-select set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-000000000007", "role": "authenticated"}', false);
+select set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-000000000007", "role": "authenticated", "aal": "aal2"}', false);
 select public.set_my_kiosk_pin('aaaaaaaa-0000-0000-0000-000000000001', '482913');
 SQL
   concurrency_session "$db" 00000000-0000-0000-0000-000000000007 \

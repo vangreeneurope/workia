@@ -36,6 +36,8 @@ describe("áreas de administración", () => {
       "importar",
       // Con auditoría (audit.read) ve también la consola de avisos, sin contenido.
       "avisos",
+      // Con gestión de personas de empresa, privacidad (derechos, retenciones y soporte).
+      "privacidad",
     ]);
   });
 
@@ -50,6 +52,7 @@ describe("áreas de administración", () => {
     expect(canUseArea("personas", scoped, { groupAdmin: false })).toBe(true);
     expect(canUseArea("membresias", scoped, { groupAdmin: false })).toBe(false);
     expect(canUseArea("centros", scoped, { groupAdmin: false })).toBe(false);
+    expect(canUseArea("privacidad", scoped, { groupAdmin: false })).toBe(false);
   });
 
   it("horarios: plantillas y calendarios exigen ámbito empresa; asignar, cualquier ámbito", () => {

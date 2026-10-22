@@ -6,7 +6,13 @@ import { cache } from "react";
 
 import { LOGIN_PATH } from "@/lib/auth/routes";
 import { assembleUserContext, type CompanyRow } from "@/lib/auth/context";
-import { canAccessSection, type SectionKey, type UserContext } from "@/lib/auth/permissions";
+import {
+  canAccessSection,
+  needsMfaStepUp,
+  type SectionKey,
+  type UserContext,
+} from "@/lib/auth/permissions";
+import { log } from "@/lib/log";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -17,6 +23,9 @@ import { createClient } from "@/lib/supabase/server";
  */
 
 export const ACTIVE_COMPANY_COOKIE = "empresa_activa";
+
+/** Página de seguridad de la cuenta (alta y verificación del segundo factor). */
+export const MFA_PATH = "/perfil/seguridad";
 
 export const getCurrentUserId = cache(async (): Promise<string | null> => {
   const supabase = await createClient();
@@ -47,7 +56,7 @@ export const getUserContext = cache(async (): Promise<UserContext> => {
   const cookieStore = await cookies();
   const now = new Date();
 
-  const [profileRes, platformRes, groupAdminsRes, membershipsRes, assignmentsRes] =
+  const [profileRes, platformRes, groupAdminsRes, membershipsRes, assignmentsRes, mfaRes] =
     await Promise.all([
       supabase.from("profiles").select("email, full_name").eq("id", userId).maybeSingle(),
       supabase.from("platform_admins").select("user_id").eq("user_id", userId).maybeSingle(),
@@ -59,11 +68,19 @@ export const getUserContext = cache(async (): Promise<UserContext> => {
         )
         .eq("user_id", userId),
       supabase.from("manager_assignments").select(VALIDITY_COLUMNS).eq("manager_user_id", userId),
+      supabase.rpc("my_mfa_status").maybeSingle(),
     ]);
 
-  for (const res of [profileRes, platformRes, groupAdminsRes, membershipsRes, assignmentsRes]) {
+  for (const res of [
+    profileRes,
+    platformRes,
+    groupAdminsRes,
+    membershipsRes,
+    assignmentsRes,
+    mfaRes,
+  ]) {
     if (res.error) {
-      console.error("Error cargando el contexto del usuario", res.error.code);
+      log.error("auth.context_failed", { code: res.error.code });
       throw new Error("No se pudo cargar tu información. Inténtalo de nuevo.");
     }
   }
@@ -92,16 +109,20 @@ export const getUserContext = cache(async (): Promise<UserContext> => {
     administeredCompanies,
     requestedCompanyId: cookieStore.get(ACTIVE_COMPANY_COOKIE)?.value,
     now,
+    mfa: { required: mfaRes.data?.required ?? false, satisfied: mfaRes.data?.satisfied ?? false },
   });
 });
 
 /**
  * Exige acceso a una sección. Responde 404 si no hay permiso para no revelar
- * la existencia de la ruta. Usar al inicio de cada página protegida.
+ * la existencia de la ruta. Si la sección necesita permisos que exigen MFA y la
+ * sesión aún no lo ha verificado, lleva a verificarlo (step-up).
+ * Usar al inicio de cada página protegida.
  */
 export async function requireSection(section: SectionKey): Promise<UserContext> {
   const ctx = await getUserContext();
   if (!canAccessSection(ctx, section)) notFound();
+  if (needsMfaStepUp(ctx, section)) redirect(`${MFA_PATH}?motivo=verificar`);
   return ctx;
 }
 

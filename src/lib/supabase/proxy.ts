@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { HOME_PATH, LOGIN_PATH, isMachinePath, isPublicPath } from "@/lib/auth/routes";
 import { getPublicEnv } from "@/lib/env";
+import { AUTH_COOKIE_OPTIONS, REQUEST_ID_PATTERN } from "@/lib/supabase/cookies";
 import type { Database } from "@/types/database";
 
 /**
@@ -13,12 +14,25 @@ import type { Database } from "@/types/database";
  */
 export async function updateSession(request: NextRequest) {
   const env = getPublicEnv();
-  let response = NextResponse.next({ request });
+  // Identificador de la petición: el del balanceador si es válido o uno nuevo.
+  // Llega a las páginas y acciones (cabecera de la petición), a PostgREST y a
+  // audit_events.request_id, y vuelve en la respuesta para soporte.
+  const incoming = request.headers.get("x-request-id");
+  const requestId = incoming && REQUEST_ID_PATTERN.test(incoming) ? incoming : crypto.randomUUID();
+  const next = () => {
+    const headers = new Headers(request.headers);
+    headers.set("x-request-id", requestId);
+    const res = NextResponse.next({ request: { headers } });
+    res.headers.set("x-request-id", requestId);
+    return res;
+  };
+  let response = next();
 
   const supabase = createServerClient<Database>(
     env.NEXT_PUBLIC_SUPABASE_URL,
     env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     {
+      cookieOptions: AUTH_COOKIE_OPTIONS,
       cookies: {
         getAll() {
           return request.cookies.getAll();
@@ -27,7 +41,7 @@ export async function updateSession(request: NextRequest) {
           for (const { name, value } of cookiesToSet) {
             request.cookies.set(name, value);
           }
-          response = NextResponse.next({ request });
+          response = next();
           for (const { name, value, options } of cookiesToSet) {
             response.cookies.set(name, value, options);
           }
@@ -70,6 +84,8 @@ function redirectPreservingCookies(url: URL, from: NextResponse) {
   for (const cookie of from.cookies.getAll()) {
     redirect.cookies.set(cookie);
   }
+  const requestId = from.headers.get("x-request-id");
+  if (requestId) redirect.headers.set("x-request-id", requestId);
   redirect.headers.set("Cache-Control", "private, no-store");
   return redirect;
 }

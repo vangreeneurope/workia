@@ -33,6 +33,7 @@ No empieces un módulo funcional nuevo sin que el anterior esté verificado (ver
 | `npm run test:db`   | Migraciones, aislamiento RLS, semillas y reversibilidad (PostgreSQL desechable) |
 | `npm run db:types`  | Regenera `src/types/database.ts` desde las migraciones (`:check` en CI)         |
 | `npm run check`     | typecheck + lint + formato + unitarias (ejecutar antes de cada commit)          |
+| `npm run security`  | Escaneo de secretos versionados y `npm audit` de producción                     |
 
 ## Arquitectura en una frase
 
@@ -116,6 +117,11 @@ docs/               Documentación funcional y técnica
 13. Prohibido: reconocimiento facial o biometría, rastreo GPS continuo, datos simulados en
     pantallas productivas o entornos reales (las semillas sintéticas son solo locales), y
     registrar en logs datos personales o tokens.
+14. **Registro técnico solo con `src/lib/log.ts`** (redacción y `request_id`); nunca `console.*`.
+15. **MFA por rol** (ADR-053): los permisos de administración, RR. HH., contabilidad y auditoría
+    solo cuentan con sesión aal2. Una función de permisos nueva debe usar `private.role_auth_ok()`.
+    Los escáneres `97_seguridad_catalogo` y `tests/unit/security-static.test.ts` deben seguir en
+    verde: no los relajes para que pase un cambio.
 
 ## Documentación técnica
 
@@ -134,6 +140,10 @@ docs/               Documentación funcional y técnica
 - `docs/INFORMES.md`: diccionario de informes y cálculos, filtros, exportaciones, auditoría,
   índices y límites medidos.
 - `docs/NORMATIVA.md`: registro de jornada, RGPD/LOPDGDD, conservación.
+- `docs/SEGURIDAD.md`: modelo de amenazas, auditoría de seguridad, cabeceras, MFA, registros.
+- `docs/PRIVACIDAD.md`: matriz de datos, retención, derechos, soporte y EIPD.
+- `docs/RUNBOOKS.md`: incidentes, brechas, restauración, soporte, MFA y secretos.
+- `docs/PENDIENTES_LEGALES.md`: decisiones abiertas para legal y privacidad.
 - `docs/PLAN_DESARROLLO.md`: fases y criterios de salida.
 - `docs/DECISIONES.md`: registro de decisiones de arquitectura (ADR).
 - `docs/ESTADO_PROYECTO.md`: estado actual, resultados de verificación y bloqueantes.

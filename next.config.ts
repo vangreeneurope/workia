@@ -19,17 +19,25 @@ function supabaseOrigin(): string {
 function contentSecurityPolicy(): string {
   const supabase = supabaseOrigin();
   const supabaseWs = supabase.replace(/^http/, "ws");
-  // Next.js inyecta scripts inline para la hidratación. Mientras no se adopte
-  // una CSP con nonce (ver docs/DECISIONES.md, ADR-009) se permite 'unsafe-inline'.
+  // Next.js inyecta scripts inline para la hidratación. Una CSP con nonce exige
+  // renderizar todo dinámicamente y es incompatible con el prerenderizado
+  // parcial que usa la app (Cache Components), así que se permite
+  // 'unsafe-inline' en scripts (ADR-009, revisado en ADR-055) y se compensa:
+  // sin atributos de evento inline, sin eval en producción, sin objetos ni
+  // marcos, formularios y base solo al propio origen, y React escapa todo el
+  // contenido (tests/unit/security-static.test.ts prohíbe dangerouslySetInnerHTML).
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],
     "script-src": ["'self'", "'unsafe-inline'", ...(isDev ? ["'unsafe-eval'"] : [])],
+    "script-src-attr": ["'none'"],
     "style-src": ["'self'", "'unsafe-inline'"],
     "img-src": ["'self'", "data:", "blob:", supabase].filter(Boolean),
+    "media-src": ["'self'", "blob:"],
     "font-src": ["'self'"],
     "connect-src": ["'self'", supabase, supabaseWs].filter(Boolean),
     "worker-src": ["'self'"],
     "manifest-src": ["'self'"],
+    "frame-src": ["'none'"],
     "frame-ancestors": ["'none'"],
     "base-uri": ["'self'"],
     "form-action": ["'self'"],
@@ -48,10 +56,18 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   {
     key: "Permissions-Policy",
-    // Cámara permitida en el propio origen para fotografiar tickets (módulo de gastos).
-    // Geolocalización desactivada: no se rastrea ubicación (docs/NORMATIVA.md).
-    value: "camera=(self), microphone=(), geolocation=(), payment=(), usb=()",
+    // Cámara en el propio origen (tickets y selfie opcional). Geolocalización en
+    // el propio origen solo para la lectura puntual al fichar cuando la empresa la
+    // activa (nunca seguimiento, docs/CONTROL_HORARIO.md). Todo lo demás, cerrado.
+    value:
+      "camera=(self), geolocation=(self), microphone=(), payment=(), usb=(), serial=(), hid=(), bluetooth=(), midi=(), display-capture=(), browsing-topics=(), accelerometer=(), gyroscope=(), magnetometer=()",
   },
+  // Aislamiento del contexto de navegación y de los recursos propios.
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+  { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
+  { key: "Origin-Agent-Cluster", value: "?1" },
+  { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
+  { key: "X-DNS-Prefetch-Control", value: "off" },
   ...(isDev
     ? []
     : [

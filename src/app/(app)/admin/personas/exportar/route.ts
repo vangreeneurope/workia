@@ -7,6 +7,7 @@ import { getAdminContext } from "@/lib/admin/context";
 import { pickParam, uuidParam } from "@/lib/admin/pagination";
 import { toCsv } from "@/lib/csv";
 import { businessDate } from "@/lib/dates";
+import { guardDownload } from "@/lib/downloads";
 import { createClient } from "@/lib/supabase/server";
 
 const SITUATION_LABELS = {
@@ -25,6 +26,8 @@ export async function GET(request: NextRequest) {
   if (!ctx || !canUseArea("personas", ctx.permissions, { groupAdmin: ctx.groupAdmin })) {
     return new Response("No encontrado", { status: 404 });
   }
+  const blocked = await guardDownload(request, await createClient());
+  if (blocked) return blocked;
   const params = request.nextUrl.searchParams;
   const filters = {
     situation: pickParam(params.get("situacion") ?? undefined, SITUATION_FILTERS) ?? "activas",

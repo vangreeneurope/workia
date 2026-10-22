@@ -37,6 +37,7 @@ export function makeContext(
     companies: memberships.map((m) => m.company),
     activeCompanyId: memberships[0]?.company.id ?? null,
     supervisedCount: 0,
+    mfa: { required: false, satisfied: false },
     ...overrides,
   };
 }

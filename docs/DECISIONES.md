@@ -638,3 +638,87 @@ de ausencia, informes de gastos, lotes, correcciones y ajustes de fichaje, y las
 `status_change`, `request_export` y `download`. La minimización se amplía a textos libres,
 proveedor, coordenadas y selfies. `audit_events` no guarda errores, cabeceras, IP, tokens ni
 secretos: no sustituye a los registros técnicos.
+
+## ADR-053 · MFA obligatoria por rol, aplicada en la base de datos
+
+**Fecha**: 2026-10-31 · **Estado**: aceptada
+
+**Contexto**: una cuenta de administración, RR. HH., contabilidad o auditoría robada da acceso a
+datos de toda la empresa. La interfaz sola no basta: cualquier llamada directa a PostgREST con la
+sesión saltaría la comprobación.
+
+**Decisión**: las funciones de permisos (`has_permission`, `has_*_permission`, `my_*_access`,
+`has_company_role`, `is_group_admin`, `is_global_admin`) solo cuentan los roles `company_admin`,
+`hr`, `accounting` y `auditor`, y la administración de grupo y de plataforma, si la sesión es
+**aal2** (`private.strong_auth()`, claim firmado por Supabase Auth). No es un permiso leído del JWT
+(regla 3): los permisos siguen en tablas; el claim solo indica la fuerza de la autenticación. Sin
+aal2 la persona conserva lo suyo (empleo, supervisión directa). La interfaz pide verificar (step-up)
+en Equipo, Informes, Auditoría y Administración, y las acciones de gestión responden con un aviso
+claro. TOTP gestionado en el servidor (Server Actions). Degradación documentada con
+`private.security_settings.mfa_enforced` (solo propietario de la base de datos).
+**Alternativas descartadas**: comprobar solo en la interfaz (eludible); políticas restrictivas en
+todas las tablas (bloquearía también el autoservicio de quien tiene un rol privilegiado).
+
+## ADR-054 · Acceso de soporte temporal concedido por la empresa
+
+**Fecha**: 2026-10-31 · **Estado**: aceptada
+
+**Decisión**: la administración de plataforma no lee datos de las empresas. La administración de
+una empresa concede a una persona de la plataforma un acceso de **solo lectura** (personas,
+cuentas, roles y auditoría) de 1 a 24 horas, con motivo, MFA y auditoría; se revoca o caduca solo.
+La plataforma tampoco lee los perfiles de toda la base: solo los de administración y los de empresas
+con acceso vigente.
+**Alternativa descartada**: acceso permanente de soporte (exposición innecesaria).
+
+## ADR-055 · Cookies de sesión httpOnly y CSP revisada
+
+**Fecha**: 2026-10-31 · **Estado**: aceptada (revisa ADR-009)
+
+**Decisión**: la app no usa Supabase en el navegador (se elimina el cliente de navegador), así que
+las cookies de sesión pasan a `httpOnly` (y `SameSite=Lax`, `Secure`). La CSP mantiene
+`'unsafe-inline'` en scripts porque los nonces exigen renderizado dinámico de todas las páginas y
+son incompatibles con el prerenderizado parcial (guía de Next.js 16); se compensa con
+`script-src-attr 'none'`, sin `eval`, sin marcos ni objetos, React sin HTML crudo (prueba estática) y
+cookies inaccesibles para scripts. Se añaden COOP, CORP y una `Permissions-Policy` cerrada
+(geolocalización solo en el propio origen para la lectura puntual al fichar).
+
+## ADR-056 · Retención ejecutable en simulación y retenciones legales
+
+**Fecha**: 2026-10-31 · **Estado**: aceptada
+
+**Decisión**: `run_retention` aplica solo plazos cortos y técnicos (OCR 90 días, avisos leídos 12
+meses, intentos del terminal 90 días, contadores y tareas) y **por defecto simula** (recuentos en
+`private.retention_runs`); ejecutar exige `RETENTION_MODE=execute`. Las tablas inmutables solo
+permiten borrar dentro de una ejecución (marca de transacción y rol propietario). El registro de
+jornada, justificantes, tickets y auditoría nunca se borran automáticamente. Las retenciones legales
+(`legal_holds`) bloquean la retención y las supresiones.
+
+## ADR-057 · Derechos de las personas con revisión humana
+
+**Fecha**: 2026-10-31 · **Estado**: aceptada
+
+**Decisión**: la persona presenta solicitudes sobre sí misma; las resuelve RR. HH. de empresa o la
+administración (con MFA, nunca la propia persona) con decisión motivada. Para supresión y
+limitación la base de datos calcula los bloqueos legales y solo permite aprobación parcial si los
+hay; aprobar no borra nada. La copia de acceso o portabilidad se genera para la solicitud aprobada,
+se descarga una vez y queda auditada.
+
+## ADR-058 · Evidencias de fichaje y documentos sensibles con lectura auditada
+
+**Fecha**: 2026-10-31 · **Estado**: aceptada
+
+**Decisión**: coordenadas, precisión y ruta de la selfie salen de la lectura general de `punches`
+(permiso por columnas); solo `punch_evidence` las devuelve, a la persona, su manager y RR. HH. con
+gestión de tiempo (no a auditoría ni a lectura general), y cada consulta deja un evento
+`sensitive_read`. La política de Storage de las selfies usa el mismo criterio. Abrir un justificante
+de ausencia también se registra (`open_absence_attachment`).
+
+## ADR-059 · Registro técnico con redacción, `request_id` y límites de frecuencia
+
+**Fecha**: 2026-10-31 · **Estado**: aceptada
+
+**Decisión**: todo registro técnico pasa por `src/lib/log.ts` (JSON por línea, niveles, redacción
+de datos personales y secretos, `alert: true` en eventos de seguridad); `console.*` está prohibido
+fuera de él (prueba estática). El proxy asigna `x-request-id`, que llega a PostgREST y a
+`audit_events`. Los límites de frecuencia por persona y acción viven en la base de datos
+(`check_rate_limit`) y los aplican las Server Actions y las descargas.

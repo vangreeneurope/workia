@@ -41,6 +41,8 @@ export type ContextInput = {
   administeredCompanies: CompanyRow[];
   requestedCompanyId: string | null | undefined;
   now: Date;
+  /** Estado de MFA según la base de datos (my_mfa_status). */
+  mfa?: { required: boolean; satisfied: boolean };
 };
 
 function toCompanySummary(row: CompanyRow): CompanySummary {
@@ -92,5 +94,6 @@ export function assembleUserContext(input: ContextInput): UserContext {
     companies,
     activeCompanyId: resolveActiveCompanyId(companies, input.requestedCompanyId),
     supervisedCount: input.managerAssignments.filter((a) => isCurrent(a, now)).length,
+    mfa: input.mfa ?? { required: false, satisfied: false },
   };
 }

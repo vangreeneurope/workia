@@ -139,24 +139,39 @@ En "Informes" cada informe muestra solo el ámbito de la persona (lo suyo, sus s
 ámbito de RR. HH., gastos para contabilidad…), con el mismo predicado que RLS (ADR-050); la matriz
 por informe está en [INFORMES.md](INFORMES.md). Las exportaciones solo las descarga quien las pidió.
 
+### Verificación en dos pasos (ADR-053)
+
+Los permisos de `company_admin`, `hr`, `accounting` y `auditor`, y la administración de grupo y de
+plataforma, **solo cuentan con sesión aal2** (segundo factor verificado). Lo aplica la base de datos
+en todas las funciones de permisos; sin aal2 la persona conserva su autoservicio y la supervisión
+directa (manager). La interfaz pide el segundo factor (step-up) al entrar en Equipo, Informes,
+Auditoría y Administración. Degradación documentada en RUNBOOKS, § 6.
+
+### Acceso de soporte (ADR-054)
+
+La plataforma no lee datos de las empresas. La administración de una empresa puede conceder a una
+persona de la plataforma lectura de personas, cuentas, roles y auditoría durante 1 a 24 horas, con
+motivo y MFA; queda auditado y se puede revocar.
+
 ### Áreas de administración (`src/lib/admin/access.ts`)
 
 Se calculan con los permisos reales de la base de datos (`my_company_permissions`):
 
-| Área                                       | Requiere                                                                 |
-| ------------------------------------------ | ------------------------------------------------------------------------ |
-| Empresas del grupo                         | Administración del grupo                                                 |
-| Centros y equipos                          | `org.manage` (ámbito empresa)                                            |
-| Personas                                   | `employees.read` (cualquier ámbito; RR. HH. de centro ve solo su centro) |
-| Cuentas y roles                            | `members.read` (ámbito empresa); invitar exige `members.manage`          |
-| Aprobadores                                | `assignments.manage`                                                     |
-| Importar CSV                               | `employees.manage` (RLS valida el ámbito de cada fila)                   |
-| Plantillas de turno, Calendarios laborales | `schedule.manage` (ámbito empresa)                                       |
-| Asignación de horarios                     | `schedule.manage` (cualquier ámbito; RLS limita a su centro o equipo)    |
-| Control horario                            | `time.manage` (políticas de empresa; terminales y PIN de su ámbito)      |
-| Vacaciones y ausencias                     | `absence.manage` (tipos y políticas de empresa; asignaciones y ajustes)  |
-| Gastos                                     | `expense.manage` (ámbito empresa: política y categorías)                 |
-| Avisos y correo                            | `audit.read` (ámbito empresa); reintentar entregas exige `org.manage`    |
+| Área                                       | Requiere                                                                            |
+| ------------------------------------------ | ----------------------------------------------------------------------------------- |
+| Empresas del grupo                         | Administración del grupo                                                            |
+| Centros y equipos                          | `org.manage` (ámbito empresa)                                                       |
+| Personas                                   | `employees.read` (cualquier ámbito; RR. HH. de centro ve solo su centro)            |
+| Cuentas y roles                            | `members.read` (ámbito empresa); invitar exige `members.manage`                     |
+| Aprobadores                                | `assignments.manage`                                                                |
+| Importar CSV                               | `employees.manage` (RLS valida el ámbito de cada fila)                              |
+| Plantillas de turno, Calendarios laborales | `schedule.manage` (ámbito empresa)                                                  |
+| Asignación de horarios                     | `schedule.manage` (cualquier ámbito; RLS limita a su centro o equipo)               |
+| Control horario                            | `time.manage` (políticas de empresa; terminales y PIN de su ámbito)                 |
+| Vacaciones y ausencias                     | `absence.manage` (tipos y políticas de empresa; asignaciones y ajustes)             |
+| Gastos                                     | `expense.manage` (ámbito empresa: política y categorías)                            |
+| Avisos y correo                            | `audit.read` (ámbito empresa); reintentar entregas exige `org.manage`               |
+| Privacidad y soporte                       | `employees.manage` (ámbito empresa); conceder soporte exige `company_admin` o grupo |
 
 Permisos de gastos (`my_expense_access`, ADR-042 y ADR-045): `read` (administración de empresa y
 Contabilidad), `manage` (administración de empresa; la de grupo solo configura y no abre tickets),

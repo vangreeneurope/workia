@@ -14,6 +14,7 @@ import { createClient } from "@/lib/supabase/server";
 import { REPORT_KEYS, REPORTS, reportVisible } from "./catalog";
 import { EXPORT_FORMATS, generateReportExport } from "./exports";
 import { exportFilters, parseFilters } from "./filters";
+import { rateLimited } from "@/lib/rate-limit";
 
 const requestSchema = z.object({
   report: z.enum(REPORT_KEYS, { message: "Informe no válido" }),
@@ -45,6 +46,8 @@ export async function requestReportExport(
   const search = Object.fromEntries(new URLSearchParams(query).entries());
   const { filters } = parseFilters(def, search, businessDate());
   const supabase = await createClient();
+  const limited = await rateLimited(supabase, "export");
+  if (limited) return limited;
   const { data: id, error } = await supabase.rpc("request_report_export", {
     p_company: companyId,
     p_report: report,

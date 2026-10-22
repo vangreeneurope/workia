@@ -1,8 +1,10 @@
+import { ShieldAlert } from "lucide-react";
+import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 
 import { getCompanyLogoUrl, getUserContext } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
-import { brandForeground, safeBrandColor } from "@/lib/auth/permissions";
+import { brandForeground, mfaPending, safeBrandColor } from "@/lib/auth/permissions";
 import { visibleNavKeys } from "@/lib/navigation";
 
 import { AppHeader } from "./app-header";
@@ -60,6 +62,21 @@ export async function AppShell({ children }: { children: ReactNode }) {
           id="contenido"
           className="mx-auto w-full max-w-5xl flex-1 px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] md:px-8 md:pb-10"
         >
+          {mfaPending(ctx) ? (
+            <p
+              role="status"
+              className="mb-4 flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-50"
+            >
+              <ShieldAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+              <span>
+                Tus permisos de gestión están en pausa hasta que verifiques tu identidad con un
+                segundo factor.{" "}
+                <Link href="/perfil/seguridad" className="font-medium underline">
+                  Verificar ahora
+                </Link>
+              </span>
+            </p>
+          ) : null}
           {children}
         </main>
       </div>

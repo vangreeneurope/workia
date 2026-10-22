@@ -12,6 +12,7 @@ import { adminAction, FORBIDDEN } from "../action-helpers";
 import { employeeSchema, terminationSchema, termsChangeSchema } from "../schemas";
 import { PEOPLE_SEARCH_COOKIE } from "./queries";
 import { sanitizeSearch } from "./situation";
+import { adminAreaOrNull } from "@/lib/admin/context";
 
 export async function createEmployee(_prev: FormState, formData: FormData): Promise<FormState> {
   let newId: string | undefined;
@@ -107,6 +108,7 @@ export async function reactivateEmployee(
 
 /** Guarda la búsqueda en una cookie (no en la URL) y vuelve al listado. */
 export async function setPeopleSearch(formData: FormData): Promise<void> {
+  if (!(await adminAreaOrNull("personas"))) return;
   const term = sanitizeSearch(String(formData.get("q") ?? ""));
   const store = await cookies();
   if (term) {
@@ -130,6 +132,7 @@ export async function setPeopleSearch(formData: FormData): Promise<void> {
 }
 
 export async function clearPeopleSearch(): Promise<void> {
+  if (!(await adminAreaOrNull("personas"))) return;
   const store = await cookies();
   store.delete({ name: PEOPLE_SEARCH_COOKIE, path: "/admin/personas" });
   redirect("/admin/personas");

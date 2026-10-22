@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getEmailProvider } from "@/features/notifications/email/registry";
+import { log } from "@/lib/log";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
@@ -12,12 +13,16 @@ export async function POST(request: Request) {
   const provider = getEmailProvider();
   const admin = createAdminClient();
   if (!provider || !admin) return new NextResponse("No encontrado", { status: 404 });
+  // Se rechaza por tamaño antes de leer el cuerpo entero.
+  if (Number(request.headers.get("content-length") ?? 0) > 256 * 1024)
+    return new NextResponse("Demasiado grande", { status: 413 });
   const raw = await request.text();
   if (raw.length > 256 * 1024) return new NextResponse("Demasiado grande", { status: 413 });
   let events;
   try {
     events = provider.verifyWebhook(raw, request.headers);
   } catch {
+    log.security("email_webhook.invalid_signature", {});
     return new NextResponse("Firma no válida", { status: 401 });
   }
   let applied = 0;

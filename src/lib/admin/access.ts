@@ -28,7 +28,8 @@ export type AdminArea =
   | "fichajes"
   | "ausencias"
   | "gastos"
-  | "avisos";
+  | "avisos"
+  | "privacidad";
 
 export const ADMIN_AREAS: { key: AdminArea; label: string; href: string; description: string }[] = [
   {
@@ -110,6 +111,13 @@ export const ADMIN_AREAS: { key: AdminArea; label: string; href: string; descrip
     href: "/admin/avisos",
     description: "Estado de los avisos y de las entregas de correo, sin contenido.",
   },
+  {
+    key: "privacidad",
+    label: "Privacidad y soporte",
+    href: "/admin/privacidad",
+    description:
+      "Solicitudes de derechos, retenciones legales, plazos de conservación y acceso de soporte.",
+  },
 ];
 
 export function hasPermission(
@@ -155,6 +163,9 @@ export function canUseArea(
       return hasPermission(permissions, "expense.manage", "company");
     case "avisos":
       return hasPermission(permissions, "audit.read", "company");
+    case "privacidad":
+      // Gestión de personas con ámbito de empresa (como en la base de datos).
+      return hasPermission(permissions, "employees.manage", "company");
   }
 }
 

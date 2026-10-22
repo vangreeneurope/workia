@@ -56,7 +56,14 @@ Principios de diseño adoptados:
 - **Derechos**: acceso (la persona ve sus datos), rectificación (vía RR. HH. y correcciones
   auditadas), supresión limitada por obligaciones legales de conservación.
 - **Evaluación de impacto (EIPD)**: valorar con el DPD si procede, especialmente por el tratamiento
-  sistemático de datos de la plantilla y por el OCR de tickets.
+  sistemático de datos de la plantilla y por el OCR de tickets. **Necesaria antes de activar** la
+  ubicación puntual al fichar o la selfie, y ante cualquier ampliación hacia geolocalización más
+  invasiva (ver PRIVACIDAD, § 5).
+- **Reconocimiento facial y biometría**: no existen en la plataforma (sin dependencias ni código que
+  los implemente, comprobado por prueba automática); la selfie no se analiza. Cualquier biometría
+  futura exigiría EIPD, base del art. 9 RGPD y decisión expresa.
+- **Derechos y soporte**: flujo de solicitudes con revisión humana, bloqueos por obligaciones de
+  conservación, retenciones legales y acceso de soporte temporal y auditado (PRIVACIDAD, §§ 3 y 4).
 - **Información a la plantilla y consulta a la representación legal** antes de implantar el
   sistema de registro de jornada.
 
@@ -104,6 +111,9 @@ correo. **Pendiente**: plazo de conservación de lotes y paquetes (referencias h
 años, a validar con la asesoría).
 
 ## 5. Conservación (propuesta a validar)
+
+La matriz completa (finalidad, base, acceso, plazo y borrado) y la retención automática están en
+[PRIVACIDAD.md](PRIVACIDAD.md); las decisiones abiertas, en [PENDIENTES_LEGALES.md](PENDIENTES_LEGALES.md).
 
 | Dato                                | Plazo mínimo propuesto                                          | Motivo                   |
 | ----------------------------------- | --------------------------------------------------------------- | ------------------------ |

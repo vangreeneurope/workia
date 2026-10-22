@@ -160,8 +160,8 @@ select test.ok(exists (select 1 from public.time_incidents where kind = 'device_
 
 -- Ubicación desactivada: no se guarda aunque llegue.
 select public.record_punch(test.co('A'), 'break_start', test.k(11), 'mobile', null, null, 'granted', 40.4, -3.7, 15);
-select test.ok((select latitude is null and location_status = 'not_requested' from public.punches
-  where idempotency_key = test.k(11)), 'Ubicación: con la política desactivada no se guarda');
+select test.ok((select e.latitude is null and e.location_status = 'not_requested'
+  from public.punch_evidence((select id from public.punches where idempotency_key = test.k(11))) e), 'Ubicación: con la política desactivada no se guarda');
 
 select test.fails($$insert into public.punches (company_id, employee_id, time_entry_id, kind, time_zone, source,
   idempotency_key) select company_id, employee_id, id, 'end', 'Europe/Madrid', 'web', gen_random_uuid()
@@ -183,7 +183,7 @@ select test.ok(exists (select 1 from public.time_incidents where kind = 'locatio
   and punch_id = (select id from public.punches where idempotency_key = test.k(12))),
   'Ubicación denegada: el fichaje se registra y se crea una incidencia');
 select public.record_punch(test.co('A'), 'end', test.k(13), 'mobile', null, null, 'granted', 40.416775, -3.703790, 12);
-select test.ok((select latitude = 40.416775 and accuracy_m = 12 from public.punches where idempotency_key = test.k(13)),
+select test.ok((select e.latitude = 40.416775 and e.accuracy_m = 12 from public.punch_evidence((select id from public.punches where idempotency_key = test.k(13))) e),
   'Ubicación concedida: se guardan coordenadas y precisión del momento del fichaje');
 select test.fails($$select public.record_punch(test.co('A'), 'start', test.k(14), 'mobile', null, null, 'granted')$$,
   'Ubicación: concedida sin coordenadas se rechaza', 'incompleta');
@@ -205,7 +205,7 @@ select test.fails($$insert into storage.objects (bucket_id, name, owner) values 
   'Selfie: nadie sube fotos en la ruta de otra persona', 'row-level security');
 select public.record_punch(test.co('A'), 'start', test.k(15), 'mobile', null, null, 'denied', null, null, null,
   test.co('A') || '/' || test.e(7) || '/' || test.k(15) || '.jpg');
-select test.ok((select selfie_path is not null from public.punches where idempotency_key = test.k(15)),
+select test.ok((select e.selfie_path is not null from public.punch_evidence((select id from public.punches where idempotency_key = test.k(15))) e),
   'Selfie: activada, se enlaza al fichaje');
 select test.fails($$select public.record_punch(test.co('A'), 'break_start', test.k(17), 'mobile', null, null,
   'denied', null, null, null, test.co('A') || '/' || test.e(7) || '/' || test.k(15) || '.jpg')$$,

@@ -1230,6 +1230,89 @@ export type Database = {
           },
         ];
       };
+      data_subject_requests: {
+        Row: {
+          blockers: Json;
+          company_id: string;
+          completed_at: string | null;
+          created_at: string;
+          decided_at: string | null;
+          decision_note: string | null;
+          details: string | null;
+          due_at: string;
+          employee_id: string;
+          id: string;
+          idempotency_key: string;
+          kind: string;
+          requested_by: string;
+          reviewer_id: string | null;
+          status: string;
+        };
+        Insert: {
+          blockers?: Json;
+          company_id: string;
+          completed_at?: string | null;
+          created_at?: string;
+          decided_at?: string | null;
+          decision_note?: string | null;
+          details?: string | null;
+          due_at?: string;
+          employee_id: string;
+          id?: string;
+          idempotency_key: string;
+          kind: string;
+          requested_by: string;
+          reviewer_id?: string | null;
+          status?: string;
+        };
+        Update: {
+          blockers?: Json;
+          company_id?: string;
+          completed_at?: string | null;
+          created_at?: string;
+          decided_at?: string | null;
+          decision_note?: string | null;
+          details?: string | null;
+          due_at?: string;
+          employee_id?: string;
+          id?: string;
+          idempotency_key?: string;
+          kind?: string;
+          requested_by?: string;
+          reviewer_id?: string | null;
+          status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "data_subject_requests_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "data_subject_requests_employee_id_company_id_fkey";
+            columns: ["employee_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "data_subject_requests_requested_by_fkey";
+            columns: ["requested_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "data_subject_requests_reviewer_id_fkey";
+            columns: ["reviewer_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       email_deliveries: {
         Row: {
           attempts: number;
@@ -2651,6 +2734,71 @@ export type Database = {
           },
         ];
       };
+      legal_holds: {
+        Row: {
+          category: string;
+          company_id: string;
+          created_at: string;
+          created_by: string;
+          employee_id: string | null;
+          id: string;
+          reason: string;
+          released_at: string | null;
+          released_by: string | null;
+        };
+        Insert: {
+          category: string;
+          company_id: string;
+          created_at?: string;
+          created_by: string;
+          employee_id?: string | null;
+          id?: string;
+          reason: string;
+          released_at?: string | null;
+          released_by?: string | null;
+        };
+        Update: {
+          category?: string;
+          company_id?: string;
+          created_at?: string;
+          created_by?: string;
+          employee_id?: string | null;
+          id?: string;
+          reason?: string;
+          released_at?: string | null;
+          released_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "legal_holds_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "legal_holds_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "legal_holds_employee_id_company_id_fkey";
+            columns: ["employee_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "employees";
+            referencedColumns: ["id", "company_id"];
+          },
+          {
+            foreignKeyName: "legal_holds_released_by_fkey";
+            columns: ["released_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       manager_assignments: {
         Row: {
           company_id: string;
@@ -3822,6 +3970,74 @@ export type Database = {
           },
         ];
       };
+      support_access_grants: {
+        Row: {
+          company_id: string;
+          created_at: string;
+          expires_at: string;
+          granted_by: string;
+          id: string;
+          reason: string;
+          revoked_at: string | null;
+          revoked_by: string | null;
+          starts_at: string;
+          support_user_id: string;
+        };
+        Insert: {
+          company_id: string;
+          created_at?: string;
+          expires_at: string;
+          granted_by: string;
+          id?: string;
+          reason: string;
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          starts_at?: string;
+          support_user_id: string;
+        };
+        Update: {
+          company_id?: string;
+          created_at?: string;
+          expires_at?: string;
+          granted_by?: string;
+          id?: string;
+          reason?: string;
+          revoked_at?: string | null;
+          revoked_by?: string | null;
+          starts_at?: string;
+          support_user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "support_access_grants_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "support_access_grants_granted_by_fkey";
+            columns: ["granted_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "support_access_grants_revoked_by_fkey";
+            columns: ["revoked_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "support_access_grants_support_user_id_fkey";
+            columns: ["support_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       teams: {
         Row: {
           company_id: string;
@@ -4745,6 +4961,7 @@ export type Database = {
         };
         Returns: string;
       };
+      check_rate_limit: { Args: { p_action: string }; Returns: undefined };
       claim_email_deliveries: {
         Args: { p_limit?: number };
         Returns: {
@@ -4773,6 +4990,7 @@ export type Database = {
         Returns: string;
       };
       close_shift_assignment: { Args: { p_id: string; p_last_day: string }; Returns: undefined };
+      complete_data_request: { Args: { p_request: string; p_note: string }; Returns: undefined };
       complete_email_delivery: {
         Args: {
           p_delivery: string;
@@ -4861,6 +5079,10 @@ export type Database = {
         Returns: Database["public"]["Enums"]["ocr_status"];
       };
       generate_time_reminders: { Args: { p_now?: string }; Returns: number };
+      grant_support_access: {
+        Args: { p_company: string; p_support_user: string; p_reason: string; p_hours?: number };
+        Returns: string;
+      };
       group_user_labels: {
         Args: { p_company: string; p_users: unknown };
         Returns: { user_id: string; full_name: string }[];
@@ -4913,6 +5135,10 @@ export type Database = {
         Args: { p_company: string };
         Returns: { action: string; scope_type: string; work_center_id: string; team_id: string }[];
       };
+      my_mfa_status: {
+        Args: Record<PropertyKey, never>;
+        Returns: { required: boolean; satisfied: boolean }[];
+      };
       my_pending_expense_approvals: {
         Args: { p_company: string };
         Returns: { report_id: string; step_order: number; routing: string }[];
@@ -4962,9 +5188,14 @@ export type Database = {
         Args: { p_company: string };
         Returns: { kind: string; status: string; total: number }[];
       };
+      open_absence_attachment: { Args: { p_attachment: string }; Returns: string };
       open_notification: {
         Args: { p_notification: string };
         Returns: { allowed: boolean; link_path: string }[];
+      };
+      place_legal_hold: {
+        Args: { p_company: string; p_category: string; p_reason: string; p_employee?: string };
+        Returns: string;
       };
       process_notification_outbox: {
         Args: { p_limit?: number };
@@ -4981,6 +5212,16 @@ export type Database = {
       publish_vacation_policy_version: {
         Args: { p_version: string; p_valid_from: string };
         Returns: undefined;
+      };
+      punch_evidence: {
+        Args: { p_punch: string };
+        Returns: {
+          location_status: string;
+          latitude: number;
+          longitude: number;
+          accuracy_m: number;
+          selfie_path: string;
+        }[];
       };
       quote_absence_request: {
         Args: {
@@ -5012,6 +5253,10 @@ export type Database = {
           counts: Json;
           error_code: string;
         }[];
+      };
+      recent_retention_runs: {
+        Args: { p_limit?: number };
+        Returns: { id: number; mode: string; run_at: string; results: Json }[];
       };
       record_email_event: {
         Args: {
@@ -5075,6 +5320,7 @@ export type Database = {
         Returns: { expense_id: string; job_id: string; created: boolean }[];
       };
       register_kiosk_device: { Args: { p_work_center: string; p_name: string }; Returns: string };
+      release_legal_hold: { Args: { p_hold: string }; Returns: undefined };
       reopen_expense: { Args: { p_expense: string }; Returns: undefined };
       report_absence_balances: {
         Args: {
@@ -5331,7 +5577,26 @@ export type Database = {
         Returns: undefined;
       };
       respond_absence_info: { Args: { p_request: string; p_message: string }; Returns: undefined };
+      retention_catalog: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          category: string;
+          data: string;
+          keep: string;
+          action: string;
+          automatic: boolean;
+        }[];
+      };
       retry_email_delivery: { Args: { p_delivery: string }; Returns: undefined };
+      review_data_request: {
+        Args: { p_request: string; p_status: string; p_note: string };
+        Returns: string;
+      };
+      revoke_support_access: { Args: { p_grant: string }; Returns: undefined };
+      run_retention: {
+        Args: { p_mode?: string; p_now?: string };
+        Returns: { category: string; affected: number; held: number; executed: boolean }[];
+      };
       run_scheduled_reminders: { Args: { p_now?: string }; Returns: number };
       save_shift_assignment: {
         Args: {
@@ -5381,6 +5646,7 @@ export type Database = {
         }[];
       };
       start_report_export: { Args: { p_export: string }; Returns: boolean };
+      subject_access_package: { Args: { p_request: string }; Returns: Json };
       submit_absence_request: {
         Args: {
           p_company: string;
@@ -5396,9 +5662,17 @@ export type Database = {
         };
         Returns: Json;
       };
+      submit_data_request: {
+        Args: { p_company: string; p_kind: string; p_details: string; p_idempotency_key: string };
+        Returns: string;
+      };
       submit_expense_report: {
         Args: { p_company: string; p_period: string; p_idempotency_key: string };
         Returns: string;
+      };
+      support_staff: {
+        Args: Record<PropertyKey, never>;
+        Returns: { user_id: string; full_name: string }[];
       };
       terminate_employee: { Args: { p_employee: string; p_last_day: string }; Returns: undefined };
     };

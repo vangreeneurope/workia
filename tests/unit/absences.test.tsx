@@ -153,13 +153,18 @@ describe("validaciones", () => {
 
 describe("justificantes", () => {
   it("reconoce el contenido real, no la extensión", () => {
-    expect(checkAttachment(new TextEncoder().encode("%PDF-1.7 ..."))).toMatchObject({
+    expect(checkAttachment(new TextEncoder().encode("%PDF-1.7 ...\n%%EOF"))).toMatchObject({
       ok: true,
       mime: "application/pdf",
     });
+    // PNG mínimo: firma, IHDR e IEND (los truncados se rechazan).
+    const png = Uint8Array.from([
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52, 0, 0, 0,
+      1, 0, 0, 0, 1, 8, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x49, 0x45, 0x4e, 0x44, 0, 0, 0, 0,
+    ]);
+    expect(checkAttachment(png)).toMatchObject({ ok: true, mime: "image/png" });
     expect(checkAttachment(Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a]))).toMatchObject({
-      ok: true,
-      mime: "image/png",
+      ok: false,
     });
     expect(checkAttachment(new TextEncoder().encode("<html>"))).toMatchObject({ ok: false });
     expect(checkAttachment(new Uint8Array(ATTACHMENT_MAX_BYTES + 1))).toMatchObject({ ok: false });

@@ -6,6 +6,7 @@ import { z } from "zod";
 import { requireUserId } from "@/lib/auth/dal";
 import { LOGIN_PATH, safeRedirectPath } from "@/lib/auth/routes";
 import { getPublicEnv } from "@/lib/env";
+import { log } from "@/lib/log";
 import { createClient } from "@/lib/supabase/server";
 
 import {
@@ -32,12 +33,19 @@ export async function signIn(_prev: FormState, formData: FormData): Promise<Form
   });
 
   if (error) {
-    // Mensaje genérico: no revelar si el correo existe.
+    // Mensaje genérico: no revelar si el correo existe. Sin el correo en el registro.
+    if (error.status === 429) log.security("auth.signin_rate_limited", {});
     const message =
       error.status === 429
         ? "Demasiados intentos. Espera unos minutos y vuelve a probar."
         : "Correo o contraseña incorrectos.";
     return { status: "error", message };
+  }
+
+  // Con segundo factor configurado, la sesión no está completa hasta verificarlo.
+  const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (aal?.nextLevel === "aal2" && aal.currentLevel !== "aal2") {
+    redirect(`/perfil/seguridad?motivo=verificar`);
   }
 
   redirect(safeRedirectPath(parsed.data.siguiente));
@@ -86,8 +94,17 @@ export async function updatePassword(_prev: FormState, formData: FormData): Prom
   }
 
   const supabase = await createClient();
+  // Step-up: con segundo factor configurado, cambiar la contraseña exige haberlo verificado.
+  const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (aal?.nextLevel === "aal2" && aal.currentLevel !== "aal2") {
+    return {
+      status: "error",
+      message: "Verifica antes tu segundo factor (Mi perfil › Seguridad de la cuenta).",
+    };
+  }
   const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
   if (error) {
+    log.warn("auth.password_update_failed", { code: error.code ?? "unknown" });
     return {
       status: "error",
       message:

@@ -24,6 +24,7 @@ import {
   versionSchema,
 } from "./schemas";
 import { parseAmount, type BalanceUnit } from "./units";
+import { rateLimited } from "@/lib/rate-limit";
 
 /*
  * La identidad sale de la sesión y la empresa de la empresa activa. La base de
@@ -82,6 +83,8 @@ async function uploadAttachment(
   requestId: string,
   file: File,
 ): Promise<string | null> {
+  const limited = await rateLimited(supabase, "upload");
+  if (limited) return limited.message ?? "Demasiadas subidas seguidas.";
   const checked = checkAttachment(new Uint8Array(await file.arrayBuffer()));
   if (!checked.ok) return checked.error;
   const { data: request } = await supabase

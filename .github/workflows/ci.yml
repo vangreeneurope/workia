@@ -28,6 +28,24 @@ jobs:
       - run: npm run format:check
       - run: npm test
 
+  seguridad:
+    name: Secretos y dependencias
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # Sin secretos versionados (claves, tokens, .env, cadenas de conexión).
+      - run: npm run security:secrets
+      # Producción sin vulnerabilidades altas o críticas. Las de herramientas de
+      # desarrollo se revisan en docs/SEGURIDAD.md (riesgo aceptado y fecha).
+      - run: npm run security:audit
+      - name: Informe completo (no bloquea)
+        run: npm audit || true
+
   base-de-datos:
     name: Migraciones, aislamiento RLS, reversibilidad y tipos
     runs-on: ubuntu-24.04

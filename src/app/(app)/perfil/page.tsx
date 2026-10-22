@@ -19,7 +19,26 @@ export default async function PerfilPage() {
 
   return (
     <>
-      <PageHeader title="Mi perfil" description="Tus datos de acceso y tus empresas." />
+      <PageHeader
+        title="Mi perfil"
+        description="Tus datos de acceso y tus empresas."
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/perfil/seguridad"
+              className="hover:bg-accent inline-flex min-h-11 items-center rounded-lg border px-3 text-sm"
+            >
+              Seguridad de la cuenta
+            </Link>
+            <Link
+              href="/perfil/privacidad"
+              className="hover:bg-accent inline-flex min-h-11 items-center rounded-lg border px-3 text-sm"
+            >
+              Mis datos y privacidad
+            </Link>
+          </div>
+        }
+      />
       <div className="grid gap-4">
         <Card>
           <CardHeader>

@@ -267,6 +267,26 @@ Funciones de informe (paginadas, con periodo máximo): `report_time_daily`, `rep
 solo service_role, `expire_report_exports`. Bucket privado `report-exports`
 (`<empresa>/<usuario>/<exportación>/<archivo>`).
 
+### Seguridad y privacidad (migración `20261031100000_seguridad`)
+
+Detalle en [SEGURIDAD.md](SEGURIDAD.md) y [PRIVACIDAD.md](PRIVACIDAD.md).
+
+| Tabla                       | Propósito                                 | Claves y restricciones relevantes                                               |
+| --------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------- |
+| `support_access_grants`     | Accesos de soporte temporales             | ≤ 24 h, motivo, no a uno mismo; solo se revoca; sin borrado; auditado           |
+| `legal_holds`               | Retenciones legales por empresa o persona | Categoría y motivo; solo se levanta; sin borrado; auditado                      |
+| `data_subject_requests`     | Derechos de las personas                  | Idempotente; plazo de un mes; bloqueos calculados; sin borrado; estado auditado |
+| `private.security_settings` | MFA obligatoria (una fila)                | Fuera de la API                                                                 |
+| `private.rate_limit_hits`   | Contadores de frecuencia                  | Por persona, acción y ventana; fuera de la API                                  |
+| `private.retention_runs`    | Ejecuciones de retención (recuentos)      | Fuera de la API; solo plataforma vía `recent_retention_runs`                    |
+
+Además: los permisos de roles privilegiados exigen aal2 (`private.strong_auth`); `punches` deja de
+exponer coordenadas y selfie (RPC `punch_evidence`); `open_absence_attachment` audita la apertura de
+justificantes; `check_rate_limit`, `run_retention` (solo service_role), `retention_catalog`,
+`place_legal_hold`, `release_legal_hold`, `submit_data_request`, `review_data_request`,
+`complete_data_request`, `subject_access_package`, `grant_support_access`, `revoke_support_access`
+y `support_staff`. Secuencias y privilegios por defecto sin `anon` ni `authenticated`.
+
 ### Auditoría y almacenamiento
 
 - `audit_log`: append-only. Columnas `actor_id` (`auth.uid()`), `company_id`, `group_id`,
@@ -277,7 +297,7 @@ solo service_role, `expire_report_exports`. Bucket privado `report-exports`
   (roles, administradores, membresías, asignaciones) quedan con quién, cuándo, antes y después.
 - `audit_events`: auditoría **minimizada** para consultar en la interfaz (`/auditoria`): acción
   (`create`, `update`, `deactivate`, `reactivate`, `terminate`, `publish`, `status_change`,
-  `export`, `import`, `request_export`, `download`), campos cambiados y sus valores antes y
+  `export`, `import`, `request_export`, `download`, `sensitive_read`), campos cambiados y sus valores antes y
   después, `request_id` de la petición, con nombre, apellidos, correos, teléfono, CIF, dirección,
   motivos, notas, comentarios, proveedor, coordenadas y selfies sustituidos por `[dato personal]`. Las exportaciones guardan solo número de filas y
   filtros (nunca el texto buscado).
@@ -324,16 +344,17 @@ Supabase no ejecuta migraciones "down", así que cada migración nueva tiene su 
 orden inverso con `psql` y borrar la fila correspondiente de
 `supabase_migrations.schema_migrations` (o `npx supabase migration repair --status reverted <versión>`).
 
-| Migración                               | Reversión                                              | Datos que se pierden al revertir                                                                                                        |
-| --------------------------------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `20261021090000/090100/090200` (fase 0) | No tienen (anteriores a esta norma)                    | —                                                                                                                                       |
-| `20261022100000_modelo_multiempresa`    | Sí                                                     | grupos, administradores de grupo, centros, equipos, roles `hr`/`auditor` y roles de ámbito centro/equipo; estados `invited`/`suspended` |
-| `20261022100100_empleados`              | Sí                                                     | fichas de empleado y condiciones; asignaciones de manager de empleados sin cuenta                                                       |
-| `20261023100000_administracion`         | Sí (generada desde el texto literal de las anteriores) | suplencias, `audit_events`, fechas de baja, asignaciones por equipo o por tipo                                                          |
-| `20261024100000_calendarios_turnos`     | Sí                                                     | calendarios, festivos, plantillas, asignaciones, ausencias integradas y eventos (la auditoría se conserva siempre)                      |
-| `20261025100000_control_horario`        | Sí                                                     | todo el registro de jornada (exportar antes: obligación de 4 años); exige vaciar antes el bucket de selfies                             |
-| `20261026100000_ausencias`              | Sí                                                     | tipos, políticas, saldos, solicitudes y justificantes; exige vaciar antes el bucket de justificantes                                    |
-| `20261030100000_informes`               | Sí                                                     | registro de exportaciones y descargas, `audit_events.request_id`; exige vaciar el bucket `report-exports`; la auditoría se conserva     |
+| Migración                               | Reversión                                              | Datos que se pierden al revertir                                                                                                                       |
+| --------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `20261021090000/090100/090200` (fase 0) | No tienen (anteriores a esta norma)                    | —                                                                                                                                                      |
+| `20261022100000_modelo_multiempresa`    | Sí                                                     | grupos, administradores de grupo, centros, equipos, roles `hr`/`auditor` y roles de ámbito centro/equipo; estados `invited`/`suspended`                |
+| `20261022100100_empleados`              | Sí                                                     | fichas de empleado y condiciones; asignaciones de manager de empleados sin cuenta                                                                      |
+| `20261023100000_administracion`         | Sí (generada desde el texto literal de las anteriores) | suplencias, `audit_events`, fechas de baja, asignaciones por equipo o por tipo                                                                         |
+| `20261024100000_calendarios_turnos`     | Sí                                                     | calendarios, festivos, plantillas, asignaciones, ausencias integradas y eventos (la auditoría se conserva siempre)                                     |
+| `20261025100000_control_horario`        | Sí                                                     | todo el registro de jornada (exportar antes: obligación de 4 años); exige vaciar antes el bucket de selfies                                            |
+| `20261026100000_ausencias`              | Sí                                                     | tipos, políticas, saldos, solicitudes y justificantes; exige vaciar antes el bucket de justificantes                                                   |
+| `20261031100000_seguridad`              | Sí                                                     | accesos de soporte, retenciones legales, solicitudes de derechos, contadores y ejecuciones de retención; quita protecciones (MFA, soporte, evidencias) |
+| `20261030100000_informes`               | Sí                                                     | registro de exportaciones y descargas, `audit_events.request_id`; exige vaciar el bucket `report-exports`; la auditoría se conserva                    |
 
 Protecciones:
 

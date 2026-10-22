@@ -5,9 +5,8 @@ import { cookies, headers } from "next/headers";
 import { cache } from "react";
 
 import { getPublicEnv } from "@/lib/env";
+import { AUTH_COOKIE_OPTIONS, REQUEST_ID_PATTERN } from "@/lib/supabase/cookies";
 import type { Database } from "@/types/database";
-
-const REQUEST_ID = /^[A-Za-z0-9-]{8,64}$/;
 
 /**
  * Identificador de la petición: el que llegue en x-request-id (si es válido) o
@@ -17,7 +16,7 @@ const REQUEST_ID = /^[A-Za-z0-9-]{8,64}$/;
  */
 export const currentRequestId = cache(async (): Promise<string> => {
   const incoming = (await headers()).get("x-request-id");
-  return incoming && REQUEST_ID.test(incoming) ? incoming : crypto.randomUUID();
+  return incoming && REQUEST_ID_PATTERN.test(incoming) ? incoming : crypto.randomUUID();
 });
 
 /**
@@ -35,6 +34,7 @@ export async function createClient() {
     env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     {
       global: { headers: { "x-request-id": requestId } },
+      cookieOptions: AUTH_COOKIE_OPTIONS,
       cookies: {
         getAll() {
           return cookieStore.getAll();

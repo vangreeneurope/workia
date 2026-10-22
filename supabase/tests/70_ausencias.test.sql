@@ -306,9 +306,17 @@ select test.ok(not exists (select 1 from storage.objects where bucket_id = 'abse
 select test.act_as(test.u(3));
 select test.ok(not exists (select 1 from storage.objects where bucket_id = 'absence-attachments'),
   'CA: la administración de empresa no abre justificantes sensibles');
+select test.fails($$select public.open_absence_attachment((select id from public.absence_attachments limit 1))$$,
+  'CA: tampoco obtiene la ruta para firmarla', 'no encontrado');
 select test.act_as(test.u(4));
 select test.ok(exists (select 1 from storage.objects where bucket_id = 'absence-attachments'),
   'HR: RR. HH. con permiso de justificantes lo abre');
+select test.ok(public.open_absence_attachment((select id from public.absence_attachments limit 1)) like '%.pdf',
+  'HR: obtiene la ruta del justificante para firmarla');
+select test.act_as(test.u(3));
+select test.ok((select count(*) from public.audit_events where entity = 'absence_attachments' and action = 'sensitive_read'
+  and actor_id = test.u(4)) = 1, 'Justificante: cada apertura queda auditada (quién y cuándo)');
+select test.act_as(test.u(4));
 select test.act_as(test.u(12));
 select test.ok(not exists (select 1 from storage.objects where bucket_id = 'absence-attachments')
   and not exists (select 1 from public.absence_attachments), 'CB: ni metadatos ni archivo de otra empresa');

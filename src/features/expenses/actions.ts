@@ -24,6 +24,7 @@ import {
   statusSchema,
   type ExpenseInput,
 } from "./schemas";
+import { rateLimited } from "@/lib/rate-limit";
 
 /*
  * La identidad sale de la sesión y la empresa de la empresa activa; los ids que
@@ -92,6 +93,8 @@ export async function uploadReceipt(_prev: FormState, formData: FormData): Promi
       fieldErrors: { receipt: ["Elige un archivo"] },
     };
   }
+  const limited = await rateLimited(await createClient(), "upload");
+  if (limited) return limited;
   const checked = checkReceiptFile({
     bytes: new Uint8Array(await file.arrayBuffer()),
     fileName: file.name,

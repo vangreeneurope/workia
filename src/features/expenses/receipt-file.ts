@@ -9,6 +9,7 @@
 import { createHash } from "node:crypto";
 
 import { imageDimensions, stripJpegMetadata, stripPngMetadata } from "@/lib/files/images";
+import { checkPdf } from "@/lib/files/pdf";
 
 export const RECEIPT_MAX_BYTES = 10 * 1024 * 1024;
 export const RECEIPT_MIN_SIDE = 200;
@@ -58,9 +59,6 @@ function detect(bytes: Uint8Array): ReceiptMime | null {
   return null;
 }
 
-/** Nombres de PDF que indican contenido activo. */
-const PDF_ACTIVE = /\/(JavaScript|JS|Launch|EmbeddedFile|OpenAction|AA|RichMedia|XFA)\b/;
-
 export function sha256Hex(bytes: Uint8Array): string {
   return createHash("sha256").update(bytes).digest("hex");
 }
@@ -82,10 +80,9 @@ export function checkReceiptFile(input: {
     return { ok: false, error: ERRORS.mismatch };
 
   if (detected === "application/pdf") {
-    // latin1 conserva cada byte: sirve para buscar nombres del formato PDF.
-    const text = Buffer.from(bytes).toString("latin1");
-    if (PDF_ACTIVE.test(text)) return { ok: false, error: ERRORS.pdfActive };
-    if (!text.slice(-1024).includes("%%EOF")) return { ok: false, error: ERRORS.content };
+    const pdf = checkPdf(bytes);
+    if (!pdf.ok)
+      return { ok: false, error: pdf.reason === "active" ? ERRORS.pdfActive : ERRORS.content };
     return {
       ok: true,
       bytes,

@@ -5,6 +5,7 @@ import { isAuthorizedCron } from "@/features/notifications/machine-auth";
 import { sendPendingEmails } from "@/features/notifications/service";
 import { supabaseNotificationStore } from "@/features/notifications/store";
 import { getPublicEnv } from "@/lib/env";
+import { log } from "@/lib/log";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
@@ -18,6 +19,7 @@ type Step = { ok: boolean; counts: Record<string, number>; error?: string };
 
 async function run(request: Request) {
   if (!isAuthorizedCron(request.headers.get("authorization"), process.env.CRON_SECRET)) {
+    log.security("cron.unauthorized", {});
     return new NextResponse("No autorizado", { status: 401 });
   }
   const client = createAdminClient();
@@ -85,8 +87,20 @@ async function run(request: Request) {
     }
     return { caducadas: (data ?? []).length, archivos_borrados: removed };
   });
+  await step("retencion", async () => {
+    // Por defecto solo se simula (recuentos). Ejecutar exige RETENTION_MODE=execute
+    // tras revisar la matriz con la organización (docs/PRIVACIDAD.md).
+    const mode = process.env.RETENTION_MODE === "execute" ? "execute" : "simulate";
+    const { data, error } = await admin.rpc("run_retention", { p_mode: mode });
+    if (error) throw new Error("run_retention");
+    const counts: Record<string, number> = { ejecutada: mode === "execute" ? 1 : 0 };
+    for (const row of data ?? []) counts[row.category] = row.affected;
+    return counts;
+  });
 
   const ok = Object.values(steps).every((s) => s.ok);
+  if (!ok)
+    log.security("cron.steps_failed", { steps: Object.keys(steps).filter((k) => !steps[k]?.ok) });
   return NextResponse.json(
     { ok, steps },
     { status: ok ? 200 : 207, headers: { "Cache-Control": "no-store" } },

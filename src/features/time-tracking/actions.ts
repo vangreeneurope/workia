@@ -28,6 +28,7 @@ import {
 import { KIOSK_COOKIE } from "./constants";
 import { sanitizeJpeg } from "./selfie";
 import { PUNCH_LABELS, type PunchKind } from "./state-machine";
+import { rateLimited } from "@/lib/rate-limit";
 
 /*
  * Reglas comunes: la identidad sale siempre de la sesión (getUserContext) y la
@@ -70,6 +71,8 @@ export async function punchAction(formData: FormData): Promise<PunchResult> {
   let selfiePath: string | undefined;
   const selfie = formData.get("selfie");
   if (selfie instanceof File && selfie.size > 0) {
+    const limited = await rateLimited(supabase, "upload");
+    if (limited) return limited;
     const sanitized = sanitizeJpeg(new Uint8Array(await selfie.arrayBuffer()));
     if (!sanitized.ok) return { status: "error", message: sanitized.error };
     const { data: me } = await supabase.rpc("my_time_status", { p_company: companyId });

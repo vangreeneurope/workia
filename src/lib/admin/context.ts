@@ -1,11 +1,11 @@
 import "server-only";
 
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 
 import { canUseArea, type AdminArea, type CompanyPermission } from "@/lib/admin/access";
-import { getUserContext } from "@/lib/auth/dal";
-import { administersCompany, type UserContext } from "@/lib/auth/permissions";
+import { getUserContext, MFA_PATH } from "@/lib/auth/dal";
+import { administersCompany, mfaPending, type UserContext } from "@/lib/auth/permissions";
 import { createClient } from "@/lib/supabase/server";
 
 export type AdminContext = {
@@ -70,6 +70,7 @@ export const getAdminContext = cache(async (): Promise<AdminContext | null> => {
 
 /** Exige acceso a un área de administración; 404 si no lo hay (no revela la ruta). */
 export async function requireAdminArea(area: AdminArea): Promise<AdminContext> {
+  if (mfaPending(await getUserContext())) redirect(`${MFA_PATH}?motivo=verificar`);
   const ctx = await getAdminContext();
   if (!ctx || !canUseArea(area, ctx.permissions, { groupAdmin: ctx.groupAdmin })) notFound();
   return ctx;

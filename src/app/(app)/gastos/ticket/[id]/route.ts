@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { requireUserId } from "@/lib/auth/dal";
+import { guardDownload } from "@/lib/downloads";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -8,11 +9,13 @@ import { createClient } from "@/lib/supabase/server";
  * para la persona, quien la supervisa y Contabilidad de su ámbito, y la URL
  * solo se firma si la política de Storage permite abrir el archivo.
  */
-export async function GET(_request: Request, { params }: RouteContext<"/gastos/ticket/[id]">) {
+export async function GET(request: Request, { params }: RouteContext<"/gastos/ticket/[id]">) {
   await requireUserId();
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) return new NextResponse("No encontrado", { status: 404 });
   const supabase = await createClient();
+  const blocked = await guardDownload(request, supabase);
+  if (blocked) return blocked;
   const { data: receipt } = await supabase
     .from("expense_receipts")
     .select("storage_path")

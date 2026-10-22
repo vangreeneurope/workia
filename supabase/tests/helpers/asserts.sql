@@ -43,12 +43,15 @@ begin
   return n;
 end $$;
 
--- Actúa como un usuario autenticado (claims del JWT que usa auth.uid()).
-create or replace function test.act_as(user_id uuid)
+-- Actúa como un usuario autenticado (claims del JWT que usan auth.uid() y
+-- private.strong_auth()). Por defecto, sesión con MFA verificado (aal2), como
+-- exige la plataforma a los roles privilegiados (ADR-053); las pruebas
+-- negativas de MFA usan aal => 'aal1'.
+create or replace function test.act_as(user_id uuid, aal text default 'aal2')
 returns void language plpgsql as $$
 begin
   perform set_config('request.jwt.claims',
-    json_build_object('sub', user_id, 'role', 'authenticated')::text, false);
+    json_build_object('sub', user_id, 'role', 'authenticated', 'aal', aal)::text, false);
 end $$;
 
 grant execute on all functions in schema test to public;

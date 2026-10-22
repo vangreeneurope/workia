@@ -185,3 +185,9 @@ insert into public.notification_preferences (company_id, user_id, event_type, ch
 insert into public.report_exports (company_id, requested_by, report_key, format, filters, idempotency_key) values
   ('aaaaaaaa-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000007', 'time_daily', 'csv',
    '{"from": "2026-10-01", "to": "2026-10-31"}', 'a7000000-0000-4000-8000-000000000001');
+
+-- Seguridad y privacidad: una solicitud de acceso de E1 en A (las pruebas de
+-- reversión comprueban que no se pierden datos sin autorización).
+insert into public.data_subject_requests (company_id, employee_id, requested_by, kind, idempotency_key) values
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'e0000000-0000-0000-0000-000000000007',
+   '00000000-0000-0000-0000-000000000007', 'access', 'a8000000-0000-4000-8000-000000000001');
