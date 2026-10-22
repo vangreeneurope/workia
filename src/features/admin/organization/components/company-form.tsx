@@ -78,7 +78,7 @@ export function CompanyForm({
           name="primary_color"
           label="Color corporativo"
           type="color"
-          defaultValue={defaults.primary_color ?? "#1f2937"}
+          defaultValue={defaults.primary_color ?? "#4a7a5f"}
           className="h-11 p-1"
           errors={errors.primary_color}
         />

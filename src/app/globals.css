@@ -25,6 +25,15 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   /* Identidad visual de la empresa activa (se inyecta en el layout protegido). */
+  --color-card-tint: var(--card-tint);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-end: var(--sidebar-end);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-chart-1: var(--chart-1);
+  --color-chart-track: var(--chart-track);
+  --shadow-soft: var(--shadow-soft);
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
   --radius-sm: calc(var(--radius) - 4px);
@@ -34,48 +43,68 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(0.985 0 0);
-  --foreground: oklch(0.145 0 0);
+  /* Tema verde salvia: neutros con un leve tinte verde, radios amplios y sombras suaves. */
+  --radius: 0.875rem;
+  --background: oklch(0.975 0.008 150);
+  --foreground: oklch(0.2 0.02 160);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-tint: oklch(0.985 0.012 150);
+  --card-foreground: oklch(0.2 0.02 160);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.48 0 0);
-  --accent: oklch(0.95 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --brand: #1f2937;
+  --popover-foreground: oklch(0.2 0.02 160);
+  --primary: oklch(0.47 0.07 155);
+  --primary-foreground: oklch(0.99 0.005 150);
+  --secondary: oklch(0.94 0.025 150);
+  --secondary-foreground: oklch(0.3 0.05 155);
+  --muted: oklch(0.955 0.012 150);
+  --muted-foreground: oklch(0.47 0.02 160);
+  --accent: oklch(0.93 0.03 150);
+  --accent-foreground: oklch(0.25 0.04 155);
+  --destructive: oklch(0.56 0.2 27);
+  --border: oklch(0.9 0.015 150);
+  --input: oklch(0.88 0.018 150);
+  --ring: oklch(0.62 0.07 155);
+  /* Columna lateral: degradado salvia oscuro con texto claro. */
+  --sidebar: oklch(0.36 0.05 160);
+  --sidebar-end: oklch(0.28 0.04 165);
+  --sidebar-foreground: oklch(0.97 0.01 150);
+  --sidebar-muted: oklch(0.85 0.03 150);
+  --sidebar-accent: oklch(1 0 0 / 14%);
+  /* Gráficos: rampa salvia (claro -> oscuro). */
+  --chart-1: oklch(0.55 0.08 155);
+  --chart-track: oklch(0.92 0.025 150);
+  --shadow-soft: 0 1px 2px oklch(0.3 0.04 155 / 6%), 0 10px 30px -14px oklch(0.3 0.05 155 / 22%);
+  --brand: oklch(0.47 0.07 155);
   --brand-foreground: #ffffff;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
+  --background: oklch(0.17 0.012 160);
+  --foreground: oklch(0.96 0.01 150);
+  --card: oklch(0.22 0.015 160);
+  --card-tint: oklch(0.24 0.02 158);
+  --card-foreground: oklch(0.96 0.01 150);
+  --popover: oklch(0.22 0.015 160);
+  --popover-foreground: oklch(0.96 0.01 150);
+  --primary: oklch(0.78 0.07 150);
+  --primary-foreground: oklch(0.2 0.03 160);
+  --secondary: oklch(0.29 0.03 158);
+  --secondary-foreground: oklch(0.95 0.01 150);
+  --muted: oklch(0.27 0.02 160);
+  --muted-foreground: oklch(0.74 0.02 150);
+  --accent: oklch(0.3 0.03 158);
+  --accent-foreground: oklch(0.96 0.01 150);
+  --destructive: oklch(0.7 0.19 22);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --ring: oklch(0.6 0.06 155);
+  --sidebar: oklch(0.24 0.03 160);
+  --sidebar-end: oklch(0.19 0.02 165);
+  --sidebar-foreground: oklch(0.96 0.01 150);
+  --sidebar-muted: oklch(0.8 0.03 150);
+  --sidebar-accent: oklch(1 0 0 / 10%);
+  --chart-1: oklch(0.72 0.08 152);
+  --chart-track: oklch(0.32 0.03 158);
 }
 
 @layer base {
@@ -87,6 +116,11 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-image: radial-gradient(
+      60rem 30rem at 100% -10%,
+      oklch(0.93 0.035 150 / 55%),
+      transparent 70%
+    );
     -webkit-tap-highlight-color: transparent;
   }
 }

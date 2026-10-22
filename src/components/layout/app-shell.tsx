@@ -27,8 +27,8 @@ export async function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div style={brandStyle} className="min-h-dvh md:grid md:grid-cols-[16rem_1fr]">
-      <aside className="bg-card sticky top-0 hidden h-dvh flex-col border-r md:flex">
-        <div className="flex h-16 items-center border-b px-4">
+      <aside className="from-sidebar to-sidebar-end text-sidebar-foreground sticky top-0 hidden h-dvh flex-col bg-linear-to-b md:flex">
+        <div className="flex h-16 items-center border-b border-white/10 px-4">
           <CompanyBrand name={activeCompany?.name ?? "Portal del empleado"} logoUrl={logoUrl} />
         </div>
         <SidebarNav visibleKeys={navKeys} />

@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function ShellSkeleton() {
   return (
     <div className="min-h-dvh md:grid md:grid-cols-[16rem_1fr]" aria-busy="true">
-      <aside className="bg-card hidden h-dvh flex-col gap-2 border-r p-4 md:flex">
+      <aside className="from-sidebar to-sidebar-end hidden h-dvh flex-col gap-2 bg-linear-to-b p-4 md:flex">
         <Skeleton className="h-9 w-40" />
         <div className="mt-6 grid gap-2">
           {Array.from({ length: 6 }, (_, i) => (

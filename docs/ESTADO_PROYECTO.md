@@ -117,6 +117,16 @@ anteriores con sesión real (excepción a la regla de CLAUDE.md, registrada aqu�
 - Documentación: docs/AUSENCIAS.md, ADR-039 a ADR-041, BASE_DATOS, PERMISOS, NORMATIVA, PRD, plan
   y README.
 
+### Tema visual verde salvia (2026-10-26)
+
+- Tokens de `globals.css` con neutros de tinte verde, radios amplios, sombra suave y degradado de
+  fondo; tarjetas con degradado leve, insignias en píldora y barra lateral oscura en degradado.
+- Color corporativo por defecto `#4a7a5f` en código y en el formulario de empresa. Las empresas ya
+  creadas conservan el que tengan en la base de datos (por defecto de la columna: `#1f2937`); se
+  cambia desde Administración, sin migración.
+- Ausencias: anillo de progreso por saldo y barras de uso mensual (`src/components/charts`), sin
+  librerías, con el dato también en texto y tabla para lectores de pantalla.
+
 ## 2. Resultados de verificación (2026-10-26)
 
 | Verificación               | Comando                                           | Resultado                                                                                                  |

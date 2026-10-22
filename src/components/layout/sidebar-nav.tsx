@@ -23,10 +23,10 @@ export function SidebarNav({ visibleKeys }: { visibleKeys: SectionKey[] }) {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex h-10 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors",
+                  "flex h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors",
                   active
-                    ? "bg-brand text-brand-foreground"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                    ? "bg-sidebar-accent text-sidebar-foreground shadow-xs"
+                    : "text-sidebar-muted hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
                 )}
               >
                 <Icon className="size-4" aria-hidden />

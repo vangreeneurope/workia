@@ -143,7 +143,7 @@ const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 
 /** Color corporativo seguro para inyectar en CSS; vuelve al neutro si no es válido. */
 export function safeBrandColor(color: string | null | undefined): string {
-  return color && HEX_COLOR.test(color) ? color : "#1f2937";
+  return color && HEX_COLOR.test(color) ? color : "#4a7a5f";
 }
 
 /** Color de texto legible (blanco o casi negro) sobre el color corporativo. */

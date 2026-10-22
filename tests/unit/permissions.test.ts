@@ -149,9 +149,9 @@ describe("resolveActiveCompanyId", () => {
 
 describe("color corporativo", () => {
   it("rechaza valores que podrían inyectar CSS", () => {
-    expect(safeBrandColor("red;} body{display:none")).toBe("#1f2937");
-    expect(safeBrandColor("#12345")).toBe("#1f2937");
-    expect(safeBrandColor(null)).toBe("#1f2937");
+    expect(safeBrandColor("red;} body{display:none")).toBe("#4a7a5f");
+    expect(safeBrandColor("#12345")).toBe("#4a7a5f");
+    expect(safeBrandColor(null)).toBe("#4a7a5f");
     expect(safeBrandColor("#A1b2C3")).toBe("#A1b2C3");
   });
 

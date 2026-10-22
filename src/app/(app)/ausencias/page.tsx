@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { ActionButton } from "@/components/admin/action-button";
+import { MonthBars } from "@/components/charts/month-bars";
+import { ProgressRing } from "@/components/charts/progress-ring";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { PageHeader } from "@/components/page-header";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -13,6 +15,7 @@ import { AttachForm, InfoResponseForm } from "@/features/absences/components/req
 import { RequestForm, type TypeOption } from "@/features/absences/components/request-form";
 import { getAbsenceAccess } from "@/features/absences/queries";
 import { minuteToClock } from "@/features/absences/time";
+import { availableFraction, monthlyUsage } from "@/features/absences/usage";
 import {
   formatAmount,
   STATUS_LABELS,
@@ -103,6 +106,18 @@ export default async function AusenciasPage({ searchParams }: PageProps<"/ausenc
     requiresApproval: t.requires_approval,
   }));
   const balances = balancesRes.data ?? [];
+  // Gráfico de uso mensual del primer saldo (normalmente, vacaciones).
+  const mainBalance = balances[0];
+  const { data: usageMovements } = mainBalance
+    ? await supabase
+        .from("balance_movements")
+        .select("kind, amount, effective_date")
+        .eq("balance_id", mainBalance.balance_id)
+        .in("kind", ["usage", "usage_reversal"])
+    : { data: [] };
+  const usage = mainBalance
+    ? monthlyUsage(usageMovements ?? [], mainBalance.period_start, mainBalance.unit)
+    : [];
   const requests = requestsRes.data ?? [];
   const calendar = calendarRes.data ?? [];
 
@@ -148,27 +163,46 @@ export default async function AusenciasPage({ searchParams }: PageProps<"/ausenc
                 ) : (
                   <ul className="grid gap-3">
                     {balances.map((b) => (
-                      <li key={b.balance_id} className="grid gap-1 rounded-lg border p-3 text-sm">
-                        <div className="flex flex-wrap items-baseline justify-between gap-2">
-                          <span className="font-medium">{b.policy_name}</span>
-                          <span className="text-lg font-semibold">
-                            {formatAmount(b.available, b.unit)}
+                      <li
+                        key={b.balance_id}
+                        className="bg-card/70 flex items-center gap-4 rounded-xl border p-3 text-sm"
+                      >
+                        <ProgressRing value={availableFraction(b)} size={88} stroke={9}>
+                          <span className="grid leading-tight">
+                            <span className="text-base font-semibold tabular-nums">
+                              {formatAmount(b.available, b.unit)}
+                            </span>
+                            <span className="text-muted-foreground text-[11px]">disponible</span>
                           </span>
+                        </ProgressRing>
+                        <div className="grid min-w-0 gap-1">
+                          <span className="font-medium">{b.policy_name}</span>
+                          <p className="text-muted-foreground">
+                            Periodo {formatDate(b.period_start)} –{" "}
+                            {formatDate(addDays(b.period_end, -1))} · derecho{" "}
+                            {formatAmount(b.entitled, b.unit)}
+                            {b.carried ? ` · arrastre ${formatAmount(b.carried, b.unit)}` : ""}
+                            {b.used ? ` · usado ${formatAmount(b.used, b.unit)}` : ""}
+                            {b.reserved ? ` · pendiente ${formatAmount(b.reserved, b.unit)}` : ""}
+                            {b.adjusted ? ` · ajustes ${formatAmount(b.adjusted, b.unit)}` : ""}
+                            {b.expired ? ` · caducado ${formatAmount(b.expired, b.unit)}` : ""}
+                          </p>
                         </div>
-                        <p className="text-muted-foreground">
-                          Periodo {formatDate(b.period_start)} –{" "}
-                          {formatDate(addDays(b.period_end, -1))} · derecho{" "}
-                          {formatAmount(b.entitled, b.unit)}
-                          {b.carried ? ` · arrastre ${formatAmount(b.carried, b.unit)}` : ""}
-                          {b.used ? ` · usado ${formatAmount(b.used, b.unit)}` : ""}
-                          {b.reserved ? ` · pendiente ${formatAmount(b.reserved, b.unit)}` : ""}
-                          {b.adjusted ? ` · ajustes ${formatAmount(b.adjusted, b.unit)}` : ""}
-                          {b.expired ? ` · caducado ${formatAmount(b.expired, b.unit)}` : ""}
-                        </p>
                       </li>
                     ))}
                   </ul>
                 )}
+                {mainBalance && usage.some((u) => u.value > 0) ? (
+                  <div className="mt-4 grid gap-1">
+                    <p className="text-sm font-medium">
+                      Disfrutado por mes · {mainBalance.policy_name}
+                    </p>
+                    <MonthBars
+                      data={usage}
+                      caption={`Disfrutado por mes de ${mainBalance.policy_name}`}
+                    />
+                  </div>
+                ) : null}
               </CardContent>
             </Card>
             <Card>

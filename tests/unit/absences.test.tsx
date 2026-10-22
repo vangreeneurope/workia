@@ -284,3 +284,25 @@ describe("bandeja", () => {
     expect((actions.decideAbsence.mock.calls[0]?.[1] as FormData).get("decision")).toBe("approve");
   });
 });
+
+describe("uso mensual y anillo de saldo", () => {
+  it("imputa usos menos reversiones a su mes y completa 12 meses", async () => {
+    const { monthlyUsage, availableFraction } = await import("@/features/absences/usage");
+    const rows = monthlyUsage(
+      [
+        { kind: "usage", amount: -10, effective_date: "2026-08-03" },
+        { kind: "usage_reversal", amount: 4, effective_date: "2026-08-03" },
+        { kind: "usage", amount: -6, effective_date: "2026-07-01" },
+        { kind: "reservation", amount: -2, effective_date: "2026-11-09" },
+      ],
+      "2026-01-01",
+      "half_days",
+    );
+    expect(rows).toHaveLength(12);
+    expect(rows[6]).toMatchObject({ value: 6, display: "3 días" });
+    expect(rows[7]).toMatchObject({ value: 6, label: "agosto de 2026" });
+    expect(rows[10]?.value).toBe(0);
+    expect(availableFraction({ available: 27, entitled: 44, carried: 4, adjusted: 6 })).toBe(0.5);
+    expect(availableFraction({ available: 3, entitled: 0, carried: 0, adjusted: 0 })).toBe(0);
+  });
+});
