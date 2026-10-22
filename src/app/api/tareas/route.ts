@@ -73,6 +73,18 @@ async function run(request: Request) {
     }
     return { borradas: purged };
   });
+  await step("exportaciones", async () => {
+    // Caducadas (7 días) y atascadas: se marcan en la base de datos y se borra el archivo.
+    const { data, error } = await admin.rpc("expire_report_exports");
+    if (error) throw new Error("expire_report_exports");
+    const paths = (data ?? []).map((r) => r.storage_path).filter((p): p is string => !!p);
+    let removed = 0;
+    for (let i = 0; i < paths.length; i += 100) {
+      const res = await admin.storage.from("report-exports").remove(paths.slice(i, i + 100));
+      if (!res.error) removed += res.data.length;
+    }
+    return { caducadas: (data ?? []).length, archivos_borrados: removed };
+  });
 
   const ok = Object.values(steps).every((s) => s.ok);
   return NextResponse.json(

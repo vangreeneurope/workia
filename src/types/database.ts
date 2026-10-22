@@ -981,6 +981,7 @@ export type Database = {
           group_id: string | null;
           id: number;
           occurred_at: string;
+          request_id: string | null;
         };
         Insert: {
           action: string;
@@ -994,6 +995,7 @@ export type Database = {
           group_id?: string | null;
           id?: never;
           occurred_at?: string;
+          request_id?: string | null;
         };
         Update: {
           action?: string;
@@ -1007,6 +1009,7 @@ export type Database = {
           group_id?: string | null;
           id?: never;
           occurred_at?: string;
+          request_id?: string | null;
         };
         Relationships: [];
       };
@@ -3226,6 +3229,136 @@ export type Database = {
           },
         ];
       };
+      report_export_downloads: {
+        Row: {
+          company_id: string;
+          downloaded_at: string;
+          downloaded_by: string;
+          export_id: string;
+          id: number;
+          request_id: string | null;
+        };
+        Insert: {
+          company_id: string;
+          downloaded_at?: string;
+          downloaded_by: string;
+          export_id: string;
+          id?: never;
+          request_id?: string | null;
+        };
+        Update: {
+          company_id?: string;
+          downloaded_at?: string;
+          downloaded_by?: string;
+          export_id?: string;
+          id?: never;
+          request_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "report_export_downloads_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "report_export_downloads_downloaded_by_fkey";
+            columns: ["downloaded_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "report_export_downloads_export_id_company_id_fkey";
+            columns: ["export_id", "company_id"];
+            isOneToOne: false;
+            referencedRelation: "report_exports";
+            referencedColumns: ["id", "company_id"];
+          },
+        ];
+      };
+      report_exports: {
+        Row: {
+          company_id: string;
+          completed_at: string | null;
+          created_at: string;
+          error_code: string | null;
+          expires_at: string | null;
+          file_name: string | null;
+          filters: Json;
+          format: string;
+          id: string;
+          idempotency_key: string;
+          report_key: string;
+          request_id: string | null;
+          requested_by: string;
+          row_count: number | null;
+          sha256: string | null;
+          size_bytes: number | null;
+          started_at: string | null;
+          status: string;
+          storage_path: string | null;
+        };
+        Insert: {
+          company_id: string;
+          completed_at?: string | null;
+          created_at?: string;
+          error_code?: string | null;
+          expires_at?: string | null;
+          file_name?: string | null;
+          filters: Json;
+          format: string;
+          id?: string;
+          idempotency_key: string;
+          report_key: string;
+          request_id?: string | null;
+          requested_by: string;
+          row_count?: number | null;
+          sha256?: string | null;
+          size_bytes?: number | null;
+          started_at?: string | null;
+          status?: string;
+          storage_path?: string | null;
+        };
+        Update: {
+          company_id?: string;
+          completed_at?: string | null;
+          created_at?: string;
+          error_code?: string | null;
+          expires_at?: string | null;
+          file_name?: string | null;
+          filters?: Json;
+          format?: string;
+          id?: string;
+          idempotency_key?: string;
+          report_key?: string;
+          request_id?: string | null;
+          requested_by?: string;
+          row_count?: number | null;
+          sha256?: string | null;
+          size_bytes?: number | null;
+          started_at?: string | null;
+          status?: string;
+          storage_path?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "report_exports_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "report_exports_requested_by_fkey";
+            columns: ["requested_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       role_assignments: {
         Row: {
           company_id: string;
@@ -4651,6 +4784,17 @@ export type Database = {
         };
         Returns: string;
       };
+      complete_report_export: {
+        Args: {
+          p_export: string;
+          p_file_name: string;
+          p_path: string;
+          p_sha256: string;
+          p_size: number;
+          p_rows: number;
+        };
+        Returns: undefined;
+      };
       complete_report_step: {
         Args: { p_report: string; p_action: string; p_comment?: string };
         Returns: Database["public"]["Enums"]["expense_report_status"];
@@ -4693,10 +4837,15 @@ export type Database = {
         Args: { p_request: string; p_approve: boolean; p_note?: string };
         Returns: string;
       };
+      expire_report_exports: {
+        Args: Record<PropertyKey, never>;
+        Returns: { export_id: string; storage_path: string }[];
+      };
       expired_punch_selfies: {
         Args: { p_limit?: number };
         Returns: { punch_id: string; selfie_path: string }[];
       };
+      fail_report_export: { Args: { p_export: string; p_error_code: string }; Returns: undefined };
       find_group_user_by_email: { Args: { p_company: string; p_email: string }; Returns: string };
       find_receipt_duplicate: {
         Args: { p_company: string; p_sha256: string };
@@ -4743,6 +4892,7 @@ export type Database = {
         Returns: undefined;
       };
       log_export_download: { Args: { p_export: string }; Returns: string };
+      log_report_download: { Args: { p_export: string }; Returns: string };
       mark_batch_accounted: { Args: { p_batch: string }; Returns: undefined };
       mark_notifications_read: { Args: { p_company: string; p_ids?: unknown }; Returns: number };
       mark_punch_selfie_purged: { Args: { p_punch: string }; Returns: undefined };
@@ -4926,6 +5076,225 @@ export type Database = {
       };
       register_kiosk_device: { Args: { p_work_center: string; p_name: string }; Returns: string };
       reopen_expense: { Args: { p_expense: string }; Returns: undefined };
+      report_absence_balances: {
+        Args: {
+          p_company: string;
+          p_day: string;
+          p_employee?: string;
+          p_team?: string;
+          p_center?: string;
+          p_limit?: number;
+          p_offset?: number;
+        };
+        Returns: {
+          employee_id: string;
+          employee_code: string;
+          employee_name: string;
+          policy_name: string;
+          unit: string;
+          period_start: string;
+          period_end: string;
+          entitled: number;
+          carried: number;
+          used: number;
+          reserved: number;
+          adjusted: number;
+          expired: number;
+          available: number;
+          total_count: number;
+        }[];
+      };
+      report_absence_requests: {
+        Args: {
+          p_company: string;
+          p_from: string;
+          p_to: string;
+          p_employee?: string;
+          p_team?: string;
+          p_center?: string;
+          p_limit?: number;
+          p_offset?: number;
+        };
+        Returns: {
+          request_id: string;
+          employee_id: string;
+          employee_code: string;
+          employee_name: string;
+          type_label: string;
+          start_date: string;
+          end_date: string;
+          amount: number;
+          amount_unit: string;
+          status: string;
+          submitted_at: string;
+          decided_at: string;
+          total_count: number;
+        }[];
+      };
+      report_approvals: {
+        Args: { p_company: string; p_from: string; p_to: string };
+        Returns: {
+          kind: string;
+          pending: number;
+          overdue: number;
+          decided: number;
+          avg_hours: number;
+        }[];
+      };
+      report_audit: {
+        Args: {
+          p_company: string;
+          p_from: string;
+          p_to: string;
+          p_actor?: string;
+          p_entity?: string;
+          p_entity_id?: string;
+          p_action?: string;
+          p_limit?: number;
+          p_offset?: number;
+        };
+        Returns: {
+          id: number;
+          occurred_at: string;
+          actor_id: string;
+          entity: string;
+          entity_id: string;
+          action: string;
+          changed_fields: unknown;
+          before: Json;
+          after: Json;
+          request_id: string;
+          total_count: number;
+        }[];
+      };
+      report_closures: {
+        Args: { p_company: string; p_from: string; p_to: string };
+        Returns: {
+          batch_id: string;
+          sequence: number;
+          kind: string;
+          period_month: string;
+          status: string;
+          closed_at: string;
+          currency: string;
+          lines: number;
+          total_cents: number;
+        }[];
+      };
+      report_expenses: {
+        Args: {
+          p_company: string;
+          p_from: string;
+          p_to: string;
+          p_group: string;
+          p_employee?: string;
+          p_team?: string;
+          p_center?: string;
+          p_client?: string;
+          p_project?: string;
+          p_limit?: number;
+          p_offset?: number;
+        };
+        Returns: {
+          group_key: string;
+          group_label: string;
+          currency: string;
+          expenses: number;
+          base_cents: number;
+          tax_cents: number;
+          total_cents: number;
+          total_count: number;
+        }[];
+      };
+      report_time_daily: {
+        Args: {
+          p_company: string;
+          p_from: string;
+          p_to: string;
+          p_employee?: string;
+          p_team?: string;
+          p_center?: string;
+          p_limit?: number;
+          p_offset?: number;
+        };
+        Returns: {
+          work_date: string;
+          employee_id: string;
+          employee_code: string;
+          employee_name: string;
+          status: string;
+          started_at: string;
+          ended_at: string;
+          worked_seconds: number;
+          break_seconds: number;
+          planned_status: string;
+          planned_seconds: number;
+          difference_seconds: number;
+          adjustments: number;
+          open_incidents: number;
+          total_count: number;
+        }[];
+      };
+      report_time_register: {
+        Args: {
+          p_company: string;
+          p_from: string;
+          p_to: string;
+          p_employee?: string;
+          p_team?: string;
+          p_center?: string;
+          p_limit?: number;
+          p_offset?: number;
+        };
+        Returns: {
+          work_date: string;
+          employee_id: string;
+          employee_code: string;
+          employee_name: string;
+          time_zone: string;
+          status: string;
+          started_at: string;
+          ended_at: string;
+          worked_seconds: number;
+          break_seconds: number;
+          punches: Json;
+          adjustments: Json;
+          total_count: number;
+        }[];
+      };
+      report_time_summary: {
+        Args: {
+          p_company: string;
+          p_from: string;
+          p_to: string;
+          p_employee?: string;
+          p_team?: string;
+          p_center?: string;
+          p_limit?: number;
+          p_offset?: number;
+        };
+        Returns: {
+          employee_id: string;
+          employee_code: string;
+          employee_name: string;
+          days: number;
+          worked_seconds: number;
+          break_seconds: number;
+          incomplete_days: number;
+          adjustments: number;
+          total_count: number;
+        }[];
+      };
+      request_report_export: {
+        Args: {
+          p_company: string;
+          p_report: string;
+          p_format: string;
+          p_filters: Json;
+          p_idempotency_key: string;
+        };
+        Returns: string;
+      };
       request_time_correction: {
         Args: {
           p_employee: string;
@@ -5011,6 +5380,7 @@ export type Database = {
           message: string;
         }[];
       };
+      start_report_export: { Args: { p_export: string }; Returns: boolean };
       submit_absence_request: {
         Args: {
           p_company: string;

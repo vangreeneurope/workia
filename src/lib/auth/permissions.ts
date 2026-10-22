@@ -72,6 +72,7 @@ export type SectionKey =
   | "ausencias"
   | "gastos"
   | "equipo"
+  | "informes"
   | "auditoria"
   | "admin"
   | "perfil";
@@ -119,6 +120,9 @@ export function canAccessSection(ctx: UserContext, section: SectionKey): boolean
       return (
         admin || ctx.supervisedCount > 0 || hasAnyRole(roles, ["manager", "company_admin", "hr"])
       );
+    case "informes":
+      // Cada informe muestra solo el ámbito de la persona (RLS y funciones de informe).
+      return admin || ctx.supervisedCount > 0 || roles.length > 0;
     case "auditoria":
       return admin || hasAnyRole(roles, ["company_admin", "auditor"]);
     case "admin":

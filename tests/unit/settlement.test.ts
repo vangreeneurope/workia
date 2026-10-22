@@ -153,6 +153,8 @@ describe("XLSX", () => {
   it("contiene las hojas de líneas y totales y es determinista", () => {
     const a = batchXlsx(data);
     expect(sha256Hex(a)).toBe(sha256Hex(batchXlsx(structuredClone(data))));
+    // Huella fija: el formato no cambia sin querer (p. ej., al tocar src/lib/files/xlsx.ts).
+    expect(sha256Hex(a)).toBe("5418d3acc5007464f0d1b9f9dad19061c3e62f98d172a6df55b869acf6215136");
     const files = unzipSync(a);
     expect(Object.keys(files)).toEqual(
       expect.arrayContaining([
@@ -195,6 +197,8 @@ describe("PDF", () => {
     const b = await batchPdf(structuredClone(data));
     expect(new TextDecoder().decode(a.slice(0, 5))).toBe("%PDF-");
     expect(sha256Hex(a)).toBe(sha256Hex(b));
+    // Huella fija: el formato no cambia sin querer (p. ej., al tocar src/lib/files/pdf-writer.ts).
+    expect(sha256Hex(a)).toBe("c6d60bad58d992b29245dfb20e938909532e3fb852f6c1a60dbcc6be9dcc2363");
     // Los totales del PDF son los mismos que los de la base de datos y el CSV.
     const text = pdfText(a);
     expect(text).toContain("Liquidación de gastos");

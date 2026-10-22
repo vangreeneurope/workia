@@ -251,6 +251,22 @@ Triggers nuevos en `absence_request_events`, `approval_steps`, `expense_reports`
 `claim_email_deliveries`, `complete_email_delivery`, `record_email_event`,
 `run_scheduled_reminders`, `record_job_run`.
 
+### Informes y exportaciones (migración `20261030100000_informes`)
+
+Diccionario, límites e índices en [INFORMES.md](INFORMES.md).
+
+| Tabla                     | Propósito                 | Claves y restricciones relevantes                                                                                    |
+| ------------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `report_exports`          | Registro de exportaciones | `(company_id, requested_by, idempotency_key)` único; filtros ≤ 1 KB; solo cambia el estado; sin `delete`; ruta única |
+| `report_export_downloads` | Cada descarga             | inmutable; FK compuesta `(export_id, company_id)`                                                                    |
+
+Funciones de informe (paginadas, con periodo máximo): `report_time_daily`, `report_time_summary`,
+`report_time_register`, `report_absence_balances`, `report_absence_requests`, `report_expenses`,
+`report_approvals`, `report_closures`, `report_audit`. Exportaciones: `request_report_export`,
+`start_report_export`, `complete_report_export`, `fail_report_export`, `log_report_download` y,
+solo service_role, `expire_report_exports`. Bucket privado `report-exports`
+(`<empresa>/<usuario>/<exportación>/<archivo>`).
+
 ### Auditoría y almacenamiento
 
 - `audit_log`: append-only. Columnas `actor_id` (`auth.uid()`), `company_id`, `group_id`,
@@ -259,10 +275,11 @@ Triggers nuevos en `absence_request_events`, `approval_steps`, `expense_reports`
   `work_centers`, `teams`, `company_memberships`, `role_assignments`, `employees`,
   `employment_terms`, `manager_assignments` y cambios de `profiles`. Los cambios privilegiados
   (roles, administradores, membresías, asignaciones) quedan con quién, cuándo, antes y después.
-- `audit_events`: auditoría **minimizada** para consultar en la interfaz: acción (`create`,
-  `update`, `deactivate`, `reactivate`, `terminate`, `export`, `import`), campos cambiados y sus
-  valores antes y después, con nombre, apellidos, correos, teléfono, CIF, dirección y motivo de
-  suplencia sustituidos por `[dato personal]`. Las exportaciones guardan solo número de filas y
+- `audit_events`: auditoría **minimizada** para consultar en la interfaz (`/auditoria`): acción
+  (`create`, `update`, `deactivate`, `reactivate`, `terminate`, `publish`, `status_change`,
+  `export`, `import`, `request_export`, `download`), campos cambiados y sus valores antes y
+  después, `request_id` de la petición, con nombre, apellidos, correos, teléfono, CIF, dirección,
+  motivos, notas, comentarios, proveedor, coordenadas y selfies sustituidos por `[dato personal]`. Las exportaciones guardan solo número de filas y
   filtros (nunca el texto buscado).
 - Bucket privado `company-logos` (ruta `<company_id>/…`, URL firmada de 1 hora).
 
@@ -316,6 +333,7 @@ orden inverso con `psql` y borrar la fila correspondiente de
 | `20261024100000_calendarios_turnos`     | Sí                                                     | calendarios, festivos, plantillas, asignaciones, ausencias integradas y eventos (la auditoría se conserva siempre)                      |
 | `20261025100000_control_horario`        | Sí                                                     | todo el registro de jornada (exportar antes: obligación de 4 años); exige vaciar antes el bucket de selfies                             |
 | `20261026100000_ausencias`              | Sí                                                     | tipos, políticas, saldos, solicitudes y justificantes; exige vaciar antes el bucket de justificantes                                    |
+| `20261030100000_informes`               | Sí                                                     | registro de exportaciones y descargas, `audit_events.request_id`; exige vaciar el bucket `report-exports`; la auditoría se conserva     |
 
 Protecciones:
 

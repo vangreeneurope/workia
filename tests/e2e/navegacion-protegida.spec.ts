@@ -209,3 +209,24 @@ test("la bandeja de avisos exige sesión y las rutas de máquina se protegen sol
   const hook = await request.post("/api/correo/webhook", { maxRedirects: 0, data: { events: [] } });
   expect(hook.status()).toBe(404);
 });
+
+test("informes, exportaciones y auditoría exigen sesión; la descarga no es un enlace público", async ({
+  page,
+  request,
+}) => {
+  for (const path of [
+    "/informes",
+    "/informes/registro-horario?desde=2026-10-01&hasta=2026-10-31",
+    "/informes/exportaciones",
+    "/auditoria",
+  ]) {
+    await page.goto(path);
+    await expect(page).toHaveURL(/\/acceder\?siguiente=/);
+  }
+  // Conocer el identificador de una exportación no permite descargarla sin sesión.
+  const download = await request.get("/informes/descargas/00000000-0000-4000-8000-000000000000", {
+    maxRedirects: 0,
+  });
+  expect(download.status()).toBe(307);
+  expect(download.headers()["location"]).toContain("/acceder");
+});

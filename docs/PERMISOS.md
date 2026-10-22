@@ -128,10 +128,16 @@ plataforma o del grupo de la empresa activa.
 | Fichajes, Ausencias |    ✓     |    ✓    |  ✓  |       ✓       |            |         | si además tiene rol |
 | Gastos              |    ✓     |    ✓    |  ✓  |       ✓       |     ✓      |         | si además tiene rol |
 | Equipo              |   (*)    |    ✓    |  ✓  |       ✓       |            |         |          ✓          |
+| Informes            |    ✓     |    ✓    |  ✓  |       ✓       |     ✓      |    ✓    |          ✓          |
 | Auditoría           |          |         |     |       ✓       |            |    ✓    |          ✓          |
 | Administración      |          |         |  ✓  |       ✓       |            |         |          ✓          |
 
-(*) Quien supervisa al menos a una persona con asignación vigente ve "Equipo" y "Horario".
+(*) Quien supervisa al menos a una persona con asignación vigente ve "Equipo", "Horario" e
+"Informes".
+
+En "Informes" cada informe muestra solo el ámbito de la persona (lo suyo, sus supervisados, su
+ámbito de RR. HH., gastos para contabilidad…), con el mismo predicado que RLS (ADR-050); la matriz
+por informe está en [INFORMES.md](INFORMES.md). Las exportaciones solo las descarga quien las pidió.
 
 ### Áreas de administración (`src/lib/admin/access.ts`)
 

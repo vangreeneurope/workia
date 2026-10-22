@@ -18,6 +18,7 @@ const ALL: SectionKey[] = [
   "ausencias",
   "gastos",
   "equipo",
+  "informes",
   "auditoria",
   "admin",
   "perfil",
@@ -30,12 +31,20 @@ function allowed(ctx: Parameters<typeof canAccessSection>[0]) {
 describe("canAccessSection", () => {
   it("empleado: solo sus secciones personales", () => {
     const ctx = makeContext([[companyA, ["employee"]]]);
-    expect(allowed(ctx)).toEqual(["panel", "horario", "fichajes", "ausencias", "gastos", "perfil"]);
+    expect(allowed(ctx)).toEqual([
+      "panel",
+      "horario",
+      "fichajes",
+      "ausencias",
+      "gastos",
+      "informes",
+      "perfil",
+    ]);
   });
 
   it("contabilidad: gastos pero no fichajes ni equipo", () => {
     const ctx = makeContext([[companyA, ["accounting"]]]);
-    expect(allowed(ctx)).toEqual(["panel", "gastos", "perfil"]);
+    expect(allowed(ctx)).toEqual(["panel", "gastos", "informes", "perfil"]);
   });
 
   it("manager: ve Equipo", () => {
@@ -74,6 +83,7 @@ describe("canAccessSection", () => {
       "ausencias",
       "gastos",
       "equipo",
+      "informes",
       "admin",
       "perfil",
     ]);
@@ -81,7 +91,7 @@ describe("canAccessSection", () => {
 
   it("auditor: Auditoría y consulta de horarios además de lo común", () => {
     const ctx = makeContext([[companyA, ["auditor"]]]);
-    expect(allowed(ctx)).toEqual(["panel", "horario", "auditoria", "perfil"]);
+    expect(allowed(ctx)).toEqual(["panel", "horario", "informes", "auditoria", "perfil"]);
   });
 
   it("horario: quien supervisa a alguien lo ve aunque no tenga rol en la empresa activa", () => {

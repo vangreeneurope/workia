@@ -590,3 +590,51 @@ de webhooks por id externo. No hay proveedor de correo real: interfaz `EmailProv
 falso fuera de producción.
 **Alternativa descartada**: enviar el correo desde la Server Action (acoplaría la operación al
 proveedor y duplicaría en los reintentos).
+
+## ADR-050 · Informes con el predicado de RLS evaluado por persona
+
+**Fecha**: 2026-10-30 · **Estado**: aceptada
+
+**Contexto**: las políticas RLS de jornadas, ausencias, gastos y auditoría llaman a funciones de
+permiso por fila (`can_read_employee_time(employee_id)`, `has_permission(company_id, …)`). Con
+volumen sintético (`99_rendimiento`), un informe SECURITY INVOKER tardaba ~15 s con 6 200 jornadas
+y ~28 s con 40 000 eventos de auditoría, porque el mismo predicado se recalculaba en cada fila.
+
+**Decisión**: los informes de volumen (`report_time_*`, `report_absence_*`, `report_expenses`,
+`report_audit`) son SECURITY DEFINER y aplican **exactamente** el predicado de la política de cada
+tabla, calculado una vez por persona con `private.report_scope(empresa, dominio)` (con atajo cuando
+el permiso es de empresa) o una vez por empresa (`audit.read`). El nombre de la persona solo se
+muestra si la política de `employees` lo permite. `96_informes` compara, para 12 perfiles y dos
+empresas, cada informe con una consulta directa bajo RLS; cualquier divergencia hace fallar la
+verificación. Aprobaciones y cierres (pocas filas) siguen siendo SECURITY INVOKER. No hay vistas.
+**Alternativas descartadas**: cambiar las políticas de las tablas a `employee_id in (select …)`
+(afecta a toda la aplicación y el conjunto de personas visibles cruza empresas por las
+supervisiones); usar la clave de servicio en la aplicación (saltaría RLS).
+
+## ADR-051 · Exportaciones asíncronas con la sesión del solicitante
+
+**Fecha**: 2026-10-30 · **Estado**: aceptada
+
+**Decisión**: la Server Action registra la exportación (`request_report_export`: filtros
+validados, `request_id`, idempotencia, máximo 3 en curso) y la genera después de responder con
+`after()`, que en Server Functions puede leer cookies: el archivo se construye con la sesión del
+solicitante, por páginas de 500 filas, y nunca con la clave de servicio. Se guarda en el bucket
+privado `report-exports` en `<empresa>/<usuario>/<exportación>/`, con SHA-256, tamaño y filas, y
+caduca a los 7 días. Solo el solicitante descarga (URL firmada de 60 s); cada descarga se registra
+en `report_export_downloads` y en `audit_events`. La tarea programada caduca, marca atascadas y
+borra archivos caducados o huérfanos con la clave de servicio (ADR-048).
+**Alternativa descartada**: generar el archivo en el navegador (cargaría el conjunto completo) o en
+la propia petición (bloquea y se corta con informes grandes). Si `after()` resultara insuficiente en
+el entorno real, el siguiente paso es una cola en `jobs` procesada por la tarea programada.
+
+## ADR-052 · `request_id` y eventos de estado en `audit_events`
+
+**Fecha**: 2026-10-30 · **Estado**: aceptada
+
+**Decisión**: el cliente de Supabase del servidor envía `x-request-id` (el de la petición entrante
+si es válido o uno nuevo por petición) y `audit_events.request_id` lo toma de
+`request.headers` de PostgREST. Se añaden eventos mínimos de estado (solo `status`) en solicitudes
+de ausencia, informes de gastos, lotes, correcciones y ajustes de fichaje, y las acciones
+`status_change`, `request_export` y `download`. La minimización se amplía a textos libres,
+proveedor, coordenadas y selfies. `audit_events` no guarda errores, cabeceras, IP, tokens ni
+secretos: no sustituye a los registros técnicos.

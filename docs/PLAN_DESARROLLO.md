@@ -63,8 +63,13 @@ la desconexión digital.
 
 Hecho (2026-10-29, docs/AVISOS.md): bandeja interna, outbox transaccional, plantillas versionadas,
 cola de correo con reintentos y dead-letter, webhook firmado, recordatorios por zona horaria y días
-laborables, tareas programadas y consola de soporte. Pendiente: proveedor de correo real (ADR),
-push en la PWA e informes consolidados.
+laborables, tareas programadas y consola de soporte.
+
+Hecho (2026-10-30, docs/INFORMES.md): panel e informes de jornada diaria, horas y descansos,
+registro horario, saldos, solicitudes, gastos, aprobaciones y cierres; exportaciones asíncronas
+CSV/XLSX/PDF privadas con huella, caducidad y descargas registradas; auditoría consultable con
+`request_id`; pruebas de ámbito, equivalencia con RLS y rendimiento con volumen sintético.
+Pendiente: proveedor de correo real (ADR), push en la PWA e informes consolidados de grupo.
 
 ## Fase 5 · Endurecimiento y salida a producción
 

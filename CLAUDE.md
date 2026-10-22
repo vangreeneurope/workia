@@ -131,6 +131,8 @@ docs/               Documentación funcional y técnica
 - `docs/LIQUIDACION_GASTOS.md`: informes mensuales, aprobación por pasos, cierre en lotes y
   esquema de exportación (PDF, CSV, XLSX, ZIP).
 - `docs/AVISOS.md`: bandeja, correo, outbox, reintentos, tareas programadas y guía de proveedor.
+- `docs/INFORMES.md`: diccionario de informes y cálculos, filtros, exportaciones, auditoría,
+  índices y límites medidos.
 - `docs/NORMATIVA.md`: registro de jornada, RGPD/LOPDGDD, conservación.
 - `docs/PLAN_DESARROLLO.md`: fases y criterios de salida.
 - `docs/DECISIONES.md`: registro de decisiones de arquitectura (ADR).

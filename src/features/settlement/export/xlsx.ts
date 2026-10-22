@@ -1,4 +1,4 @@
-import { zipSync } from "fflate";
+import { buildXlsx, type XlsxCell } from "@/lib/files/xlsx";
 
 import { CSV_COLUMNS } from "./csv";
 import { centsToDecimal } from "./money";
@@ -6,50 +6,12 @@ import { exportDate } from "./names";
 import type { BatchExportData, TotalRow } from "./types";
 
 /**
- * XLSX mínimo (Office Open XML) escrito a mano: hojas "Lineas" y "Totales".
- * Los importes se escriben como texto decimal exacto generado con enteros y,
- * además, en céntimos. Fecha interna fija (la del cierre): mismo lote, mismos bytes.
+ * XLSX de liquidación: hojas "Lineas" y "Totales". Los importes se escriben como
+ * texto decimal exacto generado con enteros y, además, en céntimos. Fecha
+ * interna fija (la del cierre): mismo lote, mismos bytes.
  */
 
-const esc = (s: string) =>
-  s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    // Caracteres de control no válidos en XML.
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "");
-
-function col(i: number): string {
-  let n = i + 1;
-  let s = "";
-  while (n > 0) {
-    const r = (n - 1) % 26;
-    s = String.fromCharCode(65 + r) + s;
-    n = Math.floor((n - 1) / 26);
-  }
-  return s;
-}
-
-type Cell = { s: string } | { n: string; money?: boolean } | null;
-
-function sheet(rows: Cell[][]): string {
-  const body = rows
-    .map((row, r) => {
-      const cells = row
-        .map((c, i) => {
-          const ref = `${col(i)}${r + 1}`;
-          if (c === null) return "";
-          if ("s" in c)
-            return `<c r="${ref}" t="inlineStr"${r === 0 ? ' s="1"' : ""}><is><t xml:space="preserve">${esc(c.s)}</t></is></c>`;
-          return `<c r="${ref}"${c.money ? ' s="2"' : ""}><v>${c.n}</v></c>`;
-        })
-        .join("");
-      return `<row r="${r + 1}">${cells}</row>`;
-    })
-    .join("");
-  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><sheetData>${body}</sheetData></worksheet>`;
-}
+type Cell = XlsxCell;
 
 const money = (cents: number | null): Cell =>
   cents === null ? null : { n: centsToDecimal(cents), money: true };
@@ -120,41 +82,11 @@ export function batchXlsx(data: BatchExportData): Uint8Array {
       { n: String(t.lines) },
     ]),
   ];
-  const enc = (s: string) => new TextEncoder().encode(s);
-  const mtime = exportDate(data);
-  const files: Record<string, [Uint8Array, { mtime: Date }]> = {
-    "[Content_Types].xml": [
-      enc(
-        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`,
-      ),
-      { mtime },
+  return buildXlsx(
+    [
+      { name: "Lineas", rows: lineRows },
+      { name: "Totales", rows: totalRows },
     ],
-    "_rels/.rels": [
-      enc(
-        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`,
-      ),
-      { mtime },
-    ],
-    "xl/workbook.xml": [
-      enc(
-        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Lineas" sheetId="1" r:id="rId1"/><sheet name="Totales" sheetId="2" r:id="rId2"/></sheets></workbook>`,
-      ),
-      { mtime },
-    ],
-    "xl/_rels/workbook.xml.rels": [
-      enc(
-        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`,
-      ),
-      { mtime },
-    ],
-    "xl/styles.xml": [
-      enc(
-        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="#,##0.00"/></numFmts><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs></styleSheet>`,
-      ),
-      { mtime },
-    ],
-    "xl/worksheets/sheet1.xml": [enc(sheet(lineRows)), { mtime }],
-    "xl/worksheets/sheet2.xml": [enc(sheet(totalRows)), { mtime }],
-  };
-  return zipSync(files, { level: 6, mtime });
+    exportDate(data),
+  );
 }

@@ -110,6 +110,8 @@ de plataforma con `recent_job_runs`):
 4. `saldos`: `settle_vacation_balances` (pendiente desde el módulo de ausencias).
 5. `selfies`: borrado de selfies caducadas (30 días) con la API de Storage (pendiente desde control
    horario).
+6. `exportaciones`: `expire_report_exports` (caducadas a los 7 días, atascadas más de 30 minutos y
+   archivos huérfanos) y borrado de sus archivos en Storage (docs/INFORMES.md).
 
 Sin `CRON_SECRET` (mínimo 32 caracteres) o sin `SUPABASE_SECRET_KEY`, la ruta no hace nada (401 o
 503). Ejemplos de planificador: Vercel Cron, Supabase `pg_cron` + `pg_net` o un workflow
