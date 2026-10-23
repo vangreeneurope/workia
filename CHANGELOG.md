@@ -34,6 +34,9 @@ versión se mueve a su sección con la fecha y se crea la etiqueta `vX.Y.Z` (doc
   o con diccionarios dentro de flujos de objetos comprimidos; ahora se revisan ambos.
 - Los JPEG subidos conservaban datos añadidos tras el final de la imagen (archivos políglotas).
 - El registro técnico usaba `process.stdout`, inexistente en el runtime Edge.
+- El plan de despliegue fallaba en repositorios privados (`git fetch` sin credenciales) y las
+  migraciones fallaban en rojo en entornos sin Supabase configurado; ahora se saltan con aviso y
+  nunca se publica en staging o producción sin migrar su base.
 
 ### Pruebas
 
