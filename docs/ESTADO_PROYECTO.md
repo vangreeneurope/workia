@@ -267,6 +267,19 @@ anteriores con sesión real (excepción a la regla de CLAUDE.md, registrada aqu�
   docs/PREPARACION_PILOTO.md.
 - Corrección: el cierre contable ya no ignora en silencio un fallo al generar el paquete.
 
+### Auditoría QA previa al piloto (2026-10-23)
+
+- Informe y recomendación en docs/qa/QA_REPORT.md: **GO condicionado** para un piloto sintético en
+  staging tras los bloqueos externos B-01 a B-04; **NO-GO** para datos reales hasta B-01 a B-09 y los
+  P2 abiertos. Sin P0 ni P1. Matriz requisito → evidencia en docs/qa/REQUIREMENTS_TRACEABILITY.md.
+- Pruebas adversarias de aislamiento sobre base poblada (`npm run test:aislamiento`, en el CI):
+  612 lecturas, 87 funciones (3.794 llamadas), 822 escrituras directas y 60 operaciones de Storage
+  sin fugas, con control positivo; conciliación contable por moneda.
+- Corregidos: PDF activo escondido (escapes y ObjStm), JPEG políglota y registro en runtime Edge.
+- Abiertos: QA-04 (huella de duplicados desde el cliente), QA-05 (subida directa a Storage sin
+  validación de contenido), QA-06 (supervisión entre empresas, decisión de producto), entre otros.
+- Marca: la aplicación se llama Workia (logotipo recreado en vector).
+
 ## 2. Resultados de verificación (2026-10-23)
 
 | Verificación               | Comando                                           | Resultado                                                                                                                                  |
@@ -274,7 +287,7 @@ anteriores con sesión real (excepción a la regla de CLAUDE.md, registrada aqu�
 | Tipos                      | `npm run typecheck`                               | Sin errores                                                                                                                                |
 | Lint                       | `npm run lint`                                    | 0 errores, 0 avisos                                                                                                                        |
 | Formato                    | `npm run format:check`                            | Correcto                                                                                                                                   |
-| Unitarias                  | `npm test`                                        | 28 archivos, 300 pruebas superadas (incluidos escáner estático, scripts de operación y alertas)                                            |
+| Unitarias                  | `npm test`                                        | 27 archivos, 303 pruebas superadas (incluidas regresiones de la auditoría QA)                                                              |
 | Aislamiento multiempresa   | `npm run test:db` → `10_aislamiento_multiempresa` | 134 aserciones superadas                                                                                                                   |
 | Integridad y escalada      | `npm run test:db` → `20_integridad_y_escalada`    | 26 aserciones superadas                                                                                                                    |
 | Semillas sintéticas        | `npm run test:db` → `30_seed_sintetico`           | 24 aserciones superadas                                                                                                                    |
@@ -302,6 +315,7 @@ anteriores con sesión real (excepción a la regla de CLAUDE.md, registrada aqu�
 | Restauración local         | `npm run ops:prueba-restauracion`                 | Esquema idéntico, 81 tablas y 251 filas, escáner de catálogo en verde (Supabase: pendiente)                                                |
 | Imagen de contenedor       | `docker build` + `docker run`                     | Construida y `healthy`; `/api/salud` con commit, migración y entorno                                                                       |
 | Workflows                  | actionlint 1.7.7                                  | Sin errores en `ci.yml` y `despliegue.yml`                                                                                                 |
+| Aislamiento adversario     | `npm run test:aislamiento`                        | Lectura, funciones, escrituras, Storage y conciliación sin fugas (docs/qa/QA_REPORT.md)                                                    |
 | Secretos                   | `npm run security:secrets`                        | Sin secretos en archivos versionados ni en el historial                                                                                    |
 | Dependencias de producción | `npm audit --omit=dev`                            | 0 vulnerabilidades                                                                                                                         |
 

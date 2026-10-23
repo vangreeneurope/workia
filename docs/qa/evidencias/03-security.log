@@ -1,0 +1,18 @@
+$ npm run security
+inicio: 2026-10-23T06:52:50Z
+
+> control-horario-grupo@0.1.0 security
+> npm run security:secrets && npm run security:audit
+
+
+> control-horario-grupo@0.1.0 security:secrets
+> node scripts/check-secrets.mjs
+
+Sin secretos detectados en 457 archivos versionados.
+
+> control-horario-grupo@0.1.0 security:audit
+> npm audit --omit=dev --audit-level=high
+
+found 0 vulnerabilities
+exit=0
+fin: 2026-10-23T06:52:51Z

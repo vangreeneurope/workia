@@ -1,0 +1,123 @@
+$ npm run build
+inicio: 2026-10-23T06:54:24Z
+
+> control-horario-grupo@0.1.0 build
+> next build
+
+▲ Next.js 16.4.2 (Turbopack)
+✓ Running next.config.ts took 39ms
+- Cache Components enabled
+- Partial Prefetching enabled
+- Experiments (use with caution):
+  · serverActions
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 8.9s
+  Running TypeScript ...
+  Finished TypeScript in 11.7s ...
+  Collecting page data using 3 workers ...
+  Generating static pages using 3 workers (0/69) ...
+  Generating static pages using 3 workers (17/69) 
+  Generating static pages using 3 workers (34/69) 
+  Generating static pages using 3 workers (51/69) 
+✓ Generating static pages using 3 workers (69/69) in 1237ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /_not-found
+├ ◐ /acceder
+├ ○ /acceder/recuperar
+├ ◐ /admin
+├ ◐ /admin/aprobadores
+├ ◐ /admin/ausencias
+├   /admin/ausencias/politicas/[id]
+│ └ ◐ /admin/ausencias/politicas/[id]
+├ ◐ /admin/avisos
+├ ◐ /admin/calendarios
+├   /admin/calendarios/[id]
+│ └ ◐ /admin/calendarios/[id]
+├ ◐ /admin/centros
+├   /admin/centros/[id]
+│ └ ◐ /admin/centros/[id]
+├ ◐ /admin/centros/nuevo
+├ ◐ /admin/empresas
+├   /admin/empresas/[id]
+│ └ ◐ /admin/empresas/[id]
+├ ◐ /admin/empresas/nueva
+├ ◐ /admin/equipos
+├   /admin/equipos/[id]
+│ └ ◐ /admin/equipos/[id]
+├ ◐ /admin/equipos/nuevo
+├ ◐ /admin/fichajes
+├ ◐ /admin/gastos
+├ ◐ /admin/horarios
+├   /admin/horarios/[id]
+│ └ ◐ /admin/horarios/[id]
+├ ◐ /admin/importar
+├ ◐ /admin/membresias
+├   /admin/membresias/[id]
+│ └ ◐ /admin/membresias/[id]
+├ ◐ /admin/personas
+├   /admin/personas/[id]
+│ └ ◐ /admin/personas/[id]
+├ ƒ /admin/personas/exportar
+├ ◐ /admin/personas/nueva
+├ ◐ /admin/plantillas
+├   /admin/plantillas/[id]
+│ └ ◐ /admin/plantillas/[id]
+├ ◐ /admin/privacidad
+├ ƒ /admin/privacidad/solicitudes/[id]/copia
+├ ƒ /api/correo/webhook
+├ ƒ /api/salud
+├ ƒ /api/salud/listo
+├ ƒ /api/salud/metricas
+├ ƒ /api/tareas
+├ ◐ /auditoria
+├ ◐ /ausencias
+├ ◐ /ausencias/bandeja
+├ ƒ /ausencias/justificante/[id]
+├ ƒ /auth/confirmar
+├ ○ /auth/error
+├ ◐ /avisos
+├ ƒ /avisos/[id]
+├ ◐ /avisos/preferencias
+├ ◐ /equipo
+├ ◐ /fichajes
+├ ◐ /fichajes/historial
+├ ◐ /fichajes/revision
+├ ◐ /gastos
+├   /gastos/[id]
+│ └ ◐ /gastos/[id]
+├ ◐ /gastos/bandeja
+├ ◐ /gastos/contabilidad
+├ ƒ /gastos/contabilidad/descargas/[id]
+├   /gastos/contabilidad/lotes/[id]
+│ └ ◐ /gastos/contabilidad/lotes/[id]
+├ ◐ /gastos/informes
+├   /gastos/informes/[id]
+│ └ ◐ /gastos/informes/[id]
+├ ◐ /gastos/nuevo
+├ ƒ /gastos/ticket/[id]
+├ ◐ /horario
+├ ◐ /informes
+├   /informes/[informe]
+│ └ ◐ /informes/[informe]
+├ ƒ /informes/descargas/[id]
+├ ◐ /informes/exportaciones
+├ ○ /manifest.webmanifest
+├ ◐ /panel
+├ ◐ /perfil
+├ ◐ /perfil/contrasena
+├ ◐ /perfil/privacidad
+├ ◐ /perfil/seguridad
+└ ◐ /terminal
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)             prerendered as static content
+◐  (Partial Prerender)  prerendered as static HTML with dynamic server-streamed content
+ƒ  (Dynamic)            server-rendered on demand
+
+exit=0
+fin: 2026-10-23T06:54:48Z

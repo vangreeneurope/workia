@@ -1,4 +1,5 @@
 $ npm run test:db
+inicio: 2026-10-23T06:52:51Z
 
 > control-horario-grupo@0.1.0 test:db
 > bash scripts/test-db.sh
@@ -1013,17 +1014,17 @@ Pruebas de seguridad y privacidad superadas.
   ok - Índice: auditoría por empresa y fecha
   ok - Índice: auditoría por actor
   ok - Índice: auditoría por objeto
-  medida - report_time_daily (31 días, 6 200 jornadas, página de 100): 42.3 ms
+  medida - report_time_daily (31 días, 6 200 jornadas, página de 100): 65.1 ms
   ok - Rendimiento: jornada diaria por debajo del umbral
-  medida - report_time_summary (60 días, 12 000 jornadas, 200 personas): 10.6 ms
+  medida - report_time_summary (60 días, 12 000 jornadas, 200 personas): 13.5 ms
   ok - Rendimiento: resumen de horas por debajo del umbral
-  medida - report_time_register (31 días, página de 100 con fichajes): 44.2 ms
+  medida - report_time_register (31 días, página de 100 con fichajes): 36.2 ms
   ok - Rendimiento: registro horario por debajo del umbral
-  medida - report_expenses (60 días, 6 000 gastos, por proyecto): 4.3 ms
+  medida - report_expenses (60 días, 6 000 gastos, por proyecto): 3.6 ms
   ok - Rendimiento: gastos agrupados por debajo del umbral
-  medida - report_audit (62 días, ~40 000 eventos de A, página de 50): 17.1 ms
+  medida - report_audit (62 días, ~40 000 eventos de A, página de 50): 14.5 ms
   ok - Rendimiento: auditoría por debajo del umbral
-  medida - report_audit por actor: 4.7 ms
+  medida - report_audit por actor: 3.8 ms
   ok - Rendimiento: auditoría por actor por debajo del umbral
   ok - Volumen: el auditor de A cuenta solo los eventos de A
 > Pruebas de concurrencia (dos sesiones simultáneas)
@@ -1031,6 +1032,8 @@ Pruebas de seguridad y privacidad superadas.
   ok - Doble toque en dos sesiones: una entrada registrada, la otra rechazada, una sola jornada
   ok - Aplicación y terminal a la vez: una pausa registrada y la otra rechazada
   ok - Dos solicitudes simultáneas: una reserva el saldo y la otra se rechaza por saldo insuficiente
+  ok - Doble decisión simultánea: una sola decisión aplicada (approved/1/-4) y la otra rechazada por estado
+  ok - Doble envío simultáneo con la misma clave: una sola solicitud; el segundo recibe el duplicado
   ok - Mismo ticket registrado a la vez: un solo gasto y un solo trabajo de OCR
   ok - Dos sesiones reclaman el mismo trabajo de OCR: una sola ejecución
   ok - Mismo cierre en dos sesiones simultáneas: un solo lote y la segunda recibe el mismo
@@ -1067,3 +1070,4 @@ psql:/home/user/supabase/migrations/20261025100000_control_horario.sql:20: NOTIC
   ok - 20261022100000_modelo_multiempresa.down.sql exige autorización para perder datos
 Todas las pruebas de base de datos han pasado.
 exit=0
+fin: 2026-10-23T06:53:42Z
