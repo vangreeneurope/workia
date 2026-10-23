@@ -2,6 +2,8 @@
 
 import { useEffect } from "react";
 
+import { IS_DEMO } from "@/lib/demo";
+
 import { listenForInstallPrompt } from "./install-store";
 
 /**
@@ -11,7 +13,8 @@ import { listenForInstallPrompt } from "./install-store";
 export function ServiceWorkerRegister() {
   useEffect(() => listenForInstallPrompt(), []);
   useEffect(() => {
-    if (process.env.NODE_ENV !== "production" || !("serviceWorker" in navigator)) return;
+    // La demostración estática (GitHub Pages) no instala el service worker.
+    if (process.env.NODE_ENV !== "production" || IS_DEMO || !("serviceWorker" in navigator)) return;
     navigator.serviceWorker.register("/sw.js", { scope: "/", updateViaCache: "none" }).catch(() => {
       // Sin SW la app sigue funcionando; solo se pierde la página sin conexión.
     });

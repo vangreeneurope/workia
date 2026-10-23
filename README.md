@@ -6,6 +6,9 @@ Plataforma web multiempresa para el control horario, la gestión de vacaciones y
 gastos comerciales con OCR de tickets. Una sola aplicación para todas las empresas del grupo, cada
 una con su plantilla, responsables, calendarios, políticas e identidad visual.
 
+**Demostración** con datos ficticios: <https://vangreeneurope.github.io/workia/> (se regenera en cada
+cambio de `main`; ver docs/CI_CD.md, «Demostración en GitHub Pages»).
+
 Estado actual: **fase 0 (base técnica) y modelo de autorización multiempresa completados**. Los
 módulos funcionales aún no están construidos. Ver [docs/ESTADO_PROYECTO.md](docs/ESTADO_PROYECTO.md).
 

@@ -296,6 +296,14 @@ anteriores con sesión real (excepción a la regla de CLAUDE.md, registrada aqu�
   las 4 a 15 se entregan en un archivo SQL probado en local para aplicarlas en el editor SQL
   (el conector cortaba las peticiones grandes). La migración 16 se aplica después del mismo modo.
 
+### Demostración en GitHub Pages (2026-10-23)
+
+- Demostración navegable con datos ficticios publicada por el workflow `Demo` en
+  `vangreeneurope.github.io/workia` (ADR-070): 88 pantallas vistas como administración de la empresa
+  de ejemplo, formularios con aviso de «los cambios no se guardan». Verificada en local servida bajo
+  `/workia` en escritorio y móvil, sin errores ni recursos rotos. Pendiente: activar Pages en el
+  repositorio.
+
 ## 2. Resultados de verificación (2026-10-23)
 
 | Verificación               | Comando                                           | Resultado                                                                                                                                  |

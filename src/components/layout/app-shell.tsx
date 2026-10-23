@@ -3,11 +3,13 @@ import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 
 import { AppVersion } from "@/components/app-version";
+import { DemoBanner } from "@/components/demo-banner";
 import { getCompanyLogoUrl, getSessionDeadline, getUserContext } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
 import { brandForeground, mfaPending, safeBrandColor } from "@/lib/auth/permissions";
 import { novedadesSinVer, ultimaVersionConNovedades } from "@/features/novedades/catalog";
 import { NovedadesAviso } from "@/features/novedades/components/novedades-aviso";
+import { IS_DEMO } from "@/lib/demo";
 import { visibleNavKeys } from "@/lib/navigation";
 import { appVersion } from "@/lib/ops/release";
 
@@ -61,6 +63,7 @@ export async function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="flex min-h-dvh min-w-0 flex-col">
+        <DemoBanner />
         <AppHeader
           user={{
             fullName: ctx.fullName,
@@ -104,7 +107,10 @@ export async function AppShell({ children }: { children: ReactNode }) {
       <MobileNav visibleKeys={navKeys} />
       <Announcer />
       <DraftKeeper userId={ctx.userId} />
-      {session ? <SessionTimer deadline={session.deadline} serverNow={session.now} /> : null}
+      {/* La demostración es una instantánea estática: sin cierre por tiempo. */}
+      {session && !IS_DEMO ? (
+        <SessionTimer deadline={session.deadline} serverNow={session.now} />
+      ) : null}
     </div>
   );
 }

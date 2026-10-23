@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Workia · Demostración</title>
+    <link rel="icon" href="__BASE__/icons/icon.svg" type="image/svg+xml" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f6f7f4;
+        --fg: #1f2a24;
+        --muted: #5b675f;
+        --card: #fff;
+        --accent: #4f6f52;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #141815;
+          --fg: #e8ece8;
+          --muted: #a3ada5;
+          --card: #1d221e;
+          --accent: #8fb093;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font:
+          16px/1.55 system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+      }
+      main {
+        max-width: 46rem;
+        margin: 0 auto;
+        padding: 2.5rem 1rem 3rem;
+      }
+      .logo {
+        width: 14rem;
+        max-width: 70%;
+        height: auto;
+        display: block;
+        margin-bottom: 1.5rem;
+      }
+      h1 {
+        font-size: 1.75rem;
+        margin: 0 0 0.5rem;
+      }
+      p {
+        margin: 0 0 1rem;
+        color: var(--muted);
+      }
+      .note {
+        background: #fef3c7;
+        color: #78350f;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        font-weight: 500;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin: 1.5rem 0 2rem;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+        padding: 0 1.25rem;
+        border-radius: 0.75rem;
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .primary {
+        background: var(--accent);
+        color: #fff;
+      }
+      .secondary {
+        border: 1px solid var(--muted);
+        color: var(--fg);
+      }
+      ul {
+        padding-left: 1.25rem;
+        color: var(--muted);
+      }
+      li {
+        margin-bottom: 0.35rem;
+      }
+      h2 {
+        font-size: 1.15rem;
+        margin: 2rem 0 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img
+        class="logo"
+        src="__BASE__/brand/workia-logo-vgreen.svg"
+        alt="Workia"
+        width="1480"
+        height="330"
+      />
+      <h1>Demostración de Workia</h1>
+      <p>
+        Control horario, vacaciones y ausencias, y gastos comerciales para las empresas del grupo.
+        Esta demostración muestra __PAGES__ pantallas reales de la aplicación, vistas por una
+        persona de administración de una empresa ficticia («Alfa Servicios Demo»).
+      </p>
+      <p class="note">
+        Todos los datos son ficticios. Puedes navegar por menús y pantallas, pero los formularios no
+        guardan cambios: no hay servidor ni base de datos detrás.
+      </p>
+      <div class="actions">
+        <a class="btn primary" href="__BASE__/panel/">Entrar en la demostración</a>
+        <a class="btn secondary" href="__BASE__/acceder/">Ver la pantalla de acceso</a>
+        <a class="btn secondary" href="__BASE__/ayuda/">Manual de uso</a>
+      </div>
+      <h2>Qué puedes ver</h2>
+      <ul>
+        <li>Fichajes, historial y revisión de correcciones.</li>
+        <li>Vacaciones y ausencias, con la bandeja de aprobación.</li>
+        <li>Gastos con ticket, informes mensuales y contabilidad.</li>
+        <li>Equipo, informes, auditoría y avisos.</li>
+        <li>Administración de la empresa, incluida la configuración de la sesión.</li>
+        <li>Ayuda con el manual por apartados y el historial de novedades.</li>
+      </ul>
+      <h2>Qué no hace la demostración</h2>
+      <ul>
+        <li>No guarda cambios ni envía correos.</li>
+        <li>No descarga archivos (exportaciones, tickets, justificantes).</li>
+        <li>
+          No cambia de persona ni de empresa: se ve como administración de la empresa de ejemplo.
+        </li>
+      </ul>
+    </main>
+  </body>
+</html>

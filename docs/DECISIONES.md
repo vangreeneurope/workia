@@ -891,3 +891,25 @@ cerrar la sesión a mano.
 dispositivo»: en un dispositivo compartido, el texto escrito permanece hasta 24 horas si la sesión
 vence sin cerrarla a mano. Queda registrada en docs/PENDIENTES_LEGALES.md para su revisión; un campo
 especialmente sensible debe marcarse con `data-sin-borrador`.
+
+## ADR-070 · Demostración navegable en GitHub Pages
+
+**Fecha**: 2026-10-23 · **Estado**: aceptada
+
+**Contexto**: la organización publica sus demostraciones en GitHub Pages, que solo sirve archivos
+estáticos. Workia necesita servidor (Server Components, Server Actions, proxy, tareas), así que la
+aplicación real no puede ejecutarse allí.
+
+**Decisión**: una demostración estática, separada de cualquier entorno real. El workflow `Demo`
+(`.github/workflows/demo.yml`, en cada push a `main`) construye la app en modo demo
+(`DEMO_BUILD=1`, ruta base `/workia`), arranca el entorno E2E con las semillas SINTÉTICAS (PostgreSQL
+desechable, PostgREST y la pasarela de pruebas), recorre con peticiones GET las pantallas visibles
+para la cuenta de administración de la empresa ficticia y publica el resultado en
+`vangreeneurope.github.io/workia`. En modo demo se muestra una franja de «datos ficticios», no se
+instala el service worker ni se cierra la sesión por tiempo, y `scripts/demo/demo.js` intercepta
+formularios y acciones con el aviso «los cambios no se guardan». Las descargas no se incluyen.
+
+**Consecuencias**: no es un entorno productivo ni real (CLAUDE.md, regla 13): no usa Supabase real,
+ni secretos, ni datos de personas. La demostración es pública aunque el repositorio sea privado (y
+GitHub Pages en un repositorio privado requiere un plan de pago de GitHub). Es una instantánea: se ve
+como administración de empresa y con los datos del día de la generación.
