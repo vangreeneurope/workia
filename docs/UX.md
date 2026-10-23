@@ -54,6 +54,10 @@ Se diseña primero para 360 px. La auditoría automática recorre todas las ruta
 - Teclado adecuado (`inputMode="decimal"` en importes y kilómetros, `numeric` en códigos y PIN,
   `type="email"`), autocompletado seguro (`username`, `current-password`, `new-password`,
   `one-time-code`; `off` en PIN, códigos y campos administrativos).
+- Autoguardado (ADR-069): lo escrito se guarda en el dispositivo mientras se escribe y se recupera
+  al volver a la pantalla con el aviso «Hemos recuperado el texto…» y la opción «Descartar». Nunca
+  contraseñas, PIN ni códigos; un campo sensible se excluye con `data-sin-borrador`.
+- Sesión (ADR-067): aviso 5 minutos antes del cierre por tiempo máximo y explicación en el acceso.
 - Estado pendiente: el botón de envío se desactiva, muestra un indicador y anuncia «enviando» a
   los lectores de pantalla mientras espera; un doble toque no envía dos veces.
 

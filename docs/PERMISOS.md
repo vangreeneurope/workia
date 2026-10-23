@@ -193,6 +193,10 @@ Permisos de horarios (`my_schedule_access`, ADR-030): administración de empresa
 gestionan (`schedule.manage`) y leen; auditoría solo lee; el manager ve los horarios publicados de
 quien supervisa sin permiso de gestión. Detalle en [HORARIOS.md](HORARIOS.md).
 
+Administración › Configuración (duración de la sesión, ADR-067): `company.manage` con ámbito de
+empresa (administración de empresa) o administración del grupo, con MFA. Ayuda (`/ayuda`) y
+Novedades (`/novedades`) están disponibles para cualquier persona con sesión.
+
 ## 7. Cómo se aplica
 
 1. **Proxy**: sin sesión, cualquier ruta privada redirige a `/acceder`.

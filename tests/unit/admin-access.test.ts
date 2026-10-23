@@ -38,11 +38,22 @@ describe("áreas de administración", () => {
       "avisos",
       // Con gestión de personas de empresa, privacidad (derechos, retenciones y soporte).
       "privacidad",
+      // Quien gestiona la empresa: ajustes como la duración de la sesión (ADR-067).
+      "configuracion",
     ]);
   });
 
   it("la administración de grupo sí", () => {
     expect(canUseArea("empresas", [], { groupAdmin: true })).toBe(true);
+    expect(canUseArea("configuracion", [], { groupAdmin: true })).toBe(true);
+  });
+
+  it("configuración: solo quien gestiona la empresa, no RR. HH. ni un ámbito parcial", () => {
+    const hr = ["members.read", "members.manage", "employees.manage"].map((p) => perm(p));
+    expect(canUseArea("configuracion", hr, { groupAdmin: false })).toBe(false);
+    expect(
+      canUseArea("configuracion", [perm("company.manage", "work_center")], { groupAdmin: false }),
+    ).toBe(false);
   });
 
   it("RR. HH. de un centro gestiona personas de su ámbito, pero no cuentas ni centros", () => {

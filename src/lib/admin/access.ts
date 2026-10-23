@@ -29,7 +29,8 @@ export type AdminArea =
   | "ausencias"
   | "gastos"
   | "avisos"
-  | "privacidad";
+  | "privacidad"
+  | "configuracion";
 
 export const ADMIN_AREAS: { key: AdminArea; label: string; href: string; description: string }[] = [
   {
@@ -118,6 +119,12 @@ export const ADMIN_AREAS: { key: AdminArea; label: string; href: string; descrip
     description:
       "Solicitudes de derechos, retenciones legales, plazos de conservación y acceso de soporte.",
   },
+  {
+    key: "configuracion",
+    label: "Configuración",
+    href: "/admin/configuracion",
+    description: "Duración máxima de la sesión y otros ajustes de la empresa.",
+  },
 ];
 
 export function hasPermission(
@@ -166,6 +173,9 @@ export function canUseArea(
     case "privacidad":
       // Gestión de personas con ámbito de empresa (como en la base de datos).
       return hasPermission(permissions, "employees.manage", "company");
+    case "configuracion":
+      // Ajustes de toda la empresa: quien la gestiona (como companies_update en la base).
+      return options.groupAdmin || hasPermission(permissions, "company.manage", "company");
   }
 }
 

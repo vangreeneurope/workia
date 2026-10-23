@@ -22,6 +22,16 @@ versión se mueve a su sección con la fecha y se crea la etiqueta `vX.Y.Z` (doc
 - Copias y restauración documentadas y prueba de restauración local
   (docs/COPIAS_Y_RESTAURACION.md).
 - Lista de release y piloto (docs/RELEASE.md) e informe de preparación (docs/PREPARACION_PILOTO.md).
+- Versión visible `vAA.N` calculada al publicar (acceso, menú lateral y menú de usuario en móvil) y
+  expuesta en `/api/salud` como `release` (ADR-066).
+- Cierre automático de la sesión a los 60 minutos de entrar, con aviso 5 minutos antes, cierre
+  inmediato al volver a una pestaña antigua y duración configurable por empresa en Administración ›
+  Configuración (migración `20261102100000_sesion_y_novedades`, ADR-067).
+- Novedades: icono en la cabecera, historial por versión con «Antes» y «Ahora, paso a paso» y aviso
+  al entrar tras una actualización (ADR-068).
+- Autoguardado del texto de los formularios en el dispositivo, recuperable al volver a entrar
+  (ADR-069).
+- Ayuda: landing y manual de uso por apartados en `/ayuda`.
 
 ### Cambiado
 

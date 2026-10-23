@@ -280,6 +280,22 @@ anteriores con sesión real (excepción a la regla de CLAUDE.md, registrada aqu�
   validación de contenido), QA-06 (supervisión entre empresas, decisión de producto), entre otros.
 - Marca: la aplicación se llama Workia (logotipo recreado en vector).
 
+### Versión, sesión, novedades y ayuda (2026-10-23)
+
+- Versión visible `vAA.N` calculada desde git al construir (ADR-066): bajo el acceso, al pie del
+  menú lateral, en el menú de usuario en móvil y en `/api/salud` (`release`).
+- Cierre de la sesión a los N minutos de entrar (60 por defecto), con aviso 5 minutos antes y
+  cierre inmediato en pestañas antiguas; N por empresa en Administración › Configuración
+  (ADR-067, migración `20261102100000_sesion_y_novedades`, pruebas `93_sesion_y_novedades`).
+- Novedades en `src/content/novedades.ts` con su versión calculada, icono en la cabecera y aviso al
+  entrar tras una actualización, recordado por persona (ADR-068).
+- Autoguardado de formularios en el dispositivo (24 h, sin contraseñas ni PIN), pendiente de
+  revisión de privacidad (ADR-069, PENDIENTES_LEGALES 23).
+- Ayuda en `/ayuda`: landing y manual de uso y formación por apartados (`src/content/ayuda.ts`).
+- Supabase de producción (`rbzhhqhiuggzkmrjxnxc`): aplicadas las migraciones 1 a 3 con el conector;
+  las 4 a 15 se entregan en un archivo SQL probado en local para aplicarlas en el editor SQL
+  (el conector cortaba las peticiones grandes). La migración 16 se aplica después del mismo modo.
+
 ## 2. Resultados de verificación (2026-10-23)
 
 | Verificación               | Comando                                           | Resultado                                                                                                                                  |
@@ -287,7 +303,7 @@ anteriores con sesión real (excepción a la regla de CLAUDE.md, registrada aqu�
 | Tipos                      | `npm run typecheck`                               | Sin errores                                                                                                                                |
 | Lint                       | `npm run lint`                                    | 0 errores, 0 avisos                                                                                                                        |
 | Formato                    | `npm run format:check`                            | Correcto                                                                                                                                   |
-| Unitarias                  | `npm test`                                        | 27 archivos, 303 pruebas superadas (incluidas regresiones de la auditoría QA)                                                              |
+| Unitarias                  | `npm test`                                        | 31 archivos, 329 pruebas superadas (incluidas versión, sesión, borradores, novedades y ayuda)                                              |
 | Aislamiento multiempresa   | `npm run test:db` → `10_aislamiento_multiempresa` | 134 aserciones superadas                                                                                                                   |
 | Integridad y escalada      | `npm run test:db` → `20_integridad_y_escalada`    | 26 aserciones superadas                                                                                                                    |
 | Semillas sintéticas        | `npm run test:db` → `30_seed_sintetico`           | 24 aserciones superadas                                                                                                                    |
@@ -301,6 +317,7 @@ anteriores con sesión real (excepción a la regla de CLAUDE.md, registrada aqu�
 | Informes                   | `npm run test:db` → `96_informes`                 | 75 aserciones superadas (ámbito por rol, equivalencia con RLS, conciliación, exportaciones)                                                |
 | Escáner de catálogo        | `npm run test:db` → `97_seguridad_catalogo`       | 24 comprobaciones sin hallazgos (RLS, privilegios, funciones, vistas, buckets, políticas)                                                  |
 | Seguridad y privacidad     | `npm run test:db` → `98_privacidad`               | 92 aserciones (MFA, soporte, evidencias, frecuencia, retención simulada y reversible, derechos)                                            |
+| Sesión y novedades         | `npm run test:db` → `93_sesion_y_novedades`       | 20 aserciones: valor por empresa y el más corto, membresía caducada, quién lo cambia (MFA), rango y novedades vistas solo propias          |
 | Observabilidad             | `npm run test:db` → `94_observabilidad`           | 8 aserciones: solo `service_role`, agregados sin identificadores, colas y tareas                                                           |
 | Rendimiento                | `npm run test:db` → `99_rendimiento`              | 14 aserciones: índices usados y páginas de 7 a 120 ms con 12 000 jornadas y 60 000 eventos                                                 |
 | Concurrencia               | `npm run test:db` → `test-db-concurrency.sh`      | 9 escenarios con dos sesiones simultáneas (saldo, ticket, OCR, cierre contable y trabajadores de avisos)                                   |

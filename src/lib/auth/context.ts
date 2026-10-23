@@ -32,7 +32,7 @@ export type MembershipRow = Validity & {
 
 export type ContextInput = {
   userId: string;
-  profile: { email: string; full_name: string } | null;
+  profile: { email: string; full_name: string; last_seen_release?: string | null } | null;
   isPlatformAdmin: boolean;
   groupAdmins: (Validity & { group_id: string })[];
   memberships: MembershipRow[];
@@ -87,6 +87,7 @@ export function assembleUserContext(input: ContextInput): UserContext {
     userId: input.userId,
     email: input.profile?.email ?? "",
     fullName: input.profile?.full_name ?? "",
+    lastSeenRelease: input.profile?.last_seen_release ?? null,
     isGlobalAdmin: input.isPlatformAdmin,
     administeredGroupIds,
     administeredCompanyIds: administeredCompanies.map((c) => c.id),

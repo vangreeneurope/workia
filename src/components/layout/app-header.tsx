@@ -1,4 +1,4 @@
-import { Bell } from "lucide-react";
+import { Bell, CircleHelp, Gift } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -6,14 +6,23 @@ import { CompanySwitcher } from "./company-switcher";
 import { UserMenu } from "./user-menu";
 
 type AppHeaderProps = {
-  user: { fullName: string; email: string; isGlobalAdmin: boolean };
+  user: { fullName: string; email: string; isGlobalAdmin: boolean; version: string | null };
   companies: { id: string; name: string }[];
   activeCompanyId: string | null;
   brand: ReactNode;
   unread?: number;
+  /** Hay novedades que la persona aún no ha visto. */
+  newsPending?: boolean;
 };
 
-export function AppHeader({ user, companies, activeCompanyId, brand, unread = 0 }: AppHeaderProps) {
+export function AppHeader({
+  user,
+  companies,
+  activeCompanyId,
+  brand,
+  unread = 0,
+  newsPending = false,
+}: AppHeaderProps) {
   return (
     <header className="bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-0 z-40 border-b pt-[env(safe-area-inset-top)] backdrop-blur">
       <a
@@ -28,6 +37,25 @@ export function AppHeader({ user, companies, activeCompanyId, brand, unread = 0 
         {companies.length > 1 ? (
           <CompanySwitcher companies={companies} activeCompanyId={activeCompanyId} />
         ) : null}
+        <Link
+          href="/ayuda"
+          aria-label="Ayuda y manual de uso"
+          title="Ayuda"
+          className="hover:bg-accent inline-flex size-11 items-center justify-center rounded-full"
+        >
+          <CircleHelp className="size-5" aria-hidden />
+        </Link>
+        <Link
+          href="/novedades"
+          aria-label={newsPending ? "Novedades: hay cambios nuevos" : "Novedades"}
+          title="Novedades"
+          className="hover:bg-accent relative inline-flex size-11 items-center justify-center rounded-full"
+        >
+          <Gift className="size-5" aria-hidden />
+          {newsPending ? (
+            <span className="bg-primary absolute top-2 right-2 size-2.5 rounded-full" aria-hidden />
+          ) : null}
+        </Link>
         <Link
           href="/avisos"
           aria-label={unread > 0 ? `Avisos: ${unread} sin leer` : "Avisos"}

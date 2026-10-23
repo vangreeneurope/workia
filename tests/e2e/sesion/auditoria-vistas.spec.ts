@@ -56,6 +56,10 @@ const ROUTES: Record<string, { user: string | null; paths: string[] }> = {
       "/perfil/contrasena",
       "/perfil/privacidad",
       "/perfil/seguridad",
+      "/ayuda",
+      "/ayuda/primeros-pasos",
+      "/ayuda/gastos",
+      "/novedades",
     ],
   },
   manager: {
@@ -104,6 +108,7 @@ const ROUTES: Record<string, { user: string | null; paths: string[] }> = {
       "/admin/personas/nueva",
       "/admin/gastos",
       "/admin/avisos",
+      "/admin/configuracion",
       "/auditoria",
       "/informes/gastos",
       "/informes/horas-y-descansos",

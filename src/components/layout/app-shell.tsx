@@ -2,15 +2,21 @@ import { ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 
-import { getCompanyLogoUrl, getUserContext } from "@/lib/auth/dal";
+import { AppVersion } from "@/components/app-version";
+import { getCompanyLogoUrl, getSessionDeadline, getUserContext } from "@/lib/auth/dal";
 import { createClient } from "@/lib/supabase/server";
 import { brandForeground, mfaPending, safeBrandColor } from "@/lib/auth/permissions";
+import { novedadesSinVer, ultimaVersionConNovedades } from "@/features/novedades/catalog";
+import { NovedadesAviso } from "@/features/novedades/components/novedades-aviso";
 import { visibleNavKeys } from "@/lib/navigation";
+import { appVersion } from "@/lib/ops/release";
 
 import { Announcer } from "./announcer";
 import { AppHeader } from "./app-header";
 import { CompanyBrand } from "./company-brand";
+import { DraftKeeper } from "./draft-keeper";
 import { MobileNav } from "./mobile-nav";
+import { SessionTimer } from "./session-timer";
 import { SidebarNav } from "./sidebar-nav";
 
 /**
@@ -23,6 +29,10 @@ export async function AppShell({ children }: { children: ReactNode }) {
   const logoUrl = await getCompanyLogoUrl(activeCompany?.logoPath ?? null);
   const brand = safeBrandColor(activeCompany?.primaryColor);
   const navKeys = visibleNavKeys(ctx);
+  const session = await getSessionDeadline();
+  // Novedades publicadas que la persona aún no ha visto (aviso tras actualizar).
+  const unseenNews = novedadesSinVer(ctx.lastSeenRelease);
+  const latestNews = ultimaVersionConNovedades();
   // Avisos sin leer de la empresa activa (RLS: solo los propios).
   let unread = 0;
   if (ctx.activeCompanyId) {
@@ -47,14 +57,21 @@ export async function AppShell({ children }: { children: ReactNode }) {
           <CompanyBrand name={activeCompany?.name ?? "Workia"} logoUrl={logoUrl} />
         </div>
         <SidebarNav visibleKeys={navKeys} />
+        <AppVersion className="text-sidebar-muted border-t border-white/10 px-4 py-3" />
       </aside>
 
       <div className="flex min-h-dvh min-w-0 flex-col">
         <AppHeader
-          user={{ fullName: ctx.fullName, email: ctx.email, isGlobalAdmin: ctx.isGlobalAdmin }}
+          user={{
+            fullName: ctx.fullName,
+            email: ctx.email,
+            isGlobalAdmin: ctx.isGlobalAdmin,
+            version: appVersion(),
+          }}
           companies={ctx.companies.map(({ id, name }) => ({ id, name }))}
           activeCompanyId={ctx.activeCompanyId}
           unread={unread}
+          newsPending={unseenNews.length > 0}
           brand={<CompanyBrand name={activeCompany?.name ?? "Workia"} logoUrl={logoUrl} />}
         />
         <main
@@ -77,12 +94,17 @@ export async function AppShell({ children }: { children: ReactNode }) {
               </span>
             </p>
           ) : null}
+          {unseenNews.length > 0 && latestNews ? (
+            <NovedadesAviso version={latestNews} titulos={unseenNews.map((n) => n.titulo)} />
+          ) : null}
           {children}
         </main>
       </div>
 
       <MobileNav visibleKeys={navKeys} />
       <Announcer />
+      <DraftKeeper userId={ctx.userId} />
+      {session ? <SessionTimer deadline={session.deadline} serverNow={session.now} /> : null}
     </div>
   );
 }

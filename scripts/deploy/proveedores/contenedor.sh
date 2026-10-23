@@ -19,6 +19,7 @@ desplegar() {
     --build-arg NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY \
     --build-arg NEXT_PUBLIC_SITE_URL \
     --build-arg APP_COMMIT \
+    --build-arg APP_RELEASE_INFO \
     --label "org.opencontainers.image.revision=$APP_COMMIT" \
     --label "org.opencontainers.image.source=${GITHUB_SERVER_URL:-}/${GITHUB_REPOSITORY:-}" \
     --tag "$tag" . >&2
