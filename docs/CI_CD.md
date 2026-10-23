@@ -154,6 +154,10 @@ gestor de secretos del **hosting**; GitHub solo guarda lo que el workflow necesi
 | `DEPLOY_URL`, `CONTAINER_IMAGE`        | Variable | Según el adaptador de despliegue                |
 | `DEPLOY_HOOK_URL`                      | Secreto  | Opcional, según el adaptador                    |
 
+**Versión visible** (ADR-066): los jobs que construyen la app usan `fetch-depth: 0` y el despliegue
+pasa `APP_RELEASE_INFO` (salida de `node scripts/version.mjs`) al build y a la imagen de contenedor,
+que no lleva `.git`. No es un secreto.
+
 **GitHub › Repository variables**: `DEPLOY_PROVIDER` (vacío = no se despliega) y
 `SUPABASE_PRODUCTION_REF`.
 

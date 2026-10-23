@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { HOME_PATH, LOGIN_PATH, isMachinePath, isPublicPath } from "@/lib/auth/routes";
+import { SESSION_EXPIRED_REASON } from "@/lib/auth/session-limit";
 import { getPublicEnv } from "@/lib/env";
 import { AUTH_COOKIE_OPTIONS, REQUEST_ID_PATTERN } from "@/lib/supabase/cookies";
 import type { Database } from "@/types/database";
@@ -56,8 +57,20 @@ export async function updateSession(request: NextRequest) {
   // No insertar código entre createServerClient y getClaims: getClaims valida
   // el JWT y, si ha caducado, lo refresca escribiendo las cookies nuevas.
   const { data } = await supabase.auth.getClaims();
-  const isAuthenticated = Boolean(data?.claims?.sub);
+  let isAuthenticated = Boolean(data?.claims?.sub);
   const { pathname, search } = request.nextUrl;
+
+  // Sesión vencida por duración máxima (ADR-067): la capa de datos manda aquí y
+  // el proxy la cierra en este dispositivo (revoca el refresco y borra cookies)
+  // antes de mostrar el acceso, en lugar de devolver a la persona al panel.
+  if (
+    isAuthenticated &&
+    pathname === LOGIN_PATH &&
+    request.nextUrl.searchParams.get("motivo") === SESSION_EXPIRED_REASON
+  ) {
+    await supabase.auth.signOut({ scope: "local" });
+    isAuthenticated = false;
+  }
 
   if (!isAuthenticated && !isPublicPath(pathname) && !isMachinePath(pathname)) {
     const url = request.nextUrl.clone();

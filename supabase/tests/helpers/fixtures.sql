@@ -191,3 +191,9 @@ insert into public.report_exports (company_id, requested_by, report_key, format,
 insert into public.data_subject_requests (company_id, employee_id, requested_by, kind, idempotency_key) values
   ('aaaaaaaa-0000-0000-0000-000000000001', 'e0000000-0000-0000-0000-000000000007',
    '00000000-0000-0000-0000-000000000007', 'access', 'a8000000-0000-4000-8000-000000000001');
+
+-- Sesión y novedades: la empresa B cierra la sesión a los 30 minutos y E1 ya vio
+-- las novedades de v26.1 (las pruebas de reversión comprueban que no se pierden
+-- datos sin autorización).
+update public.companies set session_max_minutes = 30 where id = 'bbbbbbbb-0000-0000-0000-000000000002';
+update public.profiles set last_seen_release = 'v26.1' where id = '00000000-0000-0000-0000-000000000007';

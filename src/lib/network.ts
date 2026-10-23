@@ -1,11 +1,18 @@
 import { unstable_rethrow } from "next/navigation";
 
 import { announce, hasAnnouncer } from "./announcer";
+import { FORM_SUCCESS_EVENT } from "./drafts";
 import type { FormState } from "./forms";
 
-/** Un éxito con mensaje se anuncia en el avisador global (si lo hay). */
+/**
+ * Un éxito con mensaje se anuncia en el avisador global (si lo hay) y todo
+ * éxito borra el borrador del formulario enviado (src/lib/drafts.ts).
+ */
 function announceSuccess<S extends FormState>(result: S): S {
   if (result.status === "success" && result.message && hasAnnouncer()) announce(result.message);
+  if (result.status === "success" && typeof window !== "undefined") {
+    window.dispatchEvent(new Event(FORM_SUCCESS_EVENT));
+  }
   return result;
 }
 

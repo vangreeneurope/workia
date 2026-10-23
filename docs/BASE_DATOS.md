@@ -302,6 +302,10 @@ y `support_staff`. Secuencias y privilegios por defecto sin `anon` ni `authentic
   motivos, notas, comentarios, proveedor, coordenadas y selfies sustituidos por `[dato personal]`. Las exportaciones guardan solo número de filas y
   filtros (nunca el texto buscado).
 - Bucket privado `company-logos` (ruta `<company_id>/…`, URL firmada de 1 hora).
+- `companies.session_max_minutes` (15 a 720, 60 por defecto; la cambia `company.manage`) y
+  `public.my_session_limit()`, el valor más corto de las empresas con membresía vigente de quien
+  llama (ADR-067). `profiles.last_seen_release`: última versión de novedades vista, editable solo
+  por la propia persona (ADR-068).
 
 ## 4. Funciones de autorización (`private`)
 

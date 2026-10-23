@@ -5,7 +5,7 @@
 
 ## Contrato
 
-- Recibe el entorno (`preview`, `staging` o `production`) y dispone de `APP_ENV`, `APP_COMMIT`,
+- Recibe el entorno (`preview`, `staging` o `production`) y dispone de `APP_ENV`, `APP_COMMIT`, `APP_RELEASE_INFO` (versión vAA.N),
   `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` y `NEXT_PUBLIC_SITE_URL`.
 - Construye la app para ese entorno (las `NEXT_PUBLIC_*` se fijan en el build, así que cada entorno
   tiene su build del mismo commit) y la publica.

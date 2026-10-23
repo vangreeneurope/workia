@@ -1,8 +1,9 @@
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Clock } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 
+import { AppVersion } from "@/components/app-version";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,6 +13,11 @@ export const metadata: Metadata = { title: "Acceder" };
 
 const ERROR_MESSAGES: Record<string, string> = {
   enlace: "El enlace no es válido o ha caducado. Solicita uno nuevo.",
+};
+
+const REASON_MESSAGES: Record<string, string> = {
+  caducada:
+    "Tu sesión se ha cerrado porque ha pasado el tiempo máximo de conexión. Vuelve a entrar: el texto que estabas escribiendo sigue guardado en este dispositivo.",
 };
 
 export default function AccederPage({ searchParams }: PageProps<"/acceder">) {
@@ -45,6 +51,7 @@ export default function AccederPage({ searchParams }: PageProps<"/acceder">) {
         <p className="text-muted-foreground text-center text-xs">
           Las cuentas las crea el departamento de RR. HH. de tu empresa.
         </p>
+        <AppVersion className="text-muted-foreground text-center" />
       </CardContent>
     </Card>
   );
@@ -59,9 +66,17 @@ async function LoginWithParams({
   const siguiente = typeof params.siguiente === "string" ? params.siguiente : undefined;
   const errorKey = typeof params.error === "string" ? params.error : undefined;
   const errorMessage = errorKey ? ERROR_MESSAGES[errorKey] : undefined;
+  const reasonKey = typeof params.motivo === "string" ? params.motivo : undefined;
+  const reasonMessage = reasonKey ? REASON_MESSAGES[reasonKey] : undefined;
 
   return (
     <>
+      {reasonMessage ? (
+        <Alert role="status">
+          <Clock />
+          <AlertDescription>{reasonMessage}</AlertDescription>
+        </Alert>
+      ) : null}
       {errorMessage ? (
         <Alert variant="destructive">
           <AlertCircle />

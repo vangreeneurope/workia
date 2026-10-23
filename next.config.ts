@@ -3,6 +3,8 @@ import { readdirSync, readFileSync } from "node:fs";
 
 import type { NextConfig } from "next";
 
+import { releaseInfoForBuild } from "./scripts/version.mjs";
+
 const isDev = process.env.NODE_ENV !== "production";
 
 /**
@@ -28,8 +30,12 @@ function buildInfo() {
       .sort()
       .at(-1)
       ?.replace(/\.sql$/, "") ?? "ninguna";
+  // Versión visible vAA.N y versión de cada novedad (scripts/version.mjs, ADR-066).
+  const release = releaseInfoForBuild();
   return {
     BUILD_VERSION: version,
+    BUILD_RELEASE: release.version,
+    BUILD_NOVEDADES: JSON.stringify(release.novedades),
     BUILD_COMMIT: /^[0-9a-f]{7,40}$/.test(commit) ? commit : "desconocido",
     BUILD_MIGRATION: migration,
   };

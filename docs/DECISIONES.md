@@ -823,3 +823,71 @@ lógico se ensaya en local con `npm run ops:prueba-restauracion` (datos sintéti
 
 **Consecuencias**: hasta decidir la copia de Storage (PENDIENTES_LEGALES, 16), perder archivos no es
 recuperable. La restauración en Supabase queda pendiente de ensayar con el proyecto real.
+
+## ADR-066 · Versión visible `vAA.N` calculada desde git
+
+**Fecha**: 2026-10-23 · **Estado**: aceptada
+
+**Decisión**: la versión que ve la persona (bajo el formulario de acceso, al pie del menú lateral y,
+en el móvil, en el menú de usuario) es `vAA.N`: «v», el año en dos cifras (hora de Madrid) del commit
+publicado y el número de commits de ese año en su historia, incluido él. Cada commit suma uno y el
+1 de enero vuelve a empezar. La calcula `scripts/version.mjs` al construir; sin historia completa
+(copia superficial o imagen sin `.git`) se usa `APP_RELEASE_INFO`, que el workflow de despliegue
+genera con el mismo script, y si tampoco existe no se muestra ninguna versión (nunca una inventada).
+`/api/salud` la expone como `release`. La versión SemVer de `package.json` y las etiquetas `vX.Y.Z`
+siguen siendo las de release (docs/RELEASE.md).
+
+**Consecuencias**: los jobs que construyen la app (CI y despliegue) necesitan `fetch-depth: 0`. La
+versión depende de la historia de `main`: reescribirla cambiaría los números (la protección de
+`main` ya lo impide).
+
+## ADR-067 · Duración máxima de la sesión por empresa
+
+**Fecha**: 2026-10-23 · **Estado**: aceptada
+
+**Decisión**: la sesión se cierra siempre N minutos después de entrar, aunque se esté usando (60
+por defecto, de 15 a 720). N se guarda por empresa (`companies.session_max_minutes`), lo cambia
+quien gestiona la empresa en Administración › Configuración y a quien tiene varias empresas se le
+aplica el más corto (`public.my_session_limit()`). El inicio sale del JWT validado: la marca más
+antigua de `amr`, que no cambia al refrescar el token. La capa de acceso a datos trata una sesión
+vencida como inexistente y redirige a `/acceder?motivo=caducada`, donde el proxy la cierra en ese
+dispositivo (`signOut` local: revoca el refresco y borra las cookies) y explica el motivo. En el
+navegador, un aviso 5 minutos antes y el cierre a la hora; se comprueba al volver a la pestaña, de
+modo que una pestaña abierta desde ayer se cierra en el acto.
+
+**Alternativas**: el límite de sesión de Supabase Auth (time-box) es por proyecto, no por empresa, y
+depende del plan; puede activarse además como segunda barrera con el valor más alto permitido.
+
+**Consecuencias**: antes de los 15 minutos de sesión no se consulta la base; después, una llamada
+ligera por petición. El enlace `/acceder?motivo=caducada` cierra la sesión de quien lo abre (solo la
+propia). Un cambio del valor cuenta desde la siguiente página que se abra.
+
+## ADR-068 · Novedades en el código y aviso tras actualizar
+
+**Fecha**: 2026-10-23 · **Estado**: aceptada
+
+**Decisión**: las novedades para las personas usuarias viven en `src/content/novedades.ts`, en el
+mismo cambio que las introduce, con lenguaje de uso y, si cambia la forma de trabajar, «Antes» y
+«Ahora, paso a paso». Su versión no se escribe: es la del commit que añadió la novedad (búsqueda en
+git al construir). La cabecera tiene un icono de Novedades (con marca si hay algo sin ver) y, tras
+una actualización con novedades, aparece un aviso al entrar. Lo visto se guarda por persona
+(`profiles.last_seen_release`), así que no se repite en otros dispositivos.
+
+**Consecuencias**: cada actualización de `profiles` deja su fila en `audit_log` (una por persona y
+versión). Una versión sin novedades no genera aviso.
+
+## ADR-069 · Borradores de formularios en el navegador
+
+**Fecha**: 2026-10-23 · **Estado**: aceptada (revisión de privacidad pendiente)
+
+**Decisión**: para no perder lo escrito si la sesión se cierra, el texto de los formularios de la
+zona privada se guarda en `localStorage` mientras se escribe, por persona y formulario, y se
+recupera al volver a la pantalla con un aviso y la opción «Descartar». Se excluyen contraseñas, PIN,
+códigos de un solo uso, campos ocultos, de archivo y casillas, y cualquier campo dentro de
+`data-sin-borrador`. Los borradores caducan a las 24 horas, se borran al enviar con éxito y todos al
+cerrar la sesión a mano.
+
+**Consecuencias**: es una excepción acotada al requisito del PRD «sin datos personales en caché del
+dispositivo»: en un dispositivo compartido, el texto escrito permanece hasta 24 horas si la sesión
+vence sin cerrarla a mano. Queda registrada en docs/PENDIENTES_LEGALES.md para su revisión; un campo
+especialmente sensible debe marcarse con `data-sin-borrador`.

@@ -29,11 +29,13 @@ test("/api/salud identifica versión, commit, migración y entorno sin secretos"
     "commit",
     "environment",
     "migration",
+    "release",
     "status",
     "version",
   ]);
   expect(body.status).toBe("ok");
   expect(body.migration).toBe(latestMigration);
+  expect(body.release).toMatch(/^(v\d{2}\.\d+|desconocida)$/);
   expect(body.commit).toMatch(/^([0-9a-f]{7,40}|desconocido)$/);
   expect(JSON.stringify(body)).not.toMatch(/sb_|eyJ|secret|key/i);
 });

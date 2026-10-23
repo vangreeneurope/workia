@@ -1138,6 +1138,7 @@ export type Database = {
           logo_path: string | null;
           name: string;
           primary_color: string;
+          session_max_minutes: number;
           slug: string;
           status: Database["public"]["Enums"]["entity_status"];
           tax_id: string | null;
@@ -1152,6 +1153,7 @@ export type Database = {
           logo_path?: string | null;
           name: string;
           primary_color?: string;
+          session_max_minutes?: number;
           slug: string;
           status?: Database["public"]["Enums"]["entity_status"];
           tax_id?: string | null;
@@ -1166,6 +1168,7 @@ export type Database = {
           logo_path?: string | null;
           name?: string;
           primary_color?: string;
+          session_max_minutes?: number;
           slug?: string;
           status?: Database["public"]["Enums"]["entity_status"];
           tax_id?: string | null;
@@ -3251,6 +3254,7 @@ export type Database = {
           email: string;
           full_name: string;
           id: string;
+          last_seen_release: string | null;
           phone: string | null;
           updated_at: string;
         };
@@ -3259,6 +3263,7 @@ export type Database = {
           email: string;
           full_name?: string;
           id: string;
+          last_seen_release?: string | null;
           phone?: string | null;
           updated_at?: string;
         };
@@ -3267,6 +3272,7 @@ export type Database = {
           email?: string;
           full_name?: string;
           id?: string;
+          last_seen_release?: string | null;
           phone?: string | null;
           updated_at?: string;
         };
@@ -5147,6 +5153,7 @@ export type Database = {
         Args: { p_company: string };
         Returns: { action: string; scope_type: string; work_center_id: string; team_id: string }[];
       };
+      my_session_limit: { Args: Record<PropertyKey, never>; Returns: number };
       my_time_access: {
         Args: { p_company: string };
         Returns: { action: string; scope_type: string; work_center_id: string; team_id: string }[];

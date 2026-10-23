@@ -12,6 +12,14 @@ import {
   type SectionKey,
   type UserContext,
 } from "@/lib/auth/permissions";
+import {
+  isExpired,
+  mayHaveExpired,
+  SESSION_EXPIRED_PATH,
+  sessionDeadline,
+  sessionMinutes,
+  sessionStartedAt,
+} from "@/lib/auth/session-limit";
 import { log } from "@/lib/log";
 import { createClient } from "@/lib/supabase/server";
 
@@ -27,17 +35,60 @@ export const ACTIVE_COMPANY_COOKIE = "empresa_activa";
 /** Página de seguridad de la cuenta (alta y verificación del segundo factor). */
 export const MFA_PATH = "/perfil/seguridad";
 
-export const getCurrentUserId = cache(async (): Promise<string | null> => {
+type SessionState = {
+  userId: string | null;
+  /** La sesión existía pero ha superado su duración máxima (ADR-067). */
+  expired: boolean;
+  /** Momento de entrada (ms) según el JWT validado; null si no se conoce. */
+  startedAt: number | null;
+};
+
+/** Minutos de sesión que se aplican a la persona (el más corto de sus empresas). */
+const getSessionMinutes = cache(async (): Promise<number> => {
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.getClaims();
-  if (error || !data?.claims?.sub) return null;
-  return data.claims.sub;
+  const { data, error } = await supabase.rpc("my_session_limit");
+  if (error) log.warn("auth.session_limit_failed", { code: error.code });
+  return sessionMinutes(error ? null : data);
 });
 
+/**
+ * Sesión validada (getClaims) y su vencimiento. Una sesión que ha superado la
+ * duración máxima cuenta como sin sesión en toda la capa de acceso a datos, y
+ * quien la pide va a SESSION_EXPIRED_PATH, donde el proxy la cierra.
+ */
+const getSessionState = cache(async (): Promise<SessionState> => {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getClaims();
+  if (error || !data?.claims?.sub) return { userId: null, expired: false, startedAt: null };
+  const startedAt = sessionStartedAt(data.claims);
+  const now = Date.now();
+  if (startedAt !== null && mayHaveExpired(startedAt, now)) {
+    if (isExpired(startedAt, await getSessionMinutes(), now)) {
+      log.info("auth.session_expired", {});
+      return { userId: null, expired: true, startedAt };
+    }
+  }
+  return { userId: data.claims.sub, expired: false, startedAt };
+});
+
+export const getCurrentUserId = cache(
+  async (): Promise<string | null> => (await getSessionState()).userId,
+);
+
 export async function requireUserId(): Promise<string> {
-  const userId = await getCurrentUserId();
-  if (!userId) redirect(LOGIN_PATH);
+  const { userId, expired } = await getSessionState();
+  if (!userId) redirect(expired ? SESSION_EXPIRED_PATH : LOGIN_PATH);
   return userId;
+}
+
+/**
+ * Hora límite de la sesión (ms desde epoch) y hora del servidor, para el aviso
+ * y el cierre en el navegador; null si el token no trae la hora de entrada.
+ */
+export async function getSessionDeadline(): Promise<{ deadline: number; now: number } | null> {
+  const { userId, startedAt } = await getSessionState();
+  if (!userId || startedAt === null) return null;
+  return { deadline: sessionDeadline(startedAt, await getSessionMinutes()), now: Date.now() };
 }
 
 const COMPANY_COLUMNS = "id, name, slug, primary_color, logo_path, status, group_id";
@@ -58,7 +109,11 @@ export const getUserContext = cache(async (): Promise<UserContext> => {
 
   const [profileRes, platformRes, groupAdminsRes, membershipsRes, assignmentsRes, mfaRes] =
     await Promise.all([
-      supabase.from("profiles").select("email, full_name").eq("id", userId).maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("email, full_name, last_seen_release")
+        .eq("id", userId)
+        .maybeSingle(),
       supabase.from("platform_admins").select("user_id").eq("user_id", userId).maybeSingle(),
       supabase.from("group_admins").select(`group_id, ${VALIDITY_COLUMNS}`).eq("user_id", userId),
       supabase

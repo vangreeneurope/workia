@@ -124,9 +124,15 @@ jobs:
         with:
           ref: ${{ needs.plan.outputs.sha }}
           persist-credentials: false
+          fetch-depth: 0 # versión vAA.N: commits del año (scripts/version.mjs)
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: .nvmrc
+      - name: Versión visible (vAA.N) para el build
+        run: |
+          info="$(node scripts/version.mjs)"
+          echo "APP_RELEASE_INFO=$info" >> "$GITHUB_ENV"
+          echo "::notice::Versión $(node -e 'console.log(JSON.parse(process.argv[1]).version || "desconocida")' "$info")"
       - name: Proveedor configurado
         id: proveedor
         env:
@@ -147,6 +153,7 @@ jobs:
           DEPLOY_PROVIDER: ${{ vars.DEPLOY_PROVIDER }}
           APP_ENV: ${{ needs.plan.outputs.entorno }}
           APP_COMMIT: ${{ needs.plan.outputs.sha }}
+          APP_RELEASE_INFO: ${{ env.APP_RELEASE_INFO }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
           NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}

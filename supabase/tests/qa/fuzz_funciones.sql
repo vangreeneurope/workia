@@ -167,7 +167,10 @@ select fn, string_agg(distinct split_part(outcome, ' ', 2) || ':' || left(detail
 from qa_calls where outcome like 'rechazada%' and attacker not like 'CONTROL%' group by fn order by fn;
 do $$ begin
   if exists (select 1 from qa_calls where outcome = 'devuelta' and attacker not like 'CONTROL%'
-      and detail not in ('0', 'false', '<null>', '[]', '{}', '') and fn not in ('my_mfa_status', 'support_staff')) then
+      and detail not in ('0', 'false', '<null>', '[]', '{}', '')
+      -- Sin parámetros y relativas a quien llama: su propio estado de MFA, el
+      -- personal de soporte y su propia duración de sesión (ADR-067).
+      and fn not in ('my_mfa_status', 'support_staff', 'my_session_limit')) then
     raise exception 'FUGA: una función SECURITY DEFINER devolvió datos de A a un atacante';
   end if;
   if (select fp from qa_fp where stage = 'antes') is distinct from (select fp from qa_fp where stage = 'después') then

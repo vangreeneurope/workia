@@ -51,6 +51,8 @@ export type UserContext = {
   userId: string;
   email: string;
   fullName: string;
+  /** Última versión cuyas novedades ha visto (ADR-068); null si ninguna. */
+  lastSeenRelease?: string | null;
   /** Administración de plataforma (platform_admins). */
   isGlobalAdmin: boolean;
   /** Grupos que administra con una asignación vigente (group_admins). */
