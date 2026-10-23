@@ -150,7 +150,9 @@ function write(level: LogLevel, event: string, fields?: Fields, alert = false) {
   const line = formatLog(level, event, fields, alert);
   if (level === "error") console.error(line);
   else if (level === "warn") console.warn(line);
-  else process.stdout.write(`${line}\n`);
+  // console.log (no process.stdout): también funciona en el runtime Edge (proxy e instrumentación).
+  // eslint-disable-next-line no-console -- único punto de escritura del registro (regla 14).
+  else console.log(line);
 }
 
 export const log = {

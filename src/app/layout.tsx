@@ -17,14 +17,14 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Portal del empleado",
-    template: "%s · Portal del empleado",
+    default: "Workia",
+    template: "%s · Workia",
   },
   description: "Control horario, vacaciones, ausencias y gastos del grupo.",
-  applicationName: "Portal del empleado",
+  applicationName: "Workia",
   appleWebApp: {
     capable: true,
-    title: "Portal",
+    title: "Workia",
     statusBarStyle: "default",
   },
   formatDetection: { telephone: false },

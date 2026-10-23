@@ -1,7 +1,9 @@
 # CLAUDE.md
 
 Guía para Claude Code (y para cualquier persona del equipo) al trabajar en este repositorio.
-Plataforma web multiempresa de control horario, vacaciones y ausencias, y gastos comerciales con OCR.
+**Workia** (by vgreen): plataforma web multiempresa de control horario, vacaciones y ausencias, y
+gastos comerciales con OCR. Logotipo en `public/brand/` (recreación vectorial; sustituir por el
+original cuando esté disponible).
 
 @AGENTS.md
 

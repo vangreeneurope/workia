@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "Portal del empleado",
-    short_name: "Portal",
+    name: "Workia",
+    short_name: "Workia",
     description: "Control horario, vacaciones, ausencias y gastos del grupo.",
     lang: "es-ES",
     start_url: "/panel",

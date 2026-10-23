@@ -1,4 +1,4 @@
-import { AlertCircle, Clock } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -18,11 +18,17 @@ export default function AccederPage({ searchParams }: PageProps<"/acceder">) {
   return (
     <Card>
       <CardHeader className="text-center">
-        <div className="bg-primary text-primary-foreground mx-auto mb-2 flex size-12 items-center justify-center rounded-xl">
-          <Clock className="size-6" aria-hidden />
-        </div>
+        {/* Logotipo (SVG estático en public/brand; no pasa por el optimizador de imágenes). */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/brand/workia-logo-vgreen.svg"
+          alt=""
+          width={1480}
+          height={330}
+          className="mx-auto mb-2 h-auto w-56"
+        />
         <CardTitle className="text-xl">
-          <h1>Portal del empleado</h1>
+          <h1 className="sr-only">Workia</h1>
         </CardTitle>
         <CardDescription>Accede con tu cuenta corporativa</CardDescription>
       </CardHeader>

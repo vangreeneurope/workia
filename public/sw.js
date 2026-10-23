@@ -5,8 +5,13 @@
  *   dispositivo compartido podría exponer datos personales de otra persona.
  * - Para navegaciones sin red, muestra /offline.html.
  */
-const CACHE = "portal-estatico-v1";
-const PRECACHE = ["/offline.html", "/icons/icon-192.png", "/icons/icon.svg"];
+const CACHE = "workia-estatico-v2";
+const PRECACHE = [
+  "/offline.html",
+  "/icons/icon-192.png",
+  "/icons/icon.svg",
+  "/brand/workia-logo.svg",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)));

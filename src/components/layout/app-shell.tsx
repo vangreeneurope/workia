@@ -44,7 +44,7 @@ export async function AppShell({ children }: { children: ReactNode }) {
     <div style={brandStyle} className="min-h-dvh md:grid md:grid-cols-[16rem_minmax(0,1fr)]">
       <aside className="from-sidebar to-sidebar-end text-sidebar-foreground sticky top-0 hidden h-dvh flex-col bg-linear-to-b md:flex">
         <div className="flex h-16 items-center border-b border-white/10 px-4">
-          <CompanyBrand name={activeCompany?.name ?? "Portal del empleado"} logoUrl={logoUrl} />
+          <CompanyBrand name={activeCompany?.name ?? "Workia"} logoUrl={logoUrl} />
         </div>
         <SidebarNav visibleKeys={navKeys} />
       </aside>
@@ -55,9 +55,7 @@ export async function AppShell({ children }: { children: ReactNode }) {
           companies={ctx.companies.map(({ id, name }) => ({ id, name }))}
           activeCompanyId={ctx.activeCompanyId}
           unread={unread}
-          brand={
-            <CompanyBrand name={activeCompany?.name ?? "Portal del empleado"} logoUrl={logoUrl} />
-          }
+          brand={<CompanyBrand name={activeCompany?.name ?? "Workia"} logoUrl={logoUrl} />}
         />
         <main
           id="contenido"

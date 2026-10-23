@@ -1,4 +1,6 @@
-# Portal del empleado del grupo
+# Workia
+
+Workia by vgreen: plataforma web multiempresa de control horario, vacaciones y ausencias, y gastos con OCR.
 
 Plataforma web multiempresa para el control horario, la gestión de vacaciones y ausencias y los
 gastos comerciales con OCR de tickets. Una sola aplicación para todas las empresas del grupo, cada

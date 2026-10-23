@@ -9,7 +9,7 @@ import { expect, test } from "@playwright/test";
 test("la raíz lleva a la pantalla de acceso sin sesión", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveURL(/\/acceder$/);
-  await expect(page.getByRole("heading", { name: "Portal del empleado" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Workia" })).toBeVisible();
 });
 
 test("una ruta protegida redirige conservando el destino", async ({ page }) => {
