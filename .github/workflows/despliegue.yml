@@ -90,7 +90,19 @@ jobs:
       - uses: supabase/setup-cli@1dedf2c611547ede7232d26866dd3c56ab903bbb # v1.7.3
         with:
           version: 2.120.0
+      - name: Supabase configurado en el entorno
+        id: supabase
+        env:
+          SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+        run: |
+          if [ -z "$SUPABASE_PROJECT_REF" ]; then
+            echo "::notice::El entorno no tiene SUPABASE_PROJECT_REF: no se migra (docs/CI_CD.md, § 6)."
+            echo "listo=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "listo=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Aplicar migraciones pendientes (una vez por entorno)
+        if: steps.supabase.outputs.listo == 'true'
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
@@ -137,10 +149,16 @@ jobs:
         id: proveedor
         env:
           DEPLOY_PROVIDER: ${{ vars.DEPLOY_PROVIDER }}
+          SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+          ENTORNO: ${{ needs.plan.outputs.entorno }}
         run: |
           if [ -z "$DEPLOY_PROVIDER" ]; then
             echo "::notice::Sin DEPLOY_PROVIDER: no hay hosting configurado, no se despliega (docs/CI_CD.md)."
             echo "listo=false" >> "$GITHUB_OUTPUT"
+          elif [ "$ENTORNO" != "preview" ] && [ -z "$SUPABASE_PROJECT_REF" ]; then
+            # Nunca se publica código en staging o producción sin migrar su base.
+            echo "::error::$ENTORNO tiene hosting pero no SUPABASE_PROJECT_REF: configúralo antes de desplegar."
+            exit 1
           else
             echo "listo=true" >> "$GITHUB_OUTPUT"
           fi
