@@ -114,9 +114,17 @@ const securityHeaders = [
       ]),
 ];
 
+/**
+ * Demostración estática en GitHub Pages (ADR-070): se sirve bajo la ruta del
+ * repositorio (/workia). Solo con DEMO_BUILD=1 (scripts/demo/build.sh).
+ */
+const demoBasePath =
+  process.env.DEMO_BUILD === "1" ? (process.env.DEMO_BASE_PATH ?? "/workia") : "";
+
 const nextConfig: NextConfig = {
   cacheComponents: true,
-  env: buildInfo(),
+  ...(demoBasePath ? { basePath: demoBasePath } : {}),
+  env: { ...buildInfo(), APP_BASE_PATH: demoBasePath, APP_DEMO: demoBasePath ? "1" : "" },
   // Imagen de contenedor portable (Dockerfile): servidor autónomo solo si se pide.
   ...(process.env.NEXT_OUTPUT === "standalone" ? { output: "standalone" as const } : {}),
   experimental: {

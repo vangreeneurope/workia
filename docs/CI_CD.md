@@ -209,3 +209,15 @@ mismo. `CHANGELOG.md` resume los cambios de cada versión.
 | Código    | Desplegar de nuevo el commit anterior con `workflow_dispatch` (su build es reproducible) |
 | Migración | § 4 (corrección hacia delante, reversión o restauración)                                 |
 | Datos     | docs/COPIAS_Y_RESTAURACION.md                                                            |
+
+## Demostración en GitHub Pages (ADR-070)
+
+El workflow `Demo` (`.github/workflows/demo.yml`) publica en cada push a `main` una demostración
+estática con datos ficticios en `https://vangreeneurope.github.io/workia/`. No usa secretos ni
+Supabase real: `scripts/demo/build.sh` construye la app en modo demo, arranca el entorno E2E con las
+semillas sintéticas y `scripts/demo/crawl.mjs` guarda cada pantalla. Para generarla en local:
+`DEMO_OUT=demo-out bash scripts/demo/build.sh`.
+
+Activación (una vez, por una persona administradora del repositorio): Settings › Pages › Build and
+deployment › Source: «GitHub Actions». En un repositorio privado, GitHub Pages exige un plan de pago
+de GitHub; el sitio publicado es público.

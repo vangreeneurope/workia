@@ -27,7 +27,7 @@ export default function AccederPage({ searchParams }: PageProps<"/acceder">) {
         {/* Logotipo (SVG estático en public/brand; no pasa por el optimizador de imágenes). */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/brand/workia-logo-vgreen.svg"
+          src={`${process.env.APP_BASE_PATH ?? ""}/brand/workia-logo-vgreen.svg`}
           alt=""
           width={1480}
           height={330}

@@ -32,6 +32,8 @@ versión se mueve a su sección con la fecha y se crea la etiqueta `vX.Y.Z` (doc
 - Autoguardado del texto de los formularios en el dispositivo, recuperable al volver a entrar
   (ADR-069).
 - Ayuda: landing y manual de uso por apartados en `/ayuda`.
+- Demostración navegable con datos ficticios en GitHub Pages (`vangreeneurope.github.io/workia`),
+  generada por el workflow `Demo` en cada cambio de `main` (ADR-070).
 
 ### Cambiado
 
