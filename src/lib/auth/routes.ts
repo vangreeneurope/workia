@@ -6,9 +6,16 @@ export const PUBLIC_PATHS = ["/acceder", "/auth/confirmar", "/auth/error", "/ter
  * Rutas de máquina (ADR-048): no tienen sesión de usuario y se autentican por sí
  * mismas: la tarea programada con CRON_SECRET y el webhook de correo con firma
  * HMAC. El proxy no las redirige al acceso; no son "públicas" para personas y
- * nunca sirven datos sin esa autenticación.
+ * nunca sirven datos sin esa autenticación. Las de salud (ADR-064) solo dan
+ * estados y la identidad del despliegue; las métricas exigen METRICS_TOKEN.
  */
-export const MACHINE_PATHS = ["/api/tareas", "/api/correo/webhook"] as const;
+export const MACHINE_PATHS = [
+  "/api/tareas",
+  "/api/correo/webhook",
+  "/api/salud",
+  "/api/salud/listo",
+  "/api/salud/metricas",
+] as const;
 
 export function isMachinePath(pathname: string): boolean {
   return MACHINE_PATHS.some((path) => pathname === path);

@@ -1,0 +1,107 @@
+{
+  "$comentario": "Panel operativo portable (docs/OBSERVABILIDAD.md): qué mostrar y de dónde sale. Cada panel se recrea en la herramienta elegida a partir de los registros JSON, ops_metrics y las métricas del hosting. Sin datos personales: solo recuentos, tasas y duraciones.",
+  "version": 1,
+  "filas": [
+    {
+      "titulo": "Disponibilidad",
+      "paneles": [
+        {
+          "titulo": "Vida y disponibilidad",
+          "fuente": "sonda",
+          "valor": "/api/salud y /api/salud/listo (checks.database, checks.login)"
+        },
+        {
+          "titulo": "Versión desplegada por entorno",
+          "fuente": "sonda",
+          "valor": "/api/salud: version, commit, migration, environment"
+        },
+        {
+          "titulo": "Peticiones y tasa de error 5xx",
+          "fuente": "hosting",
+          "valor": "peticiones/min y % 5xx"
+        },
+        { "titulo": "Latencia p50 y p95", "fuente": "hosting", "valor": "duración de peticiones" }
+      ]
+    },
+    {
+      "titulo": "Errores",
+      "paneles": [
+        {
+          "titulo": "Errores de aplicación por ruta",
+          "fuente": "registro",
+          "valor": "count(event = app.request_error) por route y route_type"
+        },
+        {
+          "titulo": "Eventos de seguridad",
+          "fuente": "registro",
+          "valor": "count(alert = true) por event"
+        }
+      ]
+    },
+    {
+      "titulo": "Tareas programadas y colas",
+      "paneles": [
+        {
+          "titulo": "Antigüedad de la última ejecución",
+          "fuente": "metricas",
+          "valor": "scheduler.last_run_age_s"
+        },
+        {
+          "titulo": "Pasos por resultado y duración",
+          "fuente": "registro",
+          "valor": "event = job.step: ok, duration_ms por job"
+        },
+        {
+          "titulo": "Trabajos de OCR",
+          "fuente": "metricas",
+          "valor": "jobs.pending, jobs.processing, jobs.stuck, jobs.oldest_pending_s"
+        },
+        {
+          "titulo": "Outbox de avisos",
+          "fuente": "metricas",
+          "valor": "outbox.pending, outbox.failed, outbox.oldest_pending_s"
+        },
+        {
+          "titulo": "Exportaciones de informes",
+          "fuente": "metricas",
+          "valor": "report_exports.pending, report_exports.failed_24h"
+        }
+      ]
+    },
+    {
+      "titulo": "Integraciones",
+      "paneles": [
+        {
+          "titulo": "OCR: resultados y duración",
+          "fuente": "metricas",
+          "valor": "ocr.runs_24h, ocr.failed_24h, ocr.needs_review_24h, ocr.p95_duration_s; event = ocr.job por outcome"
+        },
+        {
+          "titulo": "Correo: enviados, fallidos y retraso",
+          "fuente": "metricas",
+          "valor": "envios.sent_24h, envios.failed_24h, envios.due, envios.oldest_due_s"
+        }
+      ]
+    },
+    {
+      "titulo": "Cierre mensual",
+      "paneles": [
+        {
+          "titulo": "Lotes sin paquete",
+          "fuente": "metricas",
+          "valor": "settlement.batches_without_exports"
+        },
+        {
+          "titulo": "Informes de meses cerrados sin decidir",
+          "fuente": "metricas",
+          "valor": "settlement.reports_pending_past_months"
+        },
+        {
+          "titulo": "Cierres y su duración",
+          "fuente": "registro",
+          "valor": "event = settlement.period_closed: files, duration_ms"
+        }
+      ]
+    }
+  ]
+}

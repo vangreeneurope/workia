@@ -91,6 +91,17 @@ pg_sql rev_guard -o /dev/null -f "$PG_TESTS/helpers/asserts.sql" -f "$PG_TESTS/h
 for ((i = total; i >= 1; i--)); do
   rollback="$PG_ROLLBACKS/$(basename "${migrations[$((i - 1))]}" .sql).down.sql"
   [[ -f "$rollback" ]] || break
+  # Reversiones que no borran datos (solo funciones o permisos): deben aplicarse
+  # sin autorización. Lo declaran en su cabecera y la prueba lo verifica.
+  if grep -q '^-- Pérdida de datos: ninguna' "$rollback"; then
+    if grep -qiE '\b(drop|truncate)\s+(table|schema)|\bdelete\s+from' "$rollback"; then
+      echo "$(basename "$rollback") declara no perder datos pero borra tablas o filas" >&2
+      exit 1
+    fi
+    pg_sql rev_guard -f "$rollback" >/dev/null
+    echo "  ok - $(basename "$rollback") no pierde datos (solo funciones o permisos)"
+    continue
+  fi
   if pg_sql rev_guard -f "$rollback" >/dev/null 2>&1; then
     echo "$(basename "$rollback") ha borrado datos sin app.allow_lossy_rollback" >&2
     exit 1

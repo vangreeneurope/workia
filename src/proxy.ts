@@ -8,7 +8,7 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Excluye estáticos, imágenes, iconos, manifiesto PWA y service worker.
-    "/((?!_next/static|_next/image|favicon.ico|icons/|manifest.webmanifest|sw.js|offline.html|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    // Excluye estáticos, imágenes, iconos, manifiesto PWA, service worker y salud (ADR-064).
+    "/((?!_next/static|_next/image|favicon.ico|api/salud|icons/|manifest.webmanifest|sw.js|offline.html|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

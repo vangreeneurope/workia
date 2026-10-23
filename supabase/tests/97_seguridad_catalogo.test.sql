@@ -77,7 +77,8 @@ select test.ok(not exists (
   where n.nspname = 'public' and p.prosecdef
     and p.proname in ('run_retention', 'expire_report_exports', 'process_notification_outbox',
       'claim_email_deliveries', 'complete_email_delivery', 'record_email_event', 'run_scheduled_reminders',
-      'record_job_run', 'settle_vacation_balances', 'expired_punch_selfies', 'mark_punch_selfie_purged')
+      'record_job_run', 'settle_vacation_balances', 'expired_punch_selfies', 'mark_punch_selfie_purged',
+      'ops_metrics')
     and has_function_privilege('authenticated', p.oid, 'execute')
 ), 'Las funciones de tareas programadas solo las ejecuta service_role (el OCR corre con la sesión de la persona, ADR-043)');
 

@@ -25,6 +25,7 @@ import {
   type ExpenseInput,
 } from "./schemas";
 import { rateLimited } from "@/lib/rate-limit";
+import { log } from "@/lib/log";
 
 /*
  * La identidad sale de la sesión y la empresa de la empresa activa; los ids que
@@ -76,7 +77,15 @@ function ocrQueue(supabase: Supabase): OcrQueue {
 async function runOcr(supabase: Supabase, jobId: string | null) {
   const provider = getOcrProvider();
   if (!provider || !jobId) return;
-  await runOcrJob(jobId, provider, ocrQueue(supabase));
+  const started = Date.now();
+  const outcome = await runOcrJob(jobId, provider, ocrQueue(supabase));
+  // Métrica (docs/OBSERVABILIDAD.md): proveedor, resultado y duración; nunca contenido.
+  log.info("ocr.job", {
+    provider: provider.id,
+    outcome: outcome.status,
+    error_code: outcome.status === "failed" ? outcome.errorCode : undefined,
+    duration_ms: Date.now() - started,
+  });
 }
 
 /** Sube un ticket: valida, comprueba duplicados, lo guarda y lanza la lectura. */

@@ -1,12 +1,13 @@
 # Estado del proyecto
 
-**Última actualización**: 2026-10-31 · **Fase actual**: 1 y 2 implementadas en local
+**Última actualización**: 2026-10-23 · **Fase actual**: 1 y 2 implementadas en local
 (administración, horarios, control horario, vacaciones y ausencias) y fase 3 casi completa (gastos
 con OCR intercambiable, informes, aprobación y liquidación contable; falta el proveedor de OCR) y
 fase 4 casi completa (avisos, correo y tareas programadas; informes, exportaciones y auditoría
 consultable; faltan el proveedor de correo, push e informes de grupo), más el endurecimiento de
 seguridad y privacidad previo al piloto (fase 5, parcial) y la revisión de experiencia móvil,
-escritorio, PWA y accesibilidad (2026-10-22, docs/UX.md). Nada se ha validado aún contra
+escritorio, PWA y accesibilidad (2026-10-22, docs/UX.md) y la preparación de CI/CD, entornos,
+despliegue y operación para el piloto (2026-10-23, docs/PREPARACION_PILOTO.md). Nada se ha validado aún contra
 un proyecto Supabase real ni en GitHub Actions (sin remoto): los tres trabajos del CI se han
 ejecutado en local. Los módulos se han construido por petición expresa sin validar antes los
 anteriores con sesión real (excepción a la regla de CLAUDE.md, registrada aquí).
@@ -246,38 +247,63 @@ anteriores con sesión real (excepción a la regla de CLAUDE.md, registrada aqu�
 - CI: el trabajo de build y E2E instala PostgreSQL, guarda PostgREST en caché y sube los resultados
   si falla.
 
-## 2. Resultados de verificación (2026-10-22)
+### CI/CD, entornos, despliegue y operación (2026-10-23)
 
-| Verificación               | Comando                                           | Resultado                                                                                                    |
-| -------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Tipos                      | `npm run typecheck`                               | Sin errores                                                                                                  |
-| Lint                       | `npm run lint`                                    | 0 errores, 0 avisos                                                                                          |
-| Formato                    | `npm run format:check`                            | Correcto                                                                                                     |
-| Unitarias                  | `npm test`                                        | 25 archivos, 284 pruebas superadas (incluidos escáner estático, MFA, resumen de errores y errores de red)    |
-| Aislamiento multiempresa   | `npm run test:db` → `10_aislamiento_multiempresa` | 134 aserciones superadas                                                                                     |
-| Integridad y escalada      | `npm run test:db` → `20_integridad_y_escalada`    | 26 aserciones superadas                                                                                      |
-| Semillas sintéticas        | `npm run test:db` → `30_seed_sintetico`           | 24 aserciones superadas                                                                                      |
-| Administración             | `npm run test:db` → `40_administracion`           | 81 aserciones superadas                                                                                      |
-| Horarios                   | `npm run test:db` → `50_horarios`                 | 101 aserciones superadas                                                                                     |
-| Control horario            | `npm run test:db` → `60_control_horario`          | 115 aserciones superadas                                                                                     |
-| Ausencias                  | `npm run test:db` → `70_ausencias`                | 84 aserciones superadas                                                                                      |
-| Gastos                     | `npm run test:db` → `80_gastos`                   | 81 aserciones superadas                                                                                      |
-| Liquidación                | `npm run test:db` → `90_liquidacion`              | 76 aserciones superadas                                                                                      |
-| Avisos                     | `npm run test:db` → `95_avisos`                   | 53 aserciones superadas                                                                                      |
-| Informes                   | `npm run test:db` → `96_informes`                 | 75 aserciones superadas (ámbito por rol, equivalencia con RLS, conciliación, exportaciones)                  |
-| Escáner de catálogo        | `npm run test:db` → `97_seguridad_catalogo`       | 24 comprobaciones sin hallazgos (RLS, privilegios, funciones, vistas, buckets, políticas)                    |
-| Seguridad y privacidad     | `npm run test:db` → `98_privacidad`               | 92 aserciones (MFA, soporte, evidencias, frecuencia, retención simulada y reversible, derechos)              |
-| Rendimiento                | `npm run test:db` → `99_rendimiento`              | 14 aserciones: índices usados y páginas de 7 a 120 ms con 12 000 jornadas y 60 000 eventos                   |
-| Concurrencia               | `npm run test:db` → `test-db-concurrency.sh`      | 9 escenarios con dos sesiones simultáneas (saldo, ticket, OCR, cierre contable y trabajadores de avisos)     |
-| Reversibilidad             | `npm run test:db`                                 | 11 reversiones restauran el esquema exacto, reaplicar lo reproduce, 11 exigen autorización para perder datos |
-| Tipos frente a esquema     | `npm run db:types:check`                          | Al día (incluye las funciones RPC)                                                                           |
-| Build de producción        | `npm run build`                                   | Correcto (incluye seguridad de la cuenta, privacidad y consola de privacidad)                                |
-| E2E                        | `npm run test:e2e`                                | 118 superadas, 0 fallos (80 omitidas a propósito: las pruebas con datos usan un solo perfil)                 |
-| Auditoría de vistas        | `auditoria-vistas.spec.ts`                        | 0 hallazgos: desbordamiento, recortes, 44 px, un `h1`/`main` y axe-core WCAG 2.2 sin infracciones graves     |
-| Flujos críticos            | `flujos.spec.ts`                                  | Fichaje, solicitud, aprobación y gasto con teclado en móvil; respuesta perdida y reintento sin duplicar      |
-| Presupuestos               | `rendimiento.spec.ts`                             | 201-243 KB de JS, 0 KB de imágenes y 7-18 consultas por ruta diaria (límites 260 KB, 150 KB y 20)            |
-| Secretos                   | `npm run security:secrets`                        | Sin secretos en archivos versionados ni en el historial                                                      |
-| Dependencias de producción | `npm audit --omit=dev`                            | 0 vulnerabilidades                                                                                           |
+- CI reproducible (`.github/workflows/ci.yml`): acciones fijadas por commit, permisos mínimos,
+  concurrencia que cancela PR obsoletas, cachés por contenido, validación de migraciones inmutables,
+  RLS e integración, E2E mínimo en PR y completo en main y cada noche, check único `CI correcto`.
+  Dependabot y plantilla de PR. Protección de `main` documentada, no aplicada (docs/CI_CD.md, § 3).
+- Despliegue portable (`.github/workflows/despliegue.yml`): preview de PR propias sin cambios de
+  esquema, staging tras CI en main, producción a mano con aprobación; migraciones una vez por entorno
+  con copia confirmada en producción (`scripts/db/migrar.sh`); adaptadores de proveedor y `Dockerfile`
+  de ejemplo; verificación de commit y migración tras desplegar (ADR-063).
+- Salud y versión (`/api/salud`, `/listo`, `/metricas`), errores del servidor con `onRequestError`,
+  métricas de tareas, OCR, correo, colas y cierre (`public.ops_metrics`, migración
+  `20261101100000_observabilidad`), panel y 18 alertas con dueño y runbook (ADR-064,
+  docs/OBSERVABILIDAD.md).
+- Runbooks de login, base de datos, RLS, OCR, correo, Storage, colas, cierre mensual y despliegue
+  (RUNBOOKS, § 10). Copias y restauración (docs/COPIAS_Y_RESTAURACION.md, ADR-065) con prueba local.
+- `CHANGELOG.md`, docs/RELEASE.md (release, entorno y piloto sintético) e informe
+  docs/PREPARACION_PILOTO.md.
+- Corrección: el cierre contable ya no ignora en silencio un fallo al generar el paquete.
+
+## 2. Resultados de verificación (2026-10-23)
+
+| Verificación               | Comando                                           | Resultado                                                                                                                                  |
+| -------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Tipos                      | `npm run typecheck`                               | Sin errores                                                                                                                                |
+| Lint                       | `npm run lint`                                    | 0 errores, 0 avisos                                                                                                                        |
+| Formato                    | `npm run format:check`                            | Correcto                                                                                                                                   |
+| Unitarias                  | `npm test`                                        | 28 archivos, 300 pruebas superadas (incluidos escáner estático, scripts de operación y alertas)                                            |
+| Aislamiento multiempresa   | `npm run test:db` → `10_aislamiento_multiempresa` | 134 aserciones superadas                                                                                                                   |
+| Integridad y escalada      | `npm run test:db` → `20_integridad_y_escalada`    | 26 aserciones superadas                                                                                                                    |
+| Semillas sintéticas        | `npm run test:db` → `30_seed_sintetico`           | 24 aserciones superadas                                                                                                                    |
+| Administración             | `npm run test:db` → `40_administracion`           | 81 aserciones superadas                                                                                                                    |
+| Horarios                   | `npm run test:db` → `50_horarios`                 | 101 aserciones superadas                                                                                                                   |
+| Control horario            | `npm run test:db` → `60_control_horario`          | 115 aserciones superadas                                                                                                                   |
+| Ausencias                  | `npm run test:db` → `70_ausencias`                | 84 aserciones superadas                                                                                                                    |
+| Gastos                     | `npm run test:db` → `80_gastos`                   | 81 aserciones superadas                                                                                                                    |
+| Liquidación                | `npm run test:db` → `90_liquidacion`              | 76 aserciones superadas                                                                                                                    |
+| Avisos                     | `npm run test:db` → `95_avisos`                   | 53 aserciones superadas                                                                                                                    |
+| Informes                   | `npm run test:db` → `96_informes`                 | 75 aserciones superadas (ámbito por rol, equivalencia con RLS, conciliación, exportaciones)                                                |
+| Escáner de catálogo        | `npm run test:db` → `97_seguridad_catalogo`       | 24 comprobaciones sin hallazgos (RLS, privilegios, funciones, vistas, buckets, políticas)                                                  |
+| Seguridad y privacidad     | `npm run test:db` → `98_privacidad`               | 92 aserciones (MFA, soporte, evidencias, frecuencia, retención simulada y reversible, derechos)                                            |
+| Observabilidad             | `npm run test:db` → `94_observabilidad`           | 8 aserciones: solo `service_role`, agregados sin identificadores, colas y tareas                                                           |
+| Rendimiento                | `npm run test:db` → `99_rendimiento`              | 14 aserciones: índices usados y páginas de 7 a 120 ms con 12 000 jornadas y 60 000 eventos                                                 |
+| Concurrencia               | `npm run test:db` → `test-db-concurrency.sh`      | 9 escenarios con dos sesiones simultáneas (saldo, ticket, OCR, cierre contable y trabajadores de avisos)                                   |
+| Reversibilidad             | `npm run test:db`                                 | 12 reversiones restauran el esquema exacto, reaplicar lo reproduce; 11 exigen autorización para perder datos y 1 declara no perder ninguno |
+| Tipos frente a esquema     | `npm run db:types:check`                          | Al día (incluye las funciones RPC)                                                                                                         |
+| Build de producción        | `npm run build`                                   | Correcto (incluye seguridad de la cuenta, privacidad y consola de privacidad)                                                              |
+| E2E                        | `npm run test:e2e`                                | 121 superadas, 0 fallos (86 omitidas a propósito: las pruebas con datos usan un solo perfil); incluye salud                                |
+| Auditoría de vistas        | `auditoria-vistas.spec.ts`                        | 0 hallazgos: desbordamiento, recortes, 44 px, un `h1`/`main` y axe-core WCAG 2.2 sin infracciones graves                                   |
+| Flujos críticos            | `flujos.spec.ts`                                  | Fichaje, solicitud, aprobación y gasto con teclado en móvil; respuesta perdida y reintento sin duplicar                                    |
+| Presupuestos               | `rendimiento.spec.ts`                             | 201-243 KB de JS, 0 KB de imágenes y 7-18 consultas por ruta diaria (límites 260 KB, 150 KB y 20)                                          |
+| Migraciones                | `npm run db:check-migrations`                     | 15 válidas; detecta edición de una fusionada y fechas anteriores a la base                                                                 |
+| Restauración local         | `npm run ops:prueba-restauracion`                 | Esquema idéntico, 81 tablas y 251 filas, escáner de catálogo en verde (Supabase: pendiente)                                                |
+| Imagen de contenedor       | `docker build` + `docker run`                     | Construida y `healthy`; `/api/salud` con commit, migración y entorno                                                                       |
+| Workflows                  | actionlint 1.7.7                                  | Sin errores en `ci.yml` y `despliegue.yml`                                                                                                 |
+| Secretos                   | `npm run security:secrets`                        | Sin secretos en archivos versionados ni en el historial                                                                                    |
+| Dependencias de producción | `npm audit --omit=dev`                            | 0 vulnerabilidades                                                                                                                         |
 
 **CI**: los pasos de los cuatro trabajos de `.github/workflows/ci.yml` se han ejecutado en local
 (calidad; seguridad; base de datos con PostgreSQL desechable; build y E2E con las variables de
@@ -310,47 +336,51 @@ rendimiento en red móvil real. Modo oscuro sin activar. Ver docs/UX.md, § 12.
 
 ## 3. Bloqueantes y riesgos
 
-1. **Sin repositorio remoto en GitHub**: CI no se puede ejecutar y el trabajo solo está en git local
-   dentro de un contenedor temporal.
-2. **Sin proyecto Supabase**: falta aplicar las migraciones y probar las pantallas con sesión real.
-3. **Invitaciones**: necesitan `SUPABASE_SECRET_KEY` en el servidor y SMTP configurado.
-4. **Cambio de centro o equipo con fecha futura**: no se programa todavía (ADR-029).
-5. **Dos auditorías** (`audit_log` completa y `audit_events` minimizada): fijar con la asesoría el
+1. **CI sin ejecutar en GitHub**: el repositorio está en GitHub, pero la copia local de esta sesión
+   no tiene remoto configurado; hay que subir las ramas y comprobar la primera ejecución. La
+   protección de `main` y los entornos están documentados y sin aplicar (requiere autorización).
+2. **Preparación del piloto**: hosting, observabilidad, dueños de alertas, copia de Storage y prueba
+   de restauración en Supabase pendientes (docs/PREPARACION_PILOTO.md, § 3).
+3. **Sin proyecto Supabase**: falta aplicar las migraciones y probar las pantallas con sesión real.
+4. **Invitaciones**: necesitan `SUPABASE_SECRET_KEY` en el servidor y SMTP configurado.
+5. **Cambio de centro o equipo con fecha futura**: no se programa todavía (ADR-029).
+6. **Dos auditorías** (`audit_log` completa y `audit_events` minimizada): fijar con la asesoría el
    plazo de conservación de `audit_log` (ADR-026).
-6. **Horarios**: el equipo de una asignación por equipo es el actual de la persona; cambiar un
+7. **Horarios**: el equipo de una asignación por equipo es el actual de la persona; cambiar un
    festivo no genera avisos todavía; `leave_periods` no tiene aún quien la rellene (módulo de
    ausencias); el manager solo consulta horarios (ADR-030). Los festivos reales deben registrarse
    desde una fuente aprobada por la empresa.
-7. **Control horario**: la tarea programada ya ejecuta recordatorios y borrado de selfies, pero
+8. **Control horario**: la tarea programada ya ejecuta recordatorios y borrado de selfies, pero
    falta configurar el planificador en el entorno real; falta la exportación para la Inspección; validar con la asesoría el plazo de selfies y,
    con el DPD, la activación de la ubicación en cada empresa.
-8. **Ausencias**: `settle_vacation_balances` va en la tarea programada (falta el planificador real); definir con la asesoría el plazo
+9. **Ausencias**: `settle_vacation_balances` va en la tarea programada (falta el planificador real); definir con la asesoría el plazo
    de conservación de justificantes y los valores reales de tipos y políticas de cada empresa; un
    cambio de contrato a mitad de periodo no reprorratea el saldo abierto (se regulariza con un
    ajuste).
-9. **Gastos**: no hay proveedor de OCR (decisión pendiente, ADR-043); sin trabajador programado
-   para la cola; plazo de conservación de tickets, lotes y paquetes con la asesoría; clientes,
-   proyectos y centros de coste son texto libre; la exportación es genérica (sin mapeo a un ERP
-   concreto); sin avisos por correo de informes pendientes o devueltos.
-10. **Avisos**: sin proveedor de correo real (ADR pendiente) ni planificador configurado en un
+10. **Gastos**: no hay proveedor de OCR (decisión pendiente, ADR-043); sin trabajador programado
+    para la cola; plazo de conservación de tickets, lotes y paquetes con la asesoría; clientes,
+    proyectos y centros de coste son texto libre; la exportación es genérica (sin mapeo a un ERP
+    concreto); sin avisos por correo de informes pendientes o devueltos.
+11. **Avisos**: sin proveedor de correo real (ADR pendiente) ni planificador configurado en un
     entorno real; sin push en la PWA; plazo de conservación de avisos por validar.
-11. **Informes**: los informes de volumen son SECURITY DEFINER con el mismo predicado que RLS
+12. **Informes**: los informes de volumen son SECURITY DEFINER con el mismo predicado que RLS
     (ADR-050): cualquier cambio futuro en una política de jornadas, ausencias, gastos o auditoría
     debe reflejarse en `private.report_scope` (la prueba de equivalencia lo detecta). Sin informes
     consolidados de grupo; `after()` sin probar en el entorno real (alternativa: cola en `jobs`);
     plazo de conservación del registro de exportaciones por validar; la restricción de zona horaria
     de `time_entries` es lenta en importaciones masivas (≈20 ms por fila).
-12. **Seguridad y privacidad**: MFA (TOTP) desactivado en `supabase/config.toml` local: activarlo
+13. **Seguridad y privacidad**: MFA (TOTP) desactivado en `supabase/config.toml` local: activarlo
     en el proyecto real (si no estuviera disponible, degradación en RUNBOOKS, § 6); la retención
     está en simulación hasta validar la matriz; 20 decisiones abiertas en
     docs/PENDIENTES_LEGALES.md (plazos, EIPD, encargados, supresión); sin antivirus en subidas; CSP
     con `'unsafe-inline'` por compatibilidad con el prerenderizado parcial (ADR-055).
-13. Riesgos heredados: componentes shadcn escritos a mano, vulnerabilidades en herramientas de
+14. Riesgos heredados: componentes shadcn escritos a mano, vulnerabilidades en herramientas de
     lint (aceptadas), revisión normativa pendiente.
 
 ## 4. Próximos pasos
 
-1. Subir el repositorio a GitHub y comprobar CI.
+1. Subir las ramas a GitHub, comprobar el CI y configurar la protección de `main` y los entornos
+   (docs/CI_CD.md, § 3).
 2. Proyecto Supabase de pruebas: `supabase db push`, configurar `SUPABASE_SECRET_KEY` y SMTP, probar
    el módulo con las cuentas sintéticas y añadir E2E con sesión.
 3. Probar el horario con las semillas sintéticas (`supabase db reset`) y sesión real.

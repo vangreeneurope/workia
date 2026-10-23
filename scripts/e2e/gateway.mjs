@@ -316,6 +316,8 @@ createServer(async (req, res) => {
   try {
     const url = new URL(req.url ?? "/", `http://127.0.0.1:${PORT}`);
     if (url.pathname === "/health") return json(res, 200, { ok: true });
+    // Equivalente a la comprobación de salud de Supabase Auth (GoTrue).
+    if (url.pathname === "/auth/v1/health") return json(res, 200, { name: "pasarela-e2e" });
     if (url.pathname === "/__e2e/consultas") {
       const p = await profileBy("email", String(url.searchParams.get("email") ?? "").toLowerCase());
       if (!p) return json(res, 404, { message: "Not found" });

@@ -5193,6 +5193,7 @@ export type Database = {
         Args: { p_notification: string };
         Returns: { allowed: boolean; link_path: string }[];
       };
+      ops_metrics: { Args: { p_now?: string }; Returns: Json };
       place_legal_hold: {
         Args: { p_company: string; p_category: string; p_reason: string; p_employee?: string };
         Returns: string;

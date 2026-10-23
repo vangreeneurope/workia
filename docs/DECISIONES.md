@@ -769,3 +769,57 @@ guarda en Cache Storage.
 
 **Consecuencias**: la app instalada sigue necesitando conexión salvo para encolar fichajes
 (ADR-060). Cachear más (por ejemplo, catálogos no personales) exigiría un ADR nuevo.
+
+## ADR-063 · CI/CD portable con despliegue por adaptadores
+
+**Fecha**: 2026-10-23 · **Estado**: aceptada
+
+**Contexto**: el repositorio está en GitHub, hay cuatro entornos (local, preview, staging,
+producción) y el hosting no está decidido.
+
+**Decisión**:
+
+- CI sin secretos, con acciones fijadas por commit, permisos mínimos, cachés por contenido y un único
+  check requerido (`CI correcto`) que agrega todos los trabajos. E2E mínimo en PR y completo en
+  `main`, cada noche y a mano.
+- Las migraciones fusionadas son inmutables y las nuevas posteriores a la última de `main`
+  (`scripts/ci/check-migrations.mjs`). Se aplican con `supabase db push` una sola vez por entorno,
+  desde el workflow de despliegue, con grupo de concurrencia por entorno; producción exige commit de
+  `main` con CI correcto, aprobación del entorno y copia confirmada si hay pendientes.
+- El despliegue delega en `scripts/deploy/proveedores/$DEPLOY_PROVIDER.sh`; sin proveedor no se
+  publica nada. Se verifica que la URL sirve el commit y la migración esperados.
+- Secretos de ejecución en el gestor del hosting; GitHub solo guarda los del despliegue y las
+  migraciones, por entorno. OIDC disponible para los proveedores que lo admiten.
+
+**Consecuencias**: elegir hosting es añadir un adaptador y sus pasos de autenticación (ADR propio).
+El token del CLI de Supabase es de larga duración (sin OIDC conocido): se limita al entorno y se
+rota. La protección de `main` y de los entornos la configura una persona administradora siguiendo
+docs/CI_CD.md, § 3.
+
+## ADR-064 · Salud, versión y métricas operativas sin datos personales
+
+**Fecha**: 2026-10-23 · **Estado**: aceptada
+
+**Decisión**: `/api/salud` (vida, identidad del despliegue), `/api/salud/listo` (estados de base de
+datos y Auth) y `/api/salud/metricas` (con `METRICS_TOKEN`) son rutas de máquina fuera del proxy de
+sesión. `public.ops_metrics()` devuelve agregados de toda la plataforma (colas, OCR, correo,
+exportaciones, tareas y cierre) sin identificadores, solo para `service_role`. La clave de servicio se
+usa para estas dos lecturas en `src/lib/ops/checks.ts`, que se añade a la lista de usos justificados
+del escáner estático. Los errores no controlados se registran con `onRequestError` (plantilla de
+ruta y digest, nunca el mensaje). Alertas portables en `ops/observabilidad/alertas.json`, con dueño y
+runbook validados por una prueba.
+
+**Consecuencias**: cualquier herramienta de registros y sondas sirve. La latencia por petición sale
+del hosting. Los dueños de alertas son roles hasta asignar personas antes del piloto.
+
+## ADR-065 · Copias: base y Storage por separado, restauración en proyecto nuevo
+
+**Fecha**: 2026-10-23 · **Estado**: aceptada (copia de Storage pendiente de decisión)
+
+**Decisión**: la copia de la base (nativa de Supabase y, recomendada, lógica cifrada fuera de GitHub)
+no cubre los archivos de Storage, que necesitan su propia copia para los buckets con justificantes.
+Se restaura siempre en un proyecto nuevo y se reaplican retención y supresiones. El procedimiento
+lógico se ensaya en local con `npm run ops:prueba-restauracion` (datos sintéticos).
+
+**Consecuencias**: hasta decidir la copia de Storage (PENDIENTES_LEGALES, 16), perder archivos no es
+recuperable. La restauración en Supabase queda pendiente de ensayar con el proyecto real.

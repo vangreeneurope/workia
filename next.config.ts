@@ -1,6 +1,39 @@
+import { execSync } from "node:child_process";
+import { readdirSync, readFileSync } from "node:fs";
+
 import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV !== "production";
+
+/**
+ * Identidad del build (docs/CI_CD.md): versión, commit y última migración que
+ * espera este código. Se fijan al construir; el entorno (APP_ENV) se lee en
+ * ejecución porque el mismo build se promueve de staging a producción.
+ */
+function buildInfo() {
+  const version = (JSON.parse(readFileSync("package.json", "utf8")) as { version: string }).version;
+  let commit = process.env.APP_COMMIT ?? process.env.GITHUB_SHA ?? "";
+  if (!commit) {
+    try {
+      commit = execSync("git rev-parse HEAD", { stdio: ["ignore", "pipe", "ignore"] })
+        .toString()
+        .trim();
+    } catch {
+      commit = "desconocido";
+    }
+  }
+  const migrations = readdirSync("supabase/migrations").filter((f) => f.endsWith(".sql"));
+  const migration =
+    migrations
+      .sort()
+      .at(-1)
+      ?.replace(/\.sql$/, "") ?? "ninguna";
+  return {
+    BUILD_VERSION: version,
+    BUILD_COMMIT: /^[0-9a-f]{7,40}$/.test(commit) ? commit : "desconocido",
+    BUILD_MIGRATION: migration,
+  };
+}
 
 /**
  * Origen de Supabase permitido en la CSP. Se lee en build; si falta, la CSP
@@ -77,6 +110,9 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
+  env: buildInfo(),
+  // Imagen de contenedor portable (Dockerfile): servidor autónomo solo si se pide.
+  ...(process.env.NEXT_OUTPUT === "standalone" ? { output: "standalone" as const } : {}),
   experimental: {
     // Tickets de gasto (hasta 10 MB) y justificantes: el límite por defecto es 1 MB.
     serverActions: { bodySizeLimit: "11mb" },

@@ -110,9 +110,13 @@ scripts (ADR-009).
 
 ## 9. Despliegue
 
-- Servidor Node.js 22 con `npm run build && npm run start`, detrás de HTTPS.
-- Variables de entorno de `.env.example` configuradas en la plataforma. `NEXT_PUBLIC_SUPABASE_URL`
-  debe existir en tiempo de build (la CSP la incluye).
-- Migraciones con `supabase db push` desde CI o manualmente, siempre antes de desplegar el código
-  que las necesita.
-- Recomendación: proyecto de Supabase en región UE y un proyecto separado para pruebas.
+Detalle en docs/CI_CD.md (entornos, migraciones, secretos y despliegue portable).
+
+- Servidor Node.js 22 con `npm run build && npm run start`, o la imagen del `Dockerfile` (servidor
+  autónomo de Next.js), detrás de HTTPS. Hosting sin decidir: el workflow delega en un adaptador.
+- Un proyecto de Supabase por entorno (preview, staging, producción) en región UE. Las
+  `NEXT_PUBLIC_*` se fijan en el build (la CSP incluye la URL de Supabase): un build por entorno.
+- Migraciones con `supabase db push` desde el workflow de despliegue, una vez por entorno y antes del
+  código que las necesita; nunca desde una PR.
+- Cada despliegue se identifica en `/api/salud` (versión, commit, migración y entorno) y se observa
+  según docs/OBSERVABILIDAD.md.

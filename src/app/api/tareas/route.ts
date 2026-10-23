@@ -41,6 +41,14 @@ async function run(request: Request) {
       steps[name] = { ok: false, counts: {}, error: code };
     }
     const s = steps[name];
+    // Métrica por paso (docs/OBSERVABILIDAD.md): solo recuentos y códigos.
+    log.info("job.step", {
+      job: name,
+      ok: s?.ok ?? false,
+      error_code: s?.error,
+      duration_ms: Date.now() - started.getTime(),
+      counts: s?.counts ?? {},
+    });
     await admin.rpc("record_job_run", {
       p_job: name,
       p_started_at: started.toISOString(),
@@ -97,6 +105,12 @@ async function run(request: Request) {
     for (const row of data ?? []) counts[row.category] = row.affected;
     return counts;
   });
+
+  // Instantánea de colas al final de cada ejecución: métricas basadas en registros
+  // sin infraestructura adicional (alertas en docs/OBSERVABILIDAD.md).
+  const metrics = await admin.rpc("ops_metrics");
+  if (metrics.error) log.warn("ops.metrics_failed", { code: metrics.error.code });
+  else log.info("ops.metrics", { metrics: metrics.data });
 
   const ok = Object.values(steps).every((s) => s.ok);
   if (!ok)

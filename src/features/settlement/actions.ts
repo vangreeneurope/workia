@@ -10,6 +10,7 @@ import { canAccessSection } from "@/lib/auth/permissions";
 import { dbErrorMessage, dbErrorState } from "@/lib/db-errors";
 import { formToObject, validate, type FormState } from "@/lib/forms";
 import { createClient } from "@/lib/supabase/server";
+import { log } from "@/lib/log";
 
 import { loadBatchData } from "./data";
 import { batchCsv } from "./export/csv";
@@ -106,6 +107,7 @@ export async function closePeriod(_prev: FormState, formData: FormData): Promise
   });
   if (!parsed.ok) return parsed.state;
   const supabase = await createClient();
+  const started = Date.now();
   const { data, error } = await supabase.rpc("close_accounting_period", {
     p_company: s.companyId,
     p_period: `${parsed.data.period}-01`,
@@ -115,8 +117,16 @@ export async function closePeriod(_prev: FormState, formData: FormData): Promise
   });
   if (error || !data)
     return error ? dbErrorState(error) : { status: "error", message: "No se pudo cerrar." };
-  // El paquete se genera a continuación; si falla, se puede volver a generar desde el lote.
-  await generateFiles(supabase, data).catch(() => null);
+  // El paquete se genera a continuación; si falla, se puede volver a generar desde el lote
+  // (y la alerta «lotes sin archivos» lo detecta, docs/RUNBOOKS.md).
+  const files = await generateFiles(supabase, data).then(
+    (r) => (r.status === "error" ? "error" : "ok"),
+    (e: unknown) => {
+      log.error("settlement.files_failed", { error: e });
+      return "error";
+    },
+  );
+  log.info("settlement.period_closed", { files, duration_ms: Date.now() - started });
   redirect(`/gastos/contabilidad/lotes/${data}`);
 }
 

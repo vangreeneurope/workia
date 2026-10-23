@@ -212,6 +212,8 @@ describe("rutas de máquina", () => {
     expect(isMachinePath("/api/tareas")).toBe(true);
     expect(isMachinePath("/api/correo/webhook")).toBe(true);
     expect(isMachinePath("/api/tareas/otra")).toBe(false);
+    expect(isMachinePath("/api/salud/listo")).toBe(true);
+    expect(isMachinePath("/api/salud/otra")).toBe(false);
     expect(safeRedirectPath("/api/tareas")).toBe("/panel");
   });
 });

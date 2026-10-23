@@ -20,20 +20,23 @@ No empieces un módulo funcional nuevo sin que el anterior esté verificado (ver
 
 ## Comandos
 
-| Comando             | Qué hace                                                                        |
-| ------------------- | ------------------------------------------------------------------------------- |
-| `npm run dev`       | Servidor de desarrollo en http://localhost:3000                                 |
-| `npm run build`     | Build de producción (necesita las variables de `.env.example`)                  |
-| `npm run start`     | Sirve el build                                                                  |
-| `npm run typecheck` | Genera tipos de rutas y ejecuta `tsc --noEmit`                                  |
-| `npm run lint`      | ESLint sin avisos permitidos                                                    |
-| `npm run format`    | Prettier (escribe) · `npm run format:check` solo comprueba                      |
-| `npm test`          | Pruebas unitarias (Vitest + Testing Library)                                    |
-| `npm run test:e2e`  | E2E (Playwright, móvil y escritorio; con sesión vía `scripts/e2e/stack.sh`)     |
-| `npm run test:db`   | Migraciones, aislamiento RLS, semillas y reversibilidad (PostgreSQL desechable) |
-| `npm run db:types`  | Regenera `src/types/database.ts` desde las migraciones (`:check` en CI)         |
-| `npm run check`     | typecheck + lint + formato + unitarias (ejecutar antes de cada commit)          |
-| `npm run security`  | Escaneo de secretos versionados y `npm audit` de producción                     |
+| Comando                           | Qué hace                                                                         |
+| --------------------------------- | -------------------------------------------------------------------------------- |
+| `npm run dev`                     | Servidor de desarrollo en http://localhost:3000                                  |
+| `npm run build`                   | Build de producción (necesita las variables de `.env.example`)                   |
+| `npm run start`                   | Sirve el build                                                                   |
+| `npm run typecheck`               | Genera tipos de rutas y ejecuta `tsc --noEmit`                                   |
+| `npm run lint`                    | ESLint sin avisos permitidos                                                     |
+| `npm run format`                  | Prettier (escribe) · `npm run format:check` solo comprueba                       |
+| `npm test`                        | Pruebas unitarias (Vitest + Testing Library)                                     |
+| `npm run test:e2e`                | E2E (Playwright, móvil y escritorio; con sesión vía `scripts/e2e/stack.sh`)      |
+| `npm run test:e2e:minimo`         | E2E mínimo de las PR: acceso, seguridad, salud y flujos críticos                 |
+| `npm run test:db`                 | Migraciones, aislamiento RLS, semillas y reversibilidad (PostgreSQL desechable)  |
+| `npm run db:check-migrations`     | Nombres, reversiones y migraciones fusionadas intactas (`-- --base origin/main`) |
+| `npm run ops:prueba-restauracion` | Ensayo local de copia y restauración (pg_dump/pg_restore, datos sintéticos)      |
+| `npm run db:types`                | Regenera `src/types/database.ts` desde las migraciones (`:check` en CI)          |
+| `npm run check`                   | typecheck + lint + formato + unitarias (ejecutar antes de cada commit)           |
+| `npm run security`                | Escaneo de secretos versionados y `npm audit` de producción                      |
 
 ## Arquitectura en una frase
 
@@ -56,6 +59,8 @@ src/types/          Tipos (database.ts refleja las migraciones)
 src/proxy.ts        Proxy de Next.js 16 (antes "middleware"): refresco de sesión y redirección
 supabase/migrations Migraciones SQL versionadas (fuente de verdad del esquema)
 supabase/rollbacks  Reversión de cada migración (obligatoria desde 2026-10-22)
+scripts/            test-db, e2e/ (entorno con sesión), ci/, db/migrar.sh, deploy/ (adaptadores), ops/
+ops/observabilidad  Alertas y panel portables (JSON) con dueño y runbook
 supabase/seeds      Datos SINTÉTICOS solo para desarrollo local (supabase db reset)
 supabase/tests      Pruebas SQL (helpers/ = aserciones y escenario) · 00_shim solo para Postgres local
 tests/unit          Vitest · tests/e2e Playwright
@@ -81,6 +86,8 @@ docs/               Documentación funcional y técnica
   navegación.
 - Estilo: Prettier (100 columnas) con orden de clases Tailwind. Importaciones de tipos con `type`.
 - Commits pequeños y descriptivos en español (`feat(fichajes): …`, `fix(auth): …`, `docs: …`).
+  Cada PR añade su entrada en `CHANGELOG.md` («Sin publicar»). Las migraciones ya fusionadas no se
+  editan: se crea una nueva (docs/CI_CD.md, § 4).
 
 ## Reglas de seguridad (obligatorias)
 
@@ -101,7 +108,8 @@ docs/               Documentación funcional y técnica
 5. **Cada Server Action y Route Handler** obtiene la identidad con `getUserContext()` /
    `requireUserId()` / `requireSection()` de `src/lib/auth/dal.ts` (en administración,
    `adminAction()` o `requireAdminArea()`). Excepciones: el terminal `/terminal` (ADR-036) y las rutas
-   de máquina `/api/tareas` (CRON_SECRET) y `/api/correo/webhook` (firma), ADR-048. El `company_id` de una escritura sale siempre de
+   de máquina `/api/tareas` (CRON_SECRET) y `/api/correo/webhook` (firma), ADR-048, y las de salud
+   `/api/salud*` (sin datos; métricas con METRICS_TOKEN), ADR-064. El `company_id` de una escritura sale siempre de
    `ctx.companyId`, nunca del formulario. Nunca confíes en ids que lleguen del cliente.
 6. Usa `getClaims()` (valida el JWT), nunca `getSession()` en servidor para autorizar.
 7. **Sin secretos en el frontend ni en el repositorio.** Solo `NEXT_PUBLIC_SUPABASE_URL`,
@@ -148,6 +156,12 @@ docs/               Documentación funcional y técnica
 - `docs/PRIVACIDAD.md`: matriz de datos, retención, derechos, soporte y EIPD.
 - `docs/RUNBOOKS.md`: incidentes, brechas, restauración, soporte, MFA y secretos.
 - `docs/PENDIENTES_LEGALES.md`: decisiones abiertas para legal y privacidad.
+- `docs/CI_CD.md`: CI, protección de main, entornos, migraciones, secretos y despliegue portable.
+- `docs/OBSERVABILIDAD.md`: señales, salud, métricas, panel y alertas con dueño.
+- `docs/COPIAS_Y_RESTAURACION.md`: alcance de las copias (la de la base no incluye Storage),
+  restauración y estado de las pruebas.
+- `docs/RELEASE.md`: listas de release, de entorno y del piloto con datos sintéticos.
+- `docs/PREPARACION_PILOTO.md`: informe de preparación para el piloto.
 - `docs/PLAN_DESARROLLO.md`: fases y criterios de salida.
 - `docs/DECISIONES.md`: registro de decisiones de arquitectura (ADR).
 - `docs/ESTADO_PROYECTO.md`: estado actual, resultados de verificación y bloqueantes.

@@ -78,6 +78,9 @@ const PUBLIC_ROUTES = new Set([
   "src/app/api/tareas/route.ts", // CRON_SECRET (ADR-048)
   "src/app/api/correo/webhook/route.ts", // firma HMAC (ADR-048)
   "src/app/auth/confirmar/route.ts", // canje del código de Supabase Auth
+  "src/app/api/salud/route.ts", // vida: solo versión y entorno (ADR-064)
+  "src/app/api/salud/listo/route.ts", // disponibilidad: solo estados (ADR-064)
+  "src/app/api/salud/metricas/route.ts", // METRICS_TOKEN (ADR-064)
 ]);
 
 describe("Server Actions y Route Handlers", () => {
@@ -140,6 +143,7 @@ describe("Sesión, secretos y clientes", () => {
       "src/app/api/correo/webhook/route.ts",
       "src/features/notifications/store.ts",
       "src/features/admin/members/actions.ts", // invitaciones (ADR-025)
+      "src/lib/ops/checks.ts", // salud (consulta HEAD) y métricas agregadas (ADR-064)
     ];
     const users = files
       .filter((f) => /createAdminClient|SUPABASE_SECRET_KEY|service_role/.test(code(f)))
