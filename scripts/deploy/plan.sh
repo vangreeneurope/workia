@@ -9,7 +9,13 @@
 set -euo pipefail
 
 out="${GITHUB_OUTPUT:-/dev/stdout}"
-git fetch --quiet origin main
+# origin/main ya está en el checkout completo (fetch-depth: 0). No se vuelve a
+# pedir a GitHub: el checkout no guarda credenciales y en un repositorio privado
+# un "git fetch" fallaría (exit 128).
+git rev-parse --verify --quiet origin/main >/dev/null || {
+  echo "::error::Falta origin/main en el checkout (¿fetch-depth distinto de 0?)."
+  exit 1
+}
 
 if [[ "$EVENT" == "workflow_dispatch" ]]; then
   entorno="$INPUT_ENTORNO"
