@@ -78,3 +78,12 @@ select 'control positivo (admin de A): updates con filas = ' || count(*) from qa
 where attacker like 'CONTROL%' and outcome ~ '^filas=[1-9]';
 select op, split_part(outcome, ' ', 1) || ' ' || split_part(outcome, ' ', 2) as resultado, count(*)
 from qa_w where attacker not like 'CONTROL%' group by 1, 2 order by 1, 2;
+do $$ begin
+  if exists (select 1 from qa_w where attacker not like 'CONTROL%'
+      and (outcome ~ '^filas=[1-9]' or outcome = 'insertada' or outcome ~ '^error 23')) then
+    raise exception 'FUGA: un atacante escribió o pasó RLS en filas de A';
+  end if;
+  if (select count(*) from qa_w where attacker like 'CONTROL%' and outcome ~ '^filas=[1-9]') < 10 then
+    raise exception 'El control positivo no actualiza: el arnés no es fiable';
+  end if;
+end $$;

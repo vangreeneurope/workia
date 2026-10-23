@@ -26,6 +26,20 @@ versión se mueve a su sección con la fecha y se crea la etiqueta `vX.Y.Z` (doc
 ### Cambiado
 
 - El cierre contable registra el fallo de generación del paquete en lugar de ignorarlo.
+- Nombre de la aplicación: Workia, con logotipo e iconos.
+
+### Corregido (auditoría QA)
+
+- La detección de PDF con contenido activo se podía eludir con nombres escapados (`/J#61vaScript`)
+  o con diccionarios dentro de flujos de objetos comprimidos; ahora se revisan ambos.
+- Los JPEG subidos conservaban datos añadidos tras el final de la imagen (archivos políglotas).
+- El registro técnico usaba `process.stdout`, inexistente en el runtime Edge.
+
+### Pruebas
+
+- `npm run test:aislamiento`: pruebas adversarias sobre una base poblada (lectura, funciones,
+  escrituras, Storage y conciliación contable) con control positivo; en el CI.
+- Concurrencia: doble decisión simultánea y doble envío con la misma clave.
 
 ## 0.1.0 - 2026-10-22
 

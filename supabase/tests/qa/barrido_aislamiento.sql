@@ -57,3 +57,12 @@ end $$;
 
 select attacker, relation, rows from qa_leaks order by 1, 2;
 select 'atacantes=' || (select count(*) from qa_attackers) || ' comprobaciones=' || (select total from qa_checked);
+-- Aserción: solo se admiten los registros propios de la persona con membresía caducada
+-- (su membresía, su rol y la asignación en la que figuraba como manager).
+do $$ begin
+  if exists (select 1 from qa_leaks where not (attacker like 'EXP%'
+      and relation in ('company_memberships', 'role_assignments', 'manager_assignments'))) then
+    raise exception 'FUGA de aislamiento en lectura: %', (select string_agg(attacker || ' → ' || relation, '; ') from qa_leaks);
+  end if;
+  if (select total from qa_checked) < 500 then raise exception 'Barrido incompleto'; end if;
+end $$;

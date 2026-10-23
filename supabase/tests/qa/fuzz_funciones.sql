@@ -165,3 +165,16 @@ from qa_calls where attacker like 'CONTROL%' and outcome = 'devuelta'
 -- Motivos de rechazo por función (42501 = permiso; otros = validación o estado).
 select fn, string_agg(distinct split_part(outcome, ' ', 2) || ':' || left(detail, 60), ' | ') as motivos
 from qa_calls where outcome like 'rechazada%' and attacker not like 'CONTROL%' group by fn order by fn;
+do $$ begin
+  if exists (select 1 from qa_calls where outcome = 'devuelta' and attacker not like 'CONTROL%'
+      and detail not in ('0', 'false', '<null>', '[]', '{}', '') and fn not in ('my_mfa_status', 'support_staff')) then
+    raise exception 'FUGA: una función SECURITY DEFINER devolvió datos de A a un atacante';
+  end if;
+  if (select fp from qa_fp where stage = 'antes') is distinct from (select fp from qa_fp where stage = 'después') then
+    raise exception 'FUGA: un atacante modificó datos de A';
+  end if;
+  if (select count(distinct fn) from qa_calls where attacker like 'CONTROL%' and outcome = 'devuelta'
+      and detail not in ('0', 'false', '<null>', '[]', '{}', '')) < 10 then
+    raise exception 'El control positivo no obtiene datos: el arnés no es fiable';
+  end if;
+end $$;

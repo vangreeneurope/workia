@@ -119,6 +119,10 @@ jobs:
       # escáner de catálogo y reversibilidad exacta de cada migración.
       - name: Aislamiento multiempresa, integración y reversibilidad
         run: npm run test:db
+      # Base poblada con todos los dominios: lectura, funciones SECURITY DEFINER,
+      # escrituras directas y Storage contra otra empresa (con control positivo).
+      - name: Pruebas adversarias de aislamiento
+        run: npm run test:aislamiento
       - name: Los tipos TypeScript coinciden con las migraciones
         run: npm run db:types:check
 

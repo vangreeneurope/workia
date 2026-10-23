@@ -1,6 +1,9 @@
+import { deflateSync } from "node:zlib";
+
 import { describe, expect, it } from "vitest";
 
 import { checkAttachment } from "@/features/absences/attachments";
+import { checkReceiptFile } from "@/features/expenses/receipt-file";
 import {
   dataRequestSchema,
   legalHoldSchema,
@@ -8,6 +11,7 @@ import {
   totpCodeSchema,
 } from "@/features/security/schemas";
 import { mfaPending, needsMfaStepUp } from "@/lib/auth/permissions";
+import { stripJpegMetadata } from "@/lib/files/images";
 import { checkPdf } from "@/lib/files/pdf";
 import { isCrossSiteRequest } from "@/lib/http";
 import { formatLog, redact } from "@/lib/log";
@@ -103,6 +107,67 @@ describe("subidas maliciosas", () => {
       reason: "truncated",
     });
     expect(checkPdf(enc("%PDF-1.7\n1 0 obj << /Type /Catalog >> endobj\n%%EOF")).ok).toBe(true);
+  });
+
+  // Auditoría QA: variantes que eludían el filtro por nombre en texto plano.
+  it("rechaza nombres activos escapados (#xx) y ocultos en flujos de objetos comprimidos", () => {
+    expect(checkPdf(enc("%PDF-1.7\n<< /S /J#61vaScript /J#53 (app.alert(1)) >>\n%%EOF")).ok).toBe(
+      false,
+    );
+    const objStm = (body: string, filter = "/FlateDecode") => {
+      const data = deflateSync(Buffer.from(body, "latin1"));
+      return Uint8Array.from([
+        ...enc(
+          `%PDF-1.7\n5 0 obj\n<< /Type /ObjStm /N 1 /First 4 /Filter ${filter} /Length ${data.length} >>\nstream\n`,
+        ),
+        ...data,
+        ...enc("\nendstream\nendobj\n%%EOF"),
+      ]);
+    };
+    expect(checkPdf(objStm("6 0 << /S /JavaScript /JS (app.alert(1)) >>")).ok).toBe(false);
+    expect(checkPdf(objStm("6 0 << /Type /Catalog /OpenAction 7 0 R >>")).ok).toBe(false);
+    // Flujo de objetos legítimo (frecuente en PDF de escáneres y móviles): se admite.
+    expect(checkPdf(objStm("6 0 << /Type /Catalog /Pages 7 0 R >>")).ok).toBe(true);
+    // Filtro desconocido o datos corruptos en un flujo de objetos: no se puede revisar, se rechaza.
+    expect(checkPdf(objStm("6 0 << >>", "/LZWDecode")).ok).toBe(false);
+  });
+
+  it("malware simulado (EICAR) disfrazado de ticket se rechaza por contenido", () => {
+    const eicar = "X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*";
+    for (const [name, mime] of [
+      ["ticket.pdf", "application/pdf"],
+      ["ticket.jpg", "image/jpeg"],
+      ["ticket.png", "image/png"],
+    ] as const)
+      expect(checkReceiptFile({ bytes: enc(eicar), fileName: name, declaredMime: mime }).ok).toBe(
+        false,
+      );
+  });
+
+  it("un JPEG con datos añadidos tras el final de imagen se guarda sin ellos", () => {
+    const tail = enc("<html><script>alert(1)</script>");
+    const jpeg = Uint8Array.from([
+      0xff,
+      0xd8,
+      0xff,
+      0xda,
+      0x00,
+      0x02,
+      0x11,
+      0x22,
+      0xff,
+      0x00,
+      0x33,
+      0xff,
+      0xd9,
+      ...tail,
+    ]);
+    const out = stripJpegMetadata(jpeg);
+    expect(out.ok).toBe(true);
+    if (out.ok) {
+      expect(new TextDecoder("latin1").decode(out.bytes)).not.toContain("script");
+      expect(Array.from(out.bytes.slice(-2))).toEqual([0xff, 0xd9]);
+    }
   });
 
   it("los justificantes también: PDF activo rechazado y PNG sin metadatos", () => {

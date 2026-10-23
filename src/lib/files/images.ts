@@ -18,8 +18,18 @@ export function stripJpegMetadata(input: Uint8Array): StripResult {
       i += 1; // relleno
       continue;
     }
-    if (marker === 0xda || marker === 0xd9) {
-      parts.push(input.slice(i));
+    if (marker === 0xd9) {
+      parts.push(input.slice(i, i + 2));
+      break;
+    }
+    if (marker === 0xda) {
+      // Datos de imagen hasta el fin de imagen (FFD9). En los datos comprimidos un
+      // 0xFF siempre va seguido de 00 o de un marcador de reinicio, así que el
+      // primer FFD9 es el final real: lo que venga detrás (p. ej. un archivo
+      // políglota) se descarta.
+      let j = i + 2;
+      while (j + 1 < input.length && !(input[j] === 0xff && input[j + 1] === 0xd9)) j += 1;
+      parts.push(input.slice(i, Math.min(j + 2, input.length)));
       break;
     }
     const length = ((input[i + 2] ?? 0) << 8) + (input[i + 3] ?? 0);

@@ -41,3 +41,8 @@ end $do$;
 \set QUIET off
 select op, outcome, count(*) from qa_s group by 1, 2 order by 1, 2;
 select 'objetos de A intactos: ' || count(*) from storage.objects where name like test.co('A') || '/%';
+do $$ begin
+  if exists (select 1 from qa_s where outcome = 'insertado' or outcome ~ '^filas=[1-9]') then
+    raise exception 'FUGA: un atacante creó, modificó o borró objetos de A en Storage';
+  end if;
+end $$;
