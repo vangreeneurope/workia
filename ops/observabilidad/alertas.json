@@ -1,0 +1,225 @@
+{
+  "$comentario": "Alertas portables (docs/OBSERVABILIDAD.md). Cada alerta tiene dueño, señal, umbral, acción y runbook. Se traducen a la herramienta elegida (alertas por registros, sondas o métricas). Validado por tests/unit/observabilidad.test.ts.",
+  "version": 1,
+  "propietarios": {
+    "guardia": {
+      "rol": "Guardia técnica de la plataforma",
+      "responsabilidad": "Disponibilidad, errores, colas, integraciones y despliegues",
+      "contacto": "PENDIENTE: asignar persona y canal antes del piloto (docs/RELEASE.md)"
+    },
+    "seguridad": {
+      "rol": "Responsable de seguridad",
+      "responsabilidad": "Accesos indebidos, MFA, secretos y aislamiento entre empresas",
+      "contacto": "PENDIENTE: asignar persona y canal antes del piloto (docs/RELEASE.md)"
+    },
+    "contabilidad": {
+      "rol": "Contabilidad de cada empresa (con apoyo de guardia)",
+      "responsabilidad": "Cierre mensual de gastos y paquetes contables",
+      "contacto": "PENDIENTE: asignar por empresa piloto (docs/RELEASE.md)"
+    }
+  },
+  "fuentes": {
+    "registro": "Líneas JSON de src/lib/log.ts (campo event)",
+    "metricas": "public.ops_metrics(): evento ops.metrics en cada ejecución de /api/tareas y GET /api/salud/metricas con METRICS_TOKEN",
+    "sonda": "Comprobación externa cada minuto de /api/salud y /api/salud/listo",
+    "hosting": "Métricas del hosting: peticiones, códigos 5xx y latencia",
+    "supabase": "Registros y paneles de Supabase (Postgres, Auth, Storage)"
+  },
+  "alertas": [
+    {
+      "id": "app-no-responde",
+      "severidad": "critica",
+      "senal": {
+        "fuente": "sonda",
+        "condicion": "/api/salud no devuelve 200 en 3 comprobaciones seguidas"
+      },
+      "propietario": "guardia",
+      "accion": "Comprobar el despliegue en el hosting y la versión en /api/salud; si el último despliegue es la causa, volver al anterior",
+      "runbook": "docs/RUNBOOKS.md#aplicación-caída-o-con-errores"
+    },
+    {
+      "id": "errores-aplicacion",
+      "severidad": "alta",
+      "senal": {
+        "fuente": "registro",
+        "condicion": "event = app.request_error: más de 20 en 5 minutos o más del 1 % de las peticiones (hosting)"
+      },
+      "propietario": "guardia",
+      "accion": "Agrupar por route y digest, correlacionar con el último despliegue y con request_id",
+      "runbook": "docs/RUNBOOKS.md#aplicación-caída-o-con-errores"
+    },
+    {
+      "id": "latencia-alta",
+      "severidad": "media",
+      "senal": {
+        "fuente": "hosting",
+        "condicion": "p95 de duración de peticiones por encima de 2 s durante 10 minutos"
+      },
+      "propietario": "guardia",
+      "accion": "Revisar consultas lentas en Supabase y el informe de rendimiento; escalar recursos si es carga",
+      "runbook": "docs/RUNBOOKS.md#aplicación-caída-o-con-errores"
+    },
+    {
+      "id": "login-no-disponible",
+      "severidad": "critica",
+      "senal": {
+        "fuente": "sonda",
+        "condicion": "/api/salud/listo con checks.login = error en 3 comprobaciones seguidas"
+      },
+      "propietario": "guardia",
+      "accion": "Revisar el estado de Supabase Auth y la configuración SMTP; comunicar a las empresas si se prolonga",
+      "runbook": "docs/RUNBOOKS.md#login-y-auth"
+    },
+    {
+      "id": "login-errores",
+      "severidad": "alta",
+      "senal": {
+        "fuente": "registro",
+        "condicion": "event = auth.context_failed más de 10 en 10 minutos, o auth.signin_rate_limited más de 20 en 10 minutos"
+      },
+      "propietario": "guardia",
+      "accion": "Distinguir fallo de Auth (errores) de ataque de fuerza bruta (límites); en ataque, avisar a seguridad",
+      "runbook": "docs/RUNBOOKS.md#login-y-auth"
+    },
+    {
+      "id": "mfa-rafaga",
+      "severidad": "alta",
+      "senal": {
+        "fuente": "registro",
+        "condicion": "event = mfa.verify_failed más de 10 en 15 minutos (alert: true)"
+      },
+      "propietario": "seguridad",
+      "accion": "Identificar la cuenta por request_id y contactar con la persona por otro canal; bloquear si procede",
+      "runbook": "docs/RUNBOOKS.md#login-y-auth"
+    },
+    {
+      "id": "base-de-datos-no-disponible",
+      "severidad": "critica",
+      "senal": {
+        "fuente": "sonda",
+        "condicion": "/api/salud/listo con checks.database = error en 3 comprobaciones seguidas"
+      },
+      "propietario": "guardia",
+      "accion": "Revisar el estado del proyecto en Supabase (pausa, conexiones, disco); no ejecutar migraciones hasta que se recupere",
+      "runbook": "docs/RUNBOOKS.md#base-de-datos"
+    },
+    {
+      "id": "rls-denegaciones",
+      "severidad": "alta",
+      "senal": {
+        "fuente": "supabase",
+        "condicion": "Errores 42501 (permiso denegado) en Postgres más de 20 en 10 minutos, o tras una migración"
+      },
+      "propietario": "seguridad",
+      "accion": "Comprobar si es un fallo de la app (permiso legítimo denegado) o un intento de acceso cruzado; ejecutar la consulta de catálogo",
+      "runbook": "docs/RUNBOOKS.md#rls-y-aislamiento"
+    },
+    {
+      "id": "ocr-fallos",
+      "severidad": "media",
+      "senal": {
+        "fuente": "metricas",
+        "condicion": "ocr.failed_24h / ocr.runs_24h > 0,2 con ocr.runs_24h >= 10, o event = ocr.job con outcome = failed más de 10 en 1 hora"
+      },
+      "propietario": "guardia",
+      "accion": "Agrupar por error_code; si es el proveedor, desactivarlo (OCR_PROVIDER vacío): los gastos se completan a mano",
+      "runbook": "docs/RUNBOOKS.md#ocr"
+    },
+    {
+      "id": "cola-trabajos-atascada",
+      "severidad": "alta",
+      "senal": {
+        "fuente": "metricas",
+        "condicion": "jobs.stuck > 0, o jobs.oldest_pending_s > 1800"
+      },
+      "propietario": "guardia",
+      "accion": "Identificar trabajos bloqueados y reencolarlos con la función de reintento; revisar el proveedor de OCR",
+      "runbook": "docs/RUNBOOKS.md#colas-y-tareas-programadas"
+    },
+    {
+      "id": "tareas-sin-ejecutar",
+      "severidad": "alta",
+      "senal": {
+        "fuente": "metricas",
+        "condicion": "scheduler.last_run_age_s > 1800 o = -1 (nunca), o scheduler.failed_24h >= 3, o event = cron.steps_failed"
+      },
+      "propietario": "guardia",
+      "accion": "Comprobar el planificador y CRON_SECRET; lanzar /api/tareas a mano y revisar el paso fallido (event = job.step)",
+      "runbook": "docs/RUNBOOKS.md#colas-y-tareas-programadas"
+    },
+    {
+      "id": "avisos-atascados",
+      "severidad": "media",
+      "senal": {
+        "fuente": "metricas",
+        "condicion": "outbox.oldest_pending_s > 1800, o outbox.failed > 0"
+      },
+      "propietario": "guardia",
+      "accion": "Revisar el paso «avisos» de las tareas; los avisos fallidos se reintentan desde la consola de soporte",
+      "runbook": "docs/RUNBOOKS.md#colas-y-tareas-programadas"
+    },
+    {
+      "id": "correo-fallos",
+      "severidad": "media",
+      "senal": {
+        "fuente": "metricas",
+        "condicion": "envios.failed_24h > 0,1 × envios.sent_24h con al menos 10 envíos, o envios.oldest_due_s > 3600"
+      },
+      "propietario": "guardia",
+      "accion": "Revisar el proveedor de correo, el dominio y los rebotes; la bandeja de avisos sigue funcionando",
+      "runbook": "docs/RUNBOOKS.md#correo"
+    },
+    {
+      "id": "storage-errores",
+      "severidad": "alta",
+      "senal": {
+        "fuente": "supabase",
+        "condicion": "Errores 5xx de Storage más de 10 en 10 minutos, o report_exports.failed_24h > 0, o event = settlement.files_failed"
+      },
+      "propietario": "guardia",
+      "accion": "Revisar el estado de Storage, cuotas y políticas de los buckets; regenerar exportaciones y paquetes",
+      "runbook": "docs/RUNBOOKS.md#storage"
+    },
+    {
+      "id": "cierre-sin-paquete",
+      "severidad": "alta",
+      "senal": { "fuente": "metricas", "condicion": "settlement.batches_without_exports > 0" },
+      "propietario": "contabilidad",
+      "accion": "Regenerar el paquete desde el lote (Contabilidad); si vuelve a fallar, guardia revisa Storage y el registro",
+      "runbook": "docs/RUNBOOKS.md#cierre-mensual"
+    },
+    {
+      "id": "cierre-pendiente",
+      "severidad": "media",
+      "senal": {
+        "fuente": "metricas",
+        "condicion": "settlement.reports_pending_past_months > 0 a partir del día 5 de cada mes"
+      },
+      "propietario": "contabilidad",
+      "accion": "Recordar a managers y aprobadores los informes pendientes antes de cerrar el periodo",
+      "runbook": "docs/RUNBOOKS.md#cierre-mensual"
+    },
+    {
+      "id": "acceso-maquina-no-autorizado",
+      "severidad": "alta",
+      "senal": {
+        "fuente": "registro",
+        "condicion": "event = cron.unauthorized, metrics.unauthorized o email_webhook.invalid_signature repetido (alert: true)"
+      },
+      "propietario": "seguridad",
+      "accion": "Revisar el origen; rotar CRON_SECRET, METRICS_TOKEN o EMAIL_WEBHOOK_SECRET si pudo filtrarse",
+      "runbook": "docs/RUNBOOKS.md#7-rotación-de-secretos"
+    },
+    {
+      "id": "despliegue-fallido",
+      "severidad": "alta",
+      "senal": {
+        "fuente": "registro",
+        "condicion": "Workflow «Despliegue» fallido (notificación de GitHub) o /api/salud sirve un commit distinto del esperado"
+      },
+      "propietario": "guardia",
+      "accion": "Revisar el resumen del workflow; si falló la migración, aplicar el procedimiento de reversión o corrección hacia delante",
+      "runbook": "docs/RUNBOOKS.md#despliegue-y-migraciones"
+    }
+  ]
+}

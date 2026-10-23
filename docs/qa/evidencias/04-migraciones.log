@@ -1,0 +1,9 @@
+$ npm run db:check-migrations
+inicio: 2026-10-23T06:52:51Z
+
+> control-horario-grupo@0.1.0 db:check-migrations
+> node scripts/ci/check-migrations.mjs
+
+Migraciones válidas (15).
+exit=0
+fin: 2026-10-23T06:52:51Z

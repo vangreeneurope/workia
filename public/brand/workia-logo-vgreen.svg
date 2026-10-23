@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1480 330" role="img" aria-label="Workia by vgreen">
+  <!-- Recreación vectorial del logotipo de Workia by vgreen (sustituir por el original cuando esté disponible). -->
+  <path fill="#9cc585" d="M0 30 H76 C89 30 97 35 104 46 L226 204 C214 232 190 250 160 250 C139 250 126 240 117 225 Z"/>
+  <path fill="#86b56c" d="M150 104 L226 204 C220 218 210 230 198 238 L150 170 Z"/>
+  <path fill="#8a8a8a" d="M181 74 C170 54 182 30 210 30 C226 30 236 37 243 49 L330 197 L463 0 H500 L348 228 C338 243 322 250 304 250 C286 250 270 241 261 226 Z"/>
+  <path fill="#ffffff" d="M316 175 L330 197 L337 187 Z"/>
+  <g fill="none" stroke="#8a8a8a" stroke-width="10" stroke-linejoin="miter" transform="translate(560 58)">
+    <polyline points="0,0 38,150 75,4 112,150 150,0"/>
+    <circle cx="258" cy="75" r="70"/>
+    <path d="M375 150 V5 H435 A40 40 0 0 1 435 85 H375 M420 85 L485 150"/>
+    <path d="M545 0 V150 M650 0 L552 90 M592 54 L660 150"/>
+    <path d="M715 0 V150"/>
+    <polyline points="772,150 842,0 912,150"/>
+  </g>
+  <g font-family="Helvetica, Arial, sans-serif" font-size="64" transform="translate(1180 300)">
+    <text x="0" y="0" fill="#8a8a8a" font-size="52">by</text>
+    <text x="70" y="0" fill="#9cc585" font-weight="700">v</text>
+    <text x="104" y="0" fill="#8a8a8a">green</text>
+  </g>
+  <rect x="1462" y="240" width="5" height="78" fill="#9cc585"/>
+</svg>

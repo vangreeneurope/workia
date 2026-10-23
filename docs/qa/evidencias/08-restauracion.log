@@ -1,0 +1,18 @@
+$ npm run ops:prueba-restauracion
+inicio: 2026-10-23T06:54:17Z
+
+> control-horario-grupo@0.1.0 ops:prueba-restauracion
+> bash scripts/ops/prueba-restauracion.sh
+
+> Origen: migraciones y semillas sintéticas
+psql:/home/user/supabase/migrations/20261025100000_control_horario.sql:20: NOTICE:  extension "pgcrypto" already exists, skipping
+> Copia lógica (pg_dump, formato custom)
+> Restauración en una base nueva (pg_restore)
+> Comprobaciones
+  ok - esquema idéntico (ACL por defecto del propietario normalizada)
+  ok - recuentos de control idénticos (81 tablas, 251 filas)
+  ok - escáner de catálogo en la base restaurada (24 comprobaciones)
+> Tiempos: copia 163 ms (1099 KB), restauración 2024 ms
+Prueba de restauración local superada (2026-10-23T06:54:23Z).
+exit=0
+fin: 2026-10-23T06:54:23Z

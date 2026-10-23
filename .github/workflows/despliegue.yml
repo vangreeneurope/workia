@@ -1,0 +1,162 @@
+# Despliegue portable por entornos (docs/CI_CD.md, § Despliegue). Sin proveedor
+# fijado: delega en scripts/deploy/deploy.sh y el adaptador de DEPLOY_PROVIDER.
+#
+#  - preview:    tras un CI correcto de una PR de una rama de ESTE repositorio
+#                (nunca de forks). Sin migraciones: si la PR cambia el esquema,
+#                no se despliega.
+#  - staging:    tras un CI correcto en main. Aplica las migraciones pendientes.
+#  - production: solo a mano, con un commit de main con CI correcto, y con la
+#                aprobación del entorno "production" (revisores obligatorios en
+#                GitHub) y confirmación de copia previa si hay migraciones.
+#
+# Este archivo se ejecuta siempre desde main (workflow_run y workflow_dispatch),
+# así que una PR no puede modificarlo para obtener secretos.
+name: Despliegue
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      entorno:
+        description: Entorno de destino
+        type: choice
+        options: [staging, production]
+        required: true
+      ref:
+        description: Commit o etiqueta de main con CI correcto
+        required: true
+      copia_confirmada:
+        description: Confirmo copia o punto de restauración válido antes de migrar (producción)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    name: Plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_repository.full_name == github.repository &&
+       ((github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main') ||
+        github.event.workflow_run.event == 'pull_request'))
+    permissions:
+      contents: read
+      checks: read
+    outputs:
+      entorno: ${{ steps.plan.outputs.entorno }}
+      sha: ${{ steps.plan.outputs.sha }}
+      migraciones: ${{ steps.plan.outputs.migraciones }}
+      desplegar: ${{ steps.plan.outputs.desplegar }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - id: plan
+        name: Entorno, commit y migraciones pendientes
+        env:
+          EVENT: ${{ github.event_name }}
+          RUN_EVENT: ${{ github.event.workflow_run.event }}
+          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+          INPUT_ENTORNO: ${{ inputs.entorno }}
+          INPUT_REF: ${{ inputs.ref }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: bash scripts/deploy/plan.sh
+
+  migraciones:
+    name: Migraciones (${{ needs.plan.outputs.entorno }})
+    needs: plan
+    if: needs.plan.outputs.desplegar == 'true' && needs.plan.outputs.migraciones == 'true' && needs.plan.outputs.entorno != 'preview'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: ${{ needs.plan.outputs.entorno }}
+    concurrency:
+      # Nunca dos migraciones a la vez en el mismo entorno, y nunca se cancelan.
+      group: migraciones-${{ needs.plan.outputs.entorno }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ needs.plan.outputs.sha }}
+          persist-credentials: false
+      - uses: supabase/setup-cli@1dedf2c611547ede7232d26866dd3c56ab903bbb # v1.7.3
+        with:
+          version: 2.120.0
+      - name: Aplicar migraciones pendientes (una vez por entorno)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+          SUPABASE_PRODUCTION_REF: ${{ vars.SUPABASE_PRODUCTION_REF }}
+          COPIA_CONFIRMADA: ${{ inputs.copia_confirmada }}
+          ENTORNO: ${{ needs.plan.outputs.entorno }}
+        run: bash scripts/db/migrar.sh "$ENTORNO"
+
+  desplegar:
+    name: Desplegar (${{ needs.plan.outputs.entorno }})
+    needs: [plan, migraciones]
+    # Se despliega si no había migraciones o si se aplicaron bien.
+    if: >-
+      always() && needs.plan.outputs.desplegar == 'true' &&
+      (needs.migraciones.result == 'success' || needs.migraciones.result == 'skipped')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment:
+      name: ${{ needs.plan.outputs.entorno }}
+      url: ${{ steps.deploy.outputs.url }}
+    concurrency:
+      group: despliegue-${{ needs.plan.outputs.entorno }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      # Identidad federada (OIDC) para proveedores que la admiten: sin tokens largos.
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ needs.plan.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+      - name: Proveedor configurado
+        id: proveedor
+        env:
+          DEPLOY_PROVIDER: ${{ vars.DEPLOY_PROVIDER }}
+        run: |
+          if [ -z "$DEPLOY_PROVIDER" ]; then
+            echo "::notice::Sin DEPLOY_PROVIDER: no hay hosting configurado, no se despliega (docs/CI_CD.md)."
+            echo "listo=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "listo=true" >> "$GITHUB_OUTPUT"
+          fi
+      # Aquí van los pasos de autenticación propios del proveedor elegido (por
+      # ejemplo, el inicio de sesión por OIDC en su registro de contenedores).
+      - name: Desplegar
+        id: deploy
+        if: steps.proveedor.outputs.listo == 'true'
+        env:
+          DEPLOY_PROVIDER: ${{ vars.DEPLOY_PROVIDER }}
+          APP_ENV: ${{ needs.plan.outputs.entorno }}
+          APP_COMMIT: ${{ needs.plan.outputs.sha }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
+          CONTAINER_IMAGE: ${{ vars.CONTAINER_IMAGE }}
+          DEPLOY_URL: ${{ vars.DEPLOY_URL }}
+          DEPLOY_HOOK_URL: ${{ secrets.DEPLOY_HOOK_URL }}
+        run: bash scripts/deploy/deploy.sh "$APP_ENV"
+      - name: Verificar commit, migración y disponibilidad
+        if: steps.proveedor.outputs.listo == 'true'
+        env:
+          URL: ${{ steps.deploy.outputs.url }}
+          SHA: ${{ needs.plan.outputs.sha }}
+        run: bash scripts/deploy/verificar.sh "$URL" "$SHA"

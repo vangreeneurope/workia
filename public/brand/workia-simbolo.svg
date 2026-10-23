@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 250" role="img" aria-label="Workia">
+  <!-- Recreación vectorial del símbolo de Workia (sustituir por el original cuando esté disponible). -->
+  <path fill="#9cc585" d="M0 30 H76 C89 30 97 35 104 46 L226 204 C214 232 190 250 160 250 C139 250 126 240 117 225 Z"/>
+  <path fill="#86b56c" d="M150 104 L226 204 C220 218 210 230 198 238 L150 170 Z"/>
+  <path fill="#8a8a8a" d="M181 74 C170 54 182 30 210 30 C226 30 236 37 243 49 L330 197 L463 0 H500 L348 228 C338 243 322 250 304 250 C286 250 270 241 261 226 Z"/>
+  <path fill="#ffffff" d="M316 175 L330 197 L337 187 Z"/>
+</svg>

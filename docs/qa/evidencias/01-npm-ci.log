@@ -1,0 +1,7 @@
+$ npm ci --no-audit --no-fund
+inicio: 2026-10-23T06:51:55Z
+npm warn deprecated eslint@9.39.5: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+
+added 560 packages in 20s
+exit=0
+fin: 2026-10-23T06:52:14Z

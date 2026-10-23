@@ -1,0 +1,9 @@
+$ npm run db:types:check
+inicio: 2026-10-23T06:53:42Z
+
+> control-horario-grupo@0.1.0 db:types:check
+> bash scripts/gen-db-types.sh --check
+
+Tipos de base de datos al día.
+exit=0
+fin: 2026-10-23T06:53:46Z

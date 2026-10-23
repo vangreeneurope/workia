@@ -1,0 +1,192 @@
+# Integración continua (docs/CI_CD.md). Sin secretos: se ejecuta igual en pull
+# requests de ramas propias y de forks. Las acciones están fijadas por commit
+# (la etiqueta va en el comentario; Dependabot propone las actualizaciones).
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  merge_group:
+  schedule:
+    # E2E completo cada noche (03:17 UTC) para detectar regresiones de entorno.
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # Una ejecución por PR o rama; en PR se cancela la anterior (obsoleta). En main
+  # no se cancela: cada commit de main debe quedar verificado.
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+  # Valores públicos de relleno para el build y el entorno E2E local
+  # (scripts/e2e/stack.sh). No son secretos ni apuntan a ningún proyecto real.
+  NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_placeholder_solo_para_build
+  NEXT_PUBLIC_SITE_URL: http://localhost:3000
+
+jobs:
+  calidad:
+    name: Tipos, lint, formato y unitarias
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm test
+
+  seguridad:
+    name: Secretos y dependencias
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      # Sin secretos versionados (claves, tokens, .env, cadenas de conexión).
+      - run: npm run security:secrets
+      # Producción sin vulnerabilidades altas o críticas. Las de herramientas de
+      # desarrollo se revisan en docs/SEGURIDAD.md (riesgo aceptado y fecha).
+      - run: npm run security:audit
+      - name: Informe completo (no bloquea)
+        run: npm audit || true
+
+  migraciones:
+    name: Migraciones, RLS, integración, reversibilidad y tipos
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # Base desechable del propio job: credenciales de prueba, no secretos.
+      TEST_DB_EXTERNAL: "1"
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0 # para comparar con la rama base
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Nombres, reversiones y migraciones ya fusionadas intactas
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [ "$EVENT" = "pull_request" ]; then
+            npm run db:check-migrations -- --base "origin/$BASE_REF"
+          else
+            npm run db:check-migrations
+          fi
+      # Aplica todas las migraciones en una base nueva, pruebas positivas y
+      # negativas de aislamiento (RLS), integración con sesiones simultáneas,
+      # escáner de catálogo y reversibilidad exacta de cada migración.
+      - name: Aislamiento multiempresa, integración y reversibilidad
+        run: npm run test:db
+      # Base poblada con todos los dominios: lectura, funciones SECURITY DEFINER,
+      # escrituras directas y Storage contra otra empresa (con control positivo).
+      - name: Pruebas adversarias de aislamiento
+        run: npm run test:aislamiento
+      - name: Los tipos TypeScript coinciden con las migraciones
+        run: npm run db:types:check
+
+  build-e2e:
+    name: Build y E2E
+    runs-on: ubuntu-24.04
+    needs: calidad
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      # Cachés sin secretos y con clave por contenido. GitHub aísla las cachés
+      # escritas desde un PR: no pueden contaminar las de main.
+      - name: Caché del build de Next.js
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .next/cache
+          key: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('src/**', 'next.config.ts') }}
+          restore-keys: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+      - name: Caché de PostgREST (versión y huella fijas en scripts/e2e/stack.sh)
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.cache/portal-e2e
+          key: postgrest-12.2.3
+      - run: npx playwright install --with-deps chromium
+      - name: PostgreSQL local para el entorno E2E (binarios, sin servicio)
+        run: sudo apt-get update && sudo apt-get install -y postgresql
+      - name: Build de producción
+        run: npm run build
+        env:
+          APP_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+      # En PR, el recorrido mínimo (acceso, seguridad, salud y flujos críticos);
+      # en main, cada noche y a mano, todo (auditoría de vistas y rendimiento).
+      - name: E2E mínimo
+        if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
+        run: npm run test:e2e:minimo
+      - name: E2E completo
+        if: github.event_name != 'pull_request' && github.event_name != 'merge_group'
+        run: npm run test:e2e
+      # Solo datos sintéticos (semillas locales). Las capturas y trazas no
+      # contienen secretos: el entorno E2E genera un secreto aleatorio por ejecución.
+      - name: Resultados de Playwright si falla
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: playwright-test-results
+          path: test-results/
+          retention-days: 7
+
+  # Único check requerido en la protección de main: falla si cualquier trabajo
+  # falla o se cancela (así añadir trabajos no exige tocar la protección).
+  ci-correcto:
+    name: CI correcto
+    runs-on: ubuntu-24.04
+    if: always()
+    needs: [calidad, seguridad, migraciones, build-e2e]
+    timeout-minutes: 5
+    steps:
+      - name: Todos los trabajos han terminado bien
+        run: |
+          echo '${{ toJSON(needs) }}' | jq -e 'to_entries | all(.value.result == "success")'

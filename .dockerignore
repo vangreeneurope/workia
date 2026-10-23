@@ -1,0 +1,15 @@
+# Nada local, secreto ni de pruebas entra en la imagen.
+.git
+.github
+.next
+node_modules
+test-results
+playwright-report
+coverage
+tests
+.env
+.env.*
+!.env.example
+*.log
+Dockerfile
+.dockerignore
