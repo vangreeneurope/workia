@@ -9,6 +9,7 @@ import {
   applyFields,
   formKey,
   FORM_SUCCESS_EVENT,
+  isApplyingDraft,
   isDraftable,
   loadDrafts,
   readFields,
@@ -34,6 +35,9 @@ export function DraftKeeper({ userId }: { userId: string }) {
   const [restored, setRestored] = useState<{ form: HTMLFormElement; key: string } | null>(null);
   const lastSubmitted = useRef<string | null>(null);
   const timers = useRef(new Map<string, number>());
+  // Formularios en los que la persona ya ha escrito en esta pantalla: no se
+  // sobrescriben con un borrador (los eventos propios de applyFields no cuentan).
+  const touched = useRef(new WeakSet<HTMLFormElement>());
 
   // Guardar mientras se escribe; marcar al enviar.
   useEffect(() => {
@@ -57,6 +61,7 @@ export function DraftKeeper({ userId }: { userId: string }) {
       if (!(target instanceof Element) || !isDraftable(target)) return;
       const form = target.form;
       if (!form || !root.contains(form)) return;
+      if (!isApplyingDraft()) touched.current.add(form);
       const key = keyOf(form);
       window.clearTimeout(pending.get(key));
       pending.set(
@@ -129,6 +134,7 @@ export function DraftKeeper({ userId }: { userId: string }) {
     }
     if (dirty) saveDrafts(userId, store);
 
+    touched.current = new WeakSet();
     const done = new Set<string>();
     const attempts = RESTORE_ATTEMPTS_MS.map((delay) =>
       window.setTimeout(() => {
@@ -137,7 +143,7 @@ export function DraftKeeper({ userId }: { userId: string }) {
         forms.forEach((form, index) => {
           const key = formKey(pathname, form, index);
           const draft = current[key];
-          if (!draft || done.has(key)) return;
+          if (!draft || done.has(key) || touched.current.has(form)) return;
           done.add(key);
           if (applyFields(form, draft.fields) > 0) setRestored({ form, key });
         });
@@ -162,9 +168,9 @@ export function DraftKeeper({ userId }: { userId: string }) {
   return (
     <div
       role="status"
-      className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-40 flex justify-center px-4 md:bottom-6"
+      className="pointer-events-none fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-40 flex justify-center px-4 md:bottom-6"
     >
-      <div className="bg-card text-card-foreground flex max-w-md items-center gap-3 rounded-xl border py-1 pr-1 pl-4 text-sm shadow-lg">
+      <div className="bg-card text-card-foreground pointer-events-auto flex max-w-md items-center gap-3 rounded-xl border py-1 pr-1 pl-4 text-sm shadow-lg">
         <History className="size-4 shrink-0" aria-hidden />
         <span className="py-2">Hemos recuperado el texto que escribiste en este formulario.</span>
         <Button type="button" variant="ghost" size="sm" onClick={discard}>

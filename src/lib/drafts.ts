@@ -83,6 +83,13 @@ export function readFields(form: HTMLFormElement): Record<string, string> {
   return out;
 }
 
+let applying = false;
+
+/** ¿Los eventos actuales los emite applyFields (no la persona)? */
+export function isApplyingDraft(): boolean {
+  return applying;
+}
+
 const setters = () => ({
   input: Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set,
   textarea: Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set,
@@ -97,22 +104,30 @@ const setters = () => ({
 export function applyFields(form: HTMLFormElement, fields: Record<string, string>): number {
   const set = setters();
   let changed = 0;
-  for (const field of draftableFields(form)) {
-    const value = fields[field.name];
-    if (value === undefined || value === field.value) continue;
-    if (field instanceof HTMLSelectElement && ![...field.options].some((o) => o.value === value)) {
-      continue;
+  applying = true;
+  try {
+    for (const field of draftableFields(form)) {
+      const value = fields[field.name];
+      if (value === undefined || value === field.value) continue;
+      if (
+        field instanceof HTMLSelectElement &&
+        ![...field.options].some((o) => o.value === value)
+      ) {
+        continue;
+      }
+      const setter =
+        field instanceof HTMLInputElement
+          ? set.input
+          : field instanceof HTMLTextAreaElement
+            ? set.textarea
+            : set.select;
+      setter?.call(field, value);
+      field.dispatchEvent(new Event("input", { bubbles: true }));
+      field.dispatchEvent(new Event("change", { bubbles: true }));
+      changed++;
     }
-    const setter =
-      field instanceof HTMLInputElement
-        ? set.input
-        : field instanceof HTMLTextAreaElement
-          ? set.textarea
-          : set.select;
-    setter?.call(field, value);
-    field.dispatchEvent(new Event("input", { bubbles: true }));
-    field.dispatchEvent(new Event("change", { bubbles: true }));
-    changed++;
+  } finally {
+    applying = false;
   }
   return changed;
 }

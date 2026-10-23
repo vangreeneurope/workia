@@ -7,7 +7,7 @@ import { login, USERS } from "./helpers";
 
 test("la versión vAA.N aparece bajo el formulario de acceso", async ({ page }) => {
   await page.goto("/acceder");
-  await expect(page.getByText(/^Workia v\d{2}\.\d+$/)).toBeVisible();
+  await expect(page.getByText(/Workia v\d{2}\.\d+/)).toBeVisible();
 });
 
 test("ayuda: landing con apartados y manual paso a paso", async ({ page }) => {

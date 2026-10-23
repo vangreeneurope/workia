@@ -70,9 +70,9 @@ export function SessionTimer({ deadline, serverNow }: { deadline: number; server
   return (
     <div
       role="alert"
-      className="fixed inset-x-0 top-[calc(4.5rem+env(safe-area-inset-top))] z-50 flex justify-center px-4"
+      className="pointer-events-none fixed inset-x-0 top-[calc(4.5rem+env(safe-area-inset-top))] z-50 flex justify-center px-4"
     >
-      <div className="bg-card text-card-foreground flex w-full max-w-md items-start gap-3 rounded-xl border border-amber-300 p-4 text-sm shadow-lg dark:border-amber-700">
+      <div className="bg-card text-card-foreground pointer-events-auto flex w-full max-w-md items-start gap-3 rounded-xl border border-amber-300 p-4 text-sm shadow-lg dark:border-amber-700">
         <Clock className="mt-0.5 size-5 shrink-0 text-amber-600" aria-hidden />
         <div className="grid flex-1 gap-2">
           <p className="font-medium">
