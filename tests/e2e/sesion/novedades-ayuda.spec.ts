@@ -41,6 +41,8 @@ test("novedades: cada cambio de funcionamiento explica el antes y el ahora", asy
 
 test("aviso de actualización: se ve al entrar y no vuelve tras «Entendido»", async ({ page }) => {
   await login(page, USERS.manager);
+  // El armazón llega en streaming: esperar a la página antes de mirar si hay aviso.
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   const aviso = page.getByText(/^Workia se ha actualizado a la versión v\d{2}\.\d+$/);
   // Sin versiones calculadas (build sin historia de git) no hay aviso que probar.
   test.skip((await aviso.count()) === 0, "Build sin versiones de novedades");
