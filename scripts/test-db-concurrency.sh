@@ -11,6 +11,8 @@
 #   3. Aplicación y terminal a la vez para la misma persona: uno gana.
 #   4. Dos solicitudes de vacaciones a la vez que solo caben de una en una:
 #      una reserva el saldo y la otra se rechaza (nunca saldo consumido dos veces).
+#   4b. Doble decisión simultánea (aprobar y rechazar) y doble envío con la misma
+#      clave: una sola decisión y una sola solicitud.
 #   5. Mismo ticket registrado dos veces a la vez (reintento): un solo gasto.
 #   6. Dos sesiones reclaman a la vez el mismo trabajo de OCR: una sola ejecución.
 #   7. Dos cierres contables simultáneos del mismo periodo (misma clave y clave
@@ -119,6 +121,35 @@ SQL
     echo "FALLO: dos solicitudes simultáneas sobre el mismo saldo (solicitudes/reservado=$n)" >&2; cat "$out_a" "$out_b" >&2; return 1
   fi
   echo "  ok - Dos solicitudes simultáneas: una reserva el saldo y la otra se rechaza por saldo insuficiente"
+
+  # Doble decisión simultánea sobre la misma solicitud (aprobar y rechazar a la vez):
+  # una sola decisión aplicada y la otra rechazada por estado (auditoría QA).
+  local req
+  req="$(pg_sql "$db" -At -c "select id from public.absence_requests where idempotency_key = '7c000000-0000-4000-8000-000000000010'")"
+  concurrency_session "$db" 00000000-0000-0000-0000-000000000006 \
+    "select public.decide_absence_request('$req', 'approve', null)" 2 >"$out_a" &
+  sleep 0.5
+  concurrency_session "$db" 00000000-0000-0000-0000-000000000006 \
+    "select public.decide_absence_request('$req', 'reject', 'Otra decisión a la vez')" 0 >"$out_b"
+  wait
+  n="$(pg_sql "$db" -At -c "select r.status || '/' || (select count(*) from public.absence_approvals a where a.request_id = r.id) || '/' || (select coalesce(sum(amount), 0) from public.balance_movements m where m.request_id = r.id) from public.absence_requests r where r.id = '$req'")"
+  if [[ "${n%%/*}" != "approved" || "$(cut -d/ -f2 <<<"$n")" != "1" ]] || ! grep -q "no está pendiente" "$out_b"; then
+    echo "FALLO: doble decisión simultánea (estado/decisiones/saldo=$n)" >&2; cat "$out_a" "$out_b" >&2; return 1
+  fi
+  echo "  ok - Doble decisión simultánea: una sola decisión aplicada ($n) y la otra rechazada por estado"
+
+  # Doble envío simultáneo con la misma clave de idempotencia: una sola solicitud.
+  concurrency_session "$db" 00000000-0000-0000-0000-000000000007 \
+    "select public.submit_absence_request('$company', '7f000000-0000-4000-8000-0000000000c1', 'day', date '$monday' + 7, date '$monday' + 7, '7c000000-0000-4000-8000-000000000012') ->> 'duplicate'" 2 >"$out_a" &
+  sleep 0.5
+  concurrency_session "$db" 00000000-0000-0000-0000-000000000007 \
+    "select public.submit_absence_request('$company', '7f000000-0000-4000-8000-0000000000c1', 'day', date '$monday' + 7, date '$monday' + 7, '7c000000-0000-4000-8000-000000000012') ->> 'duplicate'" 0 >"$out_b"
+  wait
+  n="$(pg_sql "$db" -At -c "select count(*) from public.absence_requests where idempotency_key = '7c000000-0000-4000-8000-000000000012'")"
+  if [[ "$n" != "1" ]] || ! grep -qx "false" "$out_a" || ! grep -qx "true" "$out_b"; then
+    echo "FALLO: doble envío simultáneo con la misma clave (solicitudes=$n)" >&2; cat "$out_a" "$out_b" >&2; return 1
+  fi
+  echo "  ok - Doble envío simultáneo con la misma clave: una sola solicitud; el segundo recibe el duplicado"
 
   # Gastos: el mismo registro de ticket dos veces a la vez.
   local ekey=9e000000-0000-4000-8000-000000000001 epath

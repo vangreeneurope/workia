@@ -1,0 +1,11 @@
+      op       |   outcome   | count 
+---------------+-------------+-------
+ insert        | error 42501 |    30
+ update+delete | filas=0     |    30
+(2 rows)
+
+         ?column?          
+---------------------------
+ objetos de A intactos: 13
+(1 row)
+

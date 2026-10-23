@@ -1,0 +1,24 @@
+$ npm run check
+> control-horario-grupo@0.1.0 check
+> npm run typecheck && npm run lint && npm run format:check && npm run test
+> control-horario-grupo@0.1.0 typecheck
+> next typegen && tsc --noEmit
+Generating route types...
+✓ Types generated successfully
+> control-horario-grupo@0.1.0 lint
+> eslint --max-warnings=0
+> control-horario-grupo@0.1.0 format:check
+> prettier --check .
+Checking formatting...
+All matched files use Prettier code style!
+> control-horario-grupo@0.1.0 test
+> vitest run
+ RUN  v5.0.5 /home/user
+ Test Files  27 passed (27)
+      Tests  300 passed (300)
+   Start at  06:15:27
+   Duration  12.74s (environment 59%, tests 13%, import 10%, setup 10%, transform 7%, worker 1%)
+Environment  jsdom was created 27 times · 20.24s total, 59% of tracked time
+             create it once per worker with pool: 'vmThreads' (keeps per-file isolation) or isolate: false (shares it across files)
+             learn more: https://vitest.dev/guide/improving-performance#test-environments
+exit=0

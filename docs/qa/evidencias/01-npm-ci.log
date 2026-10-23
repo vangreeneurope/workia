@@ -1,0 +1,5 @@
+$ npm ci
+npm warn deprecated eslint@9.39.5: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+
+added 560 packages in 34s
+exit=0

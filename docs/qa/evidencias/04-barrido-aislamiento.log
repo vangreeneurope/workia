@@ -1,0 +1,12 @@
+           attacker           |      relation       | rows 
+------------------------------+---------------------+------
+ EXP membresía caducada en A | company_memberships |    1
+ EXP membresía caducada en A | manager_assignments |    1
+ EXP membresía caducada en A | role_assignments    |    1
+(3 rows)
+
+            ?column?            
+--------------------------------
+ atacantes=9 comprobaciones=612
+(1 row)
+

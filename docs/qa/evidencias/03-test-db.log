@@ -1,0 +1,1069 @@
+$ npm run test:db
+
+> control-horario-grupo@0.1.0 test:db
+> bash scripts/test-db.sh
+
+> Plantilla: emulación de Supabase + migraciones
+psql:/home/user/supabase/migrations/20261025100000_control_horario.sql:20: NOTICE:  extension "pgcrypto" already exists, skipping
+> Pruebas 10_aislamiento_multiempresa
+  ok - anon no puede leer groups (permission denied for table groups)
+  ok - anon no puede leer group_admins (permission denied for table group_admins)
+  ok - anon no puede leer companies (permission denied for table companies)
+  ok - anon no puede leer profiles (permission denied for table profiles)
+  ok - anon no puede leer company_memberships (permission denied for table company_memberships)
+  ok - anon no puede leer role_assignments (permission denied for table role_assignments)
+  ok - anon no puede leer work_centers (permission denied for table work_centers)
+  ok - anon no puede leer teams (permission denied for table teams)
+  ok - anon no puede leer employees (permission denied for table employees)
+  ok - anon no puede leer employment_terms (permission denied for table employment_terms)
+  ok - anon no puede leer manager_assignments (permission denied for table manager_assignments)
+  ok - anon no puede leer audit_log (permission denied for table audit_log)
+  ok - X: no ve grupos
+  ok - X: no ve empresas
+  ok - X: no ve centros
+  ok - X: no ve equipos
+  ok - X: no ve membresías
+  ok - X: no ve roles
+  ok - X: no ve empleados
+  ok - X: no ve condiciones
+  ok - X: no ve asignaciones
+  ok - X: no ve auditoría
+  ok - X: no ve logotipos
+  ok - X: solo ve su perfil
+  ok - X: no puede crear su propia membresía (new row violates row-level security policy for table "company_memberships")
+  ok - E1: solo ve su ficha
+  ok - E1: solo ve sus condiciones
+  ok - E1: solo ve su membresía
+  ok - E1: solo ve sus roles
+  ok - E1: solo ve la empresa A
+  ok - E1: solo ve su grupo
+  ok - E1: ve los centros de A
+  ok - E1: ve los equipos de A
+  ok - E1: solo ve su perfil
+  ok - E1: ve quién le supervisa
+  ok - E1: solo ve el logotipo de A
+  ok - E1: no ve auditoría
+  ok - E1: no puede leer a un compañero aunque conozca su id
+  ok - E1: filtrar por company_id de B no devuelve nada
+  ok - E1: no puede editar su ficha
+  ok - E1: no puede editar sus condiciones
+  ok - E1: no puede concederse roles (new row violates row-level security policy for table "role_assignments")
+  ok - E1: no puede darse de alta en otra empresa (new row violates row-level security policy for table "company_memberships")
+  ok - E1: no puede ampliar la vigencia de su membresía
+  ok - MGR: ve su ficha y solo a sus supervisados (también de B)
+  ok - MGR: no ve a empleados sin asignación vigente
+  ok - MGR: ve las condiciones de sus supervisados
+  ok - MGR: ve su perfil y los de sus supervisados
+  ok - MGR: ve su membresía y las de sus supervisados
+  ok - MGR: ve A (miembro) y B (supervisa), no C
+  ok - MGR: ve los logotipos de A y B
+  ok - MGR: no ve auditoría
+  ok - MGR: no puede asignarse empleados (new row violates row-level security policy for table "manager_assignments")
+  ok - MGR: supervisar no permite editar la ficha
+  ok - MOLD: con la asignación caducada no ve a E2
+  ok - MOLD: ni sus condiciones
+  ok - CA: ve los 7 empleados de A
+  ok - CA: no ve empleados de otras empresas
+  ok - CA: ve las 12 membresías de A
+  ok - CA: ve las condiciones de A
+  ok - CA: ve los perfiles de la plantilla de A
+  ok - CA: solo ve la empresa A
+  ok - CA: crea centros en A
+  ok - CA: no crea centros en B (new row violates row-level security policy for table "work_centers")
+  ok - CA: da de alta empleados en A
+  ok - CA: no da de alta empleados en B (new row violates row-level security policy for table "employees")
+  ok - CA: no puede usar un equipo de B en A (insert or update on table "employees" violates foreign key constraint "employees_team_id_company_id_fkey")
+  ok - CA: concede hr y queda registrado quién lo concedió
+  ok - CA: no puede concederse roles a sí mismo (new row violates row-level security policy for table "role_assignments")
+  ok - CA: no puede dar rol en A a una membresía de B (insert or update on table "role_assignments" violates foreign key constraint "role_assignments_membership_id_company_id_fkey")
+  ok - CA: da de alta a X en A
+  ok - CA: no da de alta en B (new row violates row-level security policy for table "company_memberships")
+  ok - CA: edita los datos de su empresa
+  ok - CA: no puede desactivar su empresa (Solo la administración del grupo puede cambiar el estado de una empresa)
+  ok - CA: asigna como manager a alguien de otra empresa del mismo grupo
+  ok - CA: no puede asignar un manager de otro grupo (new row violates row-level security policy for table "manager_assignments")
+  ok - CA: nadie supervisa su propia ficha (new row violates row-level security policy for table "manager_assignments")
+  ok - CA: no puede asignarse a sí mismo como manager (new row violates row-level security policy for table "manager_assignments")
+  ok - CA: no puede mover un empleado a otra empresa (permission denied for table employees)
+  ok - CA: no puede mover una membresía (permission denied for table company_memberships)
+  ok - CA: no puede crear condiciones para un empleado de B declarando la empresa A (new row violates row-level security policy for table "employment_terms")
+  ok - CA: no puede asignar manager a un empleado de B declarando la empresa A (new row violates row-level security policy for table "manager_assignments")
+  ok - CA: la concesión de rol queda auditada con actor, empresa y grupo
+  ok - CA: solo ve auditoría de A
+  ok - HR: concede el rol manager
+  ok - HR: no concede company_admin (new row violates row-level security policy for table "role_assignments")
+  ok - HR: no concede auditor (new row violates row-level security policy for table "role_assignments")
+  ok - HR: no puede revocar al administrador de empresa
+  ok - HR: no puede tocar sus propios roles
+  ok - HR: no puede editar su propia ficha
+  ok - HR: edita fichas de su empresa
+  ok - HRW: solo ve empleados de su centro (A2)
+  ok - HRW: solo ve condiciones de su centro
+  ok - HRW: un rol de centro no da acceso al listado de membresías
+  ok - HRW: no edita empleados de otro centro
+  ok - HRW: edita empleados de su centro
+  ok - HRW: no da de alta empleados en otro centro (new row violates row-level security policy for table "employees")
+  ok - HRW: no puede sacar un empleado de su ámbito (new row violates row-level security policy for table "employees")
+  ok - ACC: ve los empleados de A (datos básicos)
+  ok - ACC: no ve empleados de otras empresas
+  ok - ACC: no ve condiciones laborales
+  ok - ACC: no ve la plantilla de cuentas
+  ok - ACC: no ve auditoría
+  ok - ACC: no edita empleados
+  ok - ACC: no da de alta empleados (new row violates row-level security policy for table "employees")
+  ok - AUD: lee condiciones de A
+  ok - AUD: lee la auditoría de A
+  ok - AUD: solo auditoría de A
+  ok - AUD: no modifica empleados
+  ok - AUD: no concede roles (new row violates row-level security policy for table "role_assignments")
+  ok - CB: solo ve empleados de B
+  ok - CB: no ve a E1 aunque conozca su id
+  ok - CB: no ve centros de A
+  ok - CB: no ve membresías de A
+  ok - CB: no modifica empleados de A
+  ok - CB: insertar en A falla por RLS, sin revelar si el código existe (new row violates row-level security policy for table "employees")
+  ok - CB: no puede dar rol en B a una membresía de A (insert or update on table "role_assignments" violates foreign key constraint "role_assignments_membership_id_company_id_fkey")
+  ok - CC: solo ve la empresa C
+  ok - CC: solo ve su grupo
+  ok - EXP: con la membresía caducada no ve su empresa
+  ok - EXP: ni su propia ficha
+  ok - EXP: ni sus condiciones
+  ok - EXP: ni los centros
+  ok - EXP: un rol hr activo no sirve con la membresía caducada (new row violates row-level security policy for table "employees")
+  ok - RFUT: un rol con vigencia futura aún no da acceso
+  ok - RREV: un rol revocado no da acceso
+  ok - GA: ve las empresas de su grupo y no las de otro
+  ok - GA: no ve empleados de otro grupo
+  ok - GA: crea empresas en su grupo
+  ok - GA: no crea empresas en otro grupo (new row violates row-level security policy for table "companies")
+  ok - GA: no nombra administradores de grupo (new row violates row-level security policy for table "group_admins")
+  ok - GA: puede desactivar empresas de su grupo
+  ok - PA: la plataforma ve todas las empresas
+  ok - PA: tampoco puede nombrarse a sí mismo (new row violates row-level security policy for table "group_admins")
+Pruebas de aislamiento multiempresa superadas.
+> Pruebas 20_integridad_y_escalada
+  ok - Nadie mueve una membresía de empresa (La columna company_memberships.company_id no se puede modificar)
+  ok - Nadie cambia el titular de una membresía (La columna company_memberships.user_id no se puede modificar)
+  ok - Un rol concedido no se transforma en otro (La columna role_assignments.role no se puede modificar)
+  ok - Nadie mueve una ficha de empleado de empresa (La columna employees.company_id no se puede modificar)
+  ok - Una asignación de manager no cambia de empleado (La columna manager_assignments.employee_id no se puede modificar)
+  ok - Una empresa no cambia de grupo (La columna companies.group_id no se puede modificar)
+  ok - Las concesiones de roles quedan auditadas
+  ok - La auditoría no se modifica (La tabla audit_log es inmutable: no se permite UPDATE)
+  ok - La auditoría no se borra (La tabla audit_log es inmutable: no se permite DELETE)
+  ok - La auditoría no se vacía (La tabla audit_log es inmutable: no se permite TRUNCATE)
+  ok - No hay dos condiciones activas solapadas (conflicting key value violates exclusion constraint "employment_terms_no_overlap")
+  ok - Un borrador puede solaparse
+  ok - Tras cerrar unas condiciones se pueden abrir otras consecutivas
+  ok - La jornada ordinaria no supera 40 h semanales (new row for relation "employment_terms" violates check constraint "employment_terms_weekly_hours_check")
+  ok - El ámbito del rol es coherente (new row for relation "role_assignments" violates check constraint "role_assignments_scope_check")
+  ok - Un rol de A no puede tener como ámbito un centro de B (insert or update on table "role_assignments" violates foreign key constraint "role_assignments_work_center_id_company_id_fkey")
+  ok - Un equipo de A no cuelga de un centro de B (insert or update on table "teams" violates foreign key constraint "teams_work_center_id_company_id_fkey")
+  ok - La vigencia es coherente (new row for relation "company_memberships" violates check constraint "company_memberships_validity_check")
+  ok - No se puede falsear quién concede un rol (permission denied for table role_assignments)
+  ok - El estado inicial no lo decide el cliente (permission denied for table manager_assignments)
+  ok - El cliente no elige ids (evita sondear ids de otras empresas) (permission denied for table employees)
+  ok - Vincular una membresía de B en A falla por clave foránea, no por duplicado (insert or update on table "employees" violates foreign key constraint "employees_membership_id_company_id_fkey")
+  ok - El slug es único por grupo: no revela slugs de otros grupos
+  ok - Declararse administrador en user_metadata no da acceso
+  ok - Ni a empleados
+  ok - Añadir company_id o roles a los claims no amplía permisos
+Pruebas de integridad y escalada superadas.
+> Pruebas 30_seed_sintetico
+  ok - Semilla: dos empresas
+  ok - Semilla: seis fichas de empleado
+  ok - Semilla: un perfil por cuenta
+  ok - Semilla: todos los correos usan el dominio reservado .example
+  ok - Semilla: ninguna cuenta tiene contraseña en el repositorio
+  ok - Semilla: ningún permiso vive en los metadatos de Auth
+  ok - Semilla: sin NIF que pueda coincidir con uno real
+  ok - Semilla: la empleada solo ve su ficha
+  ok - Semilla: y solo su empresa
+  ok - Semilla: el manager ve su ficha y sus 2 supervisadas
+  ok - Semilla: el manager no ve a quien no supervisa
+  ok - Semilla: la administración de Beta solo ve Beta
+  ok - Semilla: contabilidad ve las fichas de Alfa
+  ok - Semilla: de las condiciones laborales solo ve las suyas
+  ok - Semilla: la empleada ve el horario de su equipo y su excepción
+  ok - Semilla: Enzo solo ve el suyo
+  ok - Semilla: Beta no ve plantillas de Alfa
+  ok - Semilla: los únicos festivos son sintéticos y lo declaran en su fuente
+  ok - Semilla: jornada sintética de ayer recalculada
+  ok - Semilla: sin PIN en el repositorio
+  ok - Semilla: el catálogo de ausencias se declara como ejemplo, no como lista legal
+  ok - Semilla: la política de gastos es de ejemplo y no hay tickets en el repositorio
+  ok - Semilla: el mapeo contable es de ejemplo y no hay informes ni lotes
+  ok - Semilla: la administración de grupo ve ambas empresas
+Semillas sintéticas verificadas.
+> Pruebas 40_administracion
+  ok - PA: ve el listado de empresas
+  ok - PA: no ve empleados de las empresas
+  ok - PA: no ve membresías de las empresas
+  ok - PA: no tiene permisos de empresa
+  ok - PA: no ve auditoría con datos de empresa
+  ok - PA: las empresas las crea la administración de grupo (new row violates row-level security policy for table "companies")
+  ok - CA: tiene los 11 permisos de empresa
+  ok - HRW: sus permisos están limitados al centro A2
+  ok - E1: un empleado no tiene permisos de gestión
+  ok - Aprobador: la asignación directa (todas) resuelve a MGR
+  ok - Aprobador: una persona sin asignación directa hereda la de su equipo
+  ok - Aprobador: persona+todas tiene prioridad sobre equipo+tipo
+  ok - Aprobador: en el equipo, el tipo concreto tiene prioridad sobre todas
+  ok - Aprobador: persona+tipo es la máxima prioridad
+  ok - Aprobador: para otro tipo sigue aplicando persona+todas
+  ok - Solape: no se admiten dos aprobadores vigentes del mismo nivel para una persona (conflicting key value violates exclusion constraint "manager_assignments_employee_excl")
+  ok - Solape: ni para un equipo (conflicting key value violates exclusion constraint "manager_assignments_team_excl")
+  ok - Una asignación futura no se solapa con la caducada
+  ok - Sin asignación vigente: error accionable (APROBADOR_NO_ASIGNADO: no hay ningún manager vigente para este tipo de solicitud)
+  ok - Autoaprobación detectada (el manager del equipo es la propia persona) (APROBADOR_AUTOAPROBACION: la persona sería su propia aprobadora)
+  ok - Aprobador sin cuenta vigente: error accionable (APROBADOR_INACTIVO: el manager asignado ya no tiene una cuenta vigente en el grupo)
+  ok - E1: puede consultar quién aprueba sus solicitudes
+  ok - CB: no puede consultar el aprobador de alguien de otra empresa (Empleado no encontrado)
+  ok - HRW: no asigna managers a equipos de otro centro (new row violates row-level security policy for table "manager_assignments")
+  ok - MOLD: una asignación de equipo vigente da visibilidad sobre el equipo
+  ok - Búsqueda: encuentra por correo a alguien de otra empresa del grupo
+  ok - Búsqueda: no encuentra a personas de otro grupo
+  ok - Nombres: solo de personas del grupo
+  ok - Búsqueda: un empleado no puede buscar personas
+  ok - Nombres: un empleado no puede consultarlos
+  ok - E2: antes de la suplencia solo se ve a sí misma
+  ok - Suplencia: el suplente aprueba el tipo indicado
+  ok - Suplencia: no afecta a otros tipos
+  ok - Suplencia: no se solapan dos para el mismo aprobador y tipo (conflicting key value violates exclusion constraint "approver_substitutions_excl")
+  ok - Suplencia: el motivo es obligatorio (new row for relation "approver_substitutions" violates check constraint "approver_substitutions_reason_check")
+  ok - Suplencia: dura como máximo un año (new row for relation "approver_substitutions" violates check constraint "approver_substitutions_validity_check")
+  ok - Suplencia: nadie se nombra suplente a sí mismo (new row violates row-level security policy for table "approver_substitutions")
+  ok - Suplencia: el suplente debe ser del mismo grupo (new row violates row-level security policy for table "approver_substitutions")
+  ok - E2: como suplente vigente ve a las personas que supervisa el ausente
+  ok - Cambio con fecha de efecto: cierra las condiciones vigentes ese día
+  ok - Cambio con fecha de efecto: abre las nuevas desde ese día
+  ok - Cambio con fecha de efecto: no se cuela antes de otro ya programado (Ya hay condiciones que empiezan el 2026-11-15 o después)
+  ok - Cambio con fecha de efecto: si falla no deja nada a medias
+  ok - Cambio con fecha de efecto: RR. HH. de otro centro ni siquiera ve a la persona (Empleado no encontrado)
+  ok - Baja: se registra el último día
+  ok - Baja: las condiciones se cierran el día siguiente
+  ok - Baja: las asignaciones de la persona terminan en la fecha efectiva
+  ok - Baja: la ficha se conserva
+  ok - Baja: bloquea condiciones posteriores (La persona causa baja el 2026-11-02: las condiciones no pueden ir más allá de esa fecha)
+  ok - Baja: bloquea asignaciones que pasen de la fecha efectiva (La persona causa baja el 2026-11-02: la asignación no puede ir más allá de esa fecha)
+  ok - Baja: no se registra dos veces (La persona ya tiene una baja el 2026-11-02)
+  ok - Baja: RR. HH. no da de baja a un administrador de empresa (Solo la administración de la empresa puede dar de baja a un administrador)
+  ok - Baja: nadie tramita su propia baja (No puedes tramitar tu propia baja)
+  ok - E1: hasta su último día conserva el acceso
+  ok - E2: con la baja ya efectiva pierde el acceso
+  ok - E2: con la cuenta caducada ya no tiene ningún permiso (Empleado no encontrado)
+  ok - Al dar de baja a la suplente, la aprobación vuelve al manager
+  ok - Tras la baja no se resuelven aprobadores para nuevas solicitudes (APROBADOR_EMPLEADO_DE_BAJA: la persona causó baja el 2026-11-02)
+  ok - CB: no puede dar de baja a alguien de otra empresa (Empleado no encontrado)
+  ok - Nadie borra fichas desde la API (permission denied for table employees)
+  ok - Reactivación: E2 recupera el acceso
+  ok - Auditoría: registra qué cambió y quién
+  ok - Auditoría: no guarda los valores personales
+  ok - Auditoría: distingue desactivaciones
+  ok - Auditoría: registra las bajas
+  ok - Auditoría: registra suplencias sin el motivo
+  ok - Auditoría: el auditor solo ve su empresa
+  ok - Auditoría: inmutable (permission denied for table audit_events)
+  ok - E1: no ve la auditoría
+  ok - Exportación: se registra sin el texto buscado
+  ok - Exportación: quien no puede leer empleados no exporta (Sin permiso)
+  ok - Solo se registran exportaciones e importaciones (Evento no admitido)
+  ok - Importación: inserta todas las filas válidas
+  ok - Importación: crea las condiciones iniciales
+  ok - Importación: informa de la fila que falla (Fila 2: el centro ZZ no existe)
+  ok - Importación: si una fila falla no se escribe ninguna
+  ok - Importación: detecta códigos duplicados (Fila 2: duplicate key value violates unique constraint "employees_company_id_employee_code_key")
+  ok - Importación: tampoco escribe nada ante un duplicado
+  ok - Importación: RR. HH. de centro no importa fuera de su ámbito (Fila 1: new row violates row-level security policy for table "employees")
+  ok - Importación: no se puede importar en otra empresa (Fila 1: new row violates row-level security policy for table "employees")
+  ok - Importación: un empleado no importa (Fila 1: new row violates row-level security policy for table "employees")
+Pruebas del módulo de administración superadas.
+> Pruebas 50_horarios
+  ok - Servicio: ni siquiera sin RLS se modifican los tramos de una versión publicada (Los tramos de una versión publicada no se modifican)
+  ok - Servicio: una versión publicada no se modifica (Una versión publicada no se modifica: crea una versión nueva)
+  ok - Servicio: no se cierra una versión con efecto en el pasado (No se puede cerrar una versión con efecto en el pasado)
+  ok - Servicio: una versión publicada no se borra (Una versión publicada no se puede borrar)
+  ok - Zona horaria: solo nombres IANA conocidos (new row for relation "companies" violates check constraint "companies_timezone_check")
+  ok - Zona horaria: también en los centros (new row for relation "work_centers" violates check constraint "work_centers_timezone_check")
+  ok - HR: gestiona horarios de toda la empresa
+  ok - HRW: su acceso a horarios se limita al centro A2
+  ok - AUD: solo lectura de horarios
+  ok - MGR: sin permisos de empresa (ve a sus supervisados por asignación)
+  ok - EXP: con la membresía caducada su rol de RR. HH. no cuenta
+  ok - RFUT: un rol con vigencia futura aún no da acceso
+  ok - Calendario: la fuente es obligatoria (null value in column "source_reference" of relation "holiday_calendars" violates not-null constraint)
+  ok - Calendario: RR. HH. crea un calendario con su fuente
+  ok - Festivo: no se registran en fechas pasadas (No se registran festivos en fechas pasadas (primer día abierto: 2026-10-23))
+  ok - Calendario: no se aplica a un centro con efecto pasado (Un calendario se aplica a un centro desde hoy o una fecha futura)
+  ok - Calendario: no se aplica dos veces al mismo centro en fechas solapadas (conflicting key value violates exclusion constraint "work_center_holiday_calendars_excl")
+  ok - Calendario: no se enlaza con un centro de otra empresa (insert or update on table "work_center_holiday_calendars" violates foreign key constraint "work_center_holiday_calendars_work_center_id_company_id_fkey")
+  ok - HRW: los calendarios son de empresa; RR. HH. de centro no los crea (new row violates row-level security policy for table "holiday_calendars")
+  ok - E1: ve los festivos de su empresa
+  ok - E1: no registra festivos (new row violates row-level security policy for table "holidays")
+  ok - EB: no ve calendarios de otra empresa
+  ok - EB: no ve festivos de otra empresa
+  ok - CB: no registra festivos en otra empresa (new row violates row-level security policy for table "holidays")
+  ok - EXP: con la membresía caducada no ve calendarios
+  ok - EXP: ni los crea (new row violates row-level security policy for table "holiday_calendars")
+  ok - E1: no crea plantillas (new row violates row-level security policy for table "shift_templates")
+  ok - E1: no edita plantillas (Plantilla no encontrada)
+  ok - E1: no ve borradores
+  ok - E1: ve los tramos publicados
+  ok - CB: solo ve las plantillas de su empresa
+  ok - CB: no edita plantillas de otra empresa (Plantilla no encontrada)
+  ok - Plantilla: el código es único en la empresa (duplicate key value violates unique constraint "shift_templates_company_id_code_key")
+  ok - Plantilla: las horas objetivo deben cuadrar con los tramos (La plantilla no es válida: Las horas objetivo (450 min) no coinciden con los tramos (480 min).)
+  ok - Plantilla: guardar de nuevo reutiliza el borrador
+  ok - Plantilla: una jornada nocturna que cruza la medianoche es válida
+  ok - Plantilla: una partida necesita dos tramos con hueco (malformed array literal: "Una jornada partida necesita dos tramos de trabajo con un hueco entre ellos.")
+  ok - Plantilla: los tramos no se solapan (malformed array literal: "Hay tramos que se solapan.")
+  ok - Plantilla: no se publica con efecto en el pasado (Una versión se publica con efecto desde hoy o una fecha futura)
+  ok - Plantilla: flexible con presencia obligatoria dentro de la ventana
+  ok - Plantilla: la flexible necesita ventana (new row for relation "shift_template_versions" violates check constraint "shift_template_versions_flex_check")
+  ok - Versiones: solo se crean mediante la función (sin privilegio directo) (permission denied for table shift_template_versions)
+  ok - HRW: las plantillas son de empresa; RR. HH. de centro no las edita (Plantilla no encontrada)
+  ok - Asignación: no empieza en el pasado (Un horario nuevo empieza hoy o en una fecha futura)
+  ok - Asignación: indica cada día del ciclo (Indica la plantilla (o descanso) de cada uno de los 7 días del ciclo)
+  ok - Asignación: no usa plantillas de otra empresa (insert or update on table "shift_assignment_days" violates foreign key constraint "shift_assignment_days_template_id_company_id_fkey")
+  ok - Asignación: sin escritura directa (solo mediante funciones) (permission denied for table shift_assignments)
+  ok - Conflictos: una asignación limpia no tiene ninguno
+  ok - E1: no ve los borradores de su horario
+  ok - MGR: tampoco ve borradores
+  ok - MGR: no publica horarios (Asignación no encontrada)
+  ok - Publicar: notifica a la persona
+  ok - Publicar: registra quién publica
+  ok - Auditoría: la publicación queda registrada como tal
+  ok - Publicar: no se publica dos veces (Solo se publican borradores)
+  ok - Asignación publicada: no se edita (se cierra y se crea otra) (Solo se editan borradores de la misma empresa)
+  ok - Conflictos: detecta el solape con un horario publicado del mismo nivel
+  ok - Conflictos: un solape impide publicar aunque se acepten avisos (Hay 1 conflicto(s) que impiden publicar)
+  ok - Conflictos: detecta plantillas sin versión vigente
+  ok - Asignación por contrato: la persona sale de las condiciones, no del formulario
+  ok - Asignación por contrato: corregida, se publica (nivel distinto del individual)
+  ok - Conflictos: explica la ausencia aprobada (código de empleado, días)
+  ok - Conflictos: los avisos exigen confirmación (Hay 1 aviso(s): revísalos y confirma la publicación)
+  ok - Conflictos: con la confirmación se publica
+  ok - Excepción: como mucho 31 días (new row for relation "shift_assignments" violates check constraint "shift_assignments_exception_check")
+  ok - Conflictos: detecta personas sin condiciones de empleo vigentes
+  ok - Conflictos: en un equipo, por cada persona
+  ok - Equipo: se notifica a cada persona del equipo
+  ok - HRW: no asigna fuera de su centro (No encontrado o sin permiso)
+  ok - HRW: ni a equipos de otro centro (No encontrado o sin permiso)
+  ok - HRW: asigna a personas de su centro
+  ok - Conflictos: detecta días posteriores a la baja
+  ok - CB: no asigna en otra empresa (No encontrado o sin permiso)
+  ok - CB: ni consulta conflictos de otra empresa (Asignación no encontrada)
+  ok - CB: no ve asignaciones de otra empresa
+  ok - EXP: con la membresía caducada no ve asignaciones
+  ok - EXP: ni asigna (No encontrado o sin permiso)
+  ok - E1: ve sus asignaciones publicadas (individual, contrato, excepción y equipo)
+  ok - E1: ve sus eventos de cambio
+  ok - E1: ve sus ausencias
+  ok - E1: los eventos no se modifican (permission denied for table schedule_events)
+  ok - E2: no ve horarios ajenos (ni del equipo AT1)
+  ok - E2: no ve eventos ajenos
+  ok - E2: no ve ausencias ajenas
+  ok - MGR: ve los horarios publicados de quien supervisa y de su equipo
+  ok - MGR: sin borradores
+  ok - MGR: los eventos son de cada persona
+  ok - AUD: lee horarios publicados pero no borradores
+  ok - AUD: ve todos los publicados de la empresa
+  ok - HRW: solo ve lo de su centro
+  ok - Cierre: no se acorta una asignación hacia el pasado (No se puede acortar una asignación hacia el pasado (primer día abierto: 2026-10-23))
+  ok - Cierre: una asignación iniciada no se revoca (Una asignación ya iniciada no se revoca: ciérrala desde hoy)
+  ok - Cierre: termina en la fecha indicada y conserva el pasado
+  ok - Cierre: notifica a la persona
+  ok - Cierre: un borrador se descarta
+  ok - Versión: no se publica sobre periodos pasados (Una versión se publica con efecto desde hoy o una fecha futura)
+  ok - Versión: notifica a quienes tienen asignaciones vigentes con esa plantilla
+  ok - Versión: la anterior se cierra en la fecha de efecto y conserva su inicio
+  ok - Versión: los tramos de la anterior siguen intactos (los días pasados no cambian)
+  ok - Versión: conviven dos versiones publicadas sin solaparse
+  ok - E1: recibe el aviso de la nueva versión una sola vez
+Pruebas de horarios superadas.
+> Pruebas 60_control_horario
+  ok - Zona: hora inexistente de primavera -> 03:30 CEST
+  ok - Zona: hora repetida de otoño -> primera vez (CEST)
+  ok - Zona: 06:00 del día siguiente tras el cambio de otoño
+  ok - Zona: Canarias va una hora por detrás
+  ok - Plan: noche del cambio de otoño en SQL igual que en TS
+  ok - Medianoche: la jornada nocturna es del día de inicio y cuenta 9 h reales en el cambio de hora
+  ok - Noche dentro de tolerancia: sin incidencias
+  ok - Zona: la fecha de la jornada sale de la zona del centro (Canarias)
+  ok - Estados: no se abre otra jornada con una abierta reciente (Ya tienes una jornada abierta)
+  ok - Olvido: la jornada anterior queda incompleta
+  ok - Olvido: genera la incidencia de salida no registrada
+  ok - Olvido: solo queda una jornada abierta
+  ok - Tolerancia: entrar 20 min tarde genera incidencia con la desviación
+  ok - Tolerancia: salir 5 min tarde no
+  ok - Fuera de horario: fichar un día de ausencia aprobada genera incidencia
+  ok - Servicio: los fichajes no se modifican (Los fichajes son inmutables: solicita una corrección)
+  ok - Servicio: los fichajes no se borran (Los fichajes son inmutables: solicita una corrección)
+  ok - Servicio: las jornadas no se borran (La tabla time_entries es inmutable: no se permite DELETE)
+  ok - Fichaje: la primera petición registra la entrada
+  ok - Idempotencia: la misma clave devuelve el mismo fichaje
+  ok - Idempotencia: dos peticiones con la misma clave generan un solo evento
+  ok - Idempotencia: una clave no sirve para otro tipo de fichaje (Esa clave ya se usó para otro fichaje)
+  ok - Doble toque: una segunda entrada con otra clave se rechaza (Ya tienes una jornada abierta)
+  ok - Estados: no se reanuda sin pausa (No estás en pausa)
+  ok - Secuencia inválida: la jornada sigue intacta (un fichaje, abierta)
+  ok - Estados: no se sale estando en pausa (Estás en pausa: reanuda antes de esta acción)
+  ok - Estados: inicio, pausa, reanudación y fin cierran la jornada
+  ok - Estados: sin jornada abierta no hay pausa (No hay ninguna jornada abierta: empieza la jornada primero)
+  ok - Origen: la aplicación no puede declararse terminal (Origen no válido)
+  ok - Reintento offline: la hora oficial es la del servidor; la del dispositivo queda declarada
+  ok - Reintento offline: la diferencia de hora genera una incidencia
+  ok - Ubicación: con la política desactivada no se guarda
+  ok - E1: no inserta fichajes directamente (permission denied for table punches)
+  ok - E1: no modifica fichajes (permission denied for table punches)
+  ok - E1: no borra fichajes (permission denied for table punches)
+  ok - E1: no modifica su jornada (permission denied for table time_entries)
+  ok - Política: RR. HH. exige ubicación
+  ok - Ubicación denegada: el fichaje se registra y se crea una incidencia
+  ok - Ubicación concedida: se guardan coordenadas y precisión del momento del fichaje
+  ok - Ubicación: concedida sin coordenadas se rechaza (Ubicación incompleta)
+  ok - Selfie: desactivada por política se rechaza (La selfie no está activada en tu empresa)
+  ok - Selfie: sin la política no se puede subir (new row violates row-level security policy for table "objects")
+  ok - Selfie: nadie sube fotos en la ruta de otra persona (new row violates row-level security policy for table "objects")
+  ok - Selfie: activada, se enlaza al fichaje
+  ok - Selfie: la ruta debe corresponder a la clave del fichaje (Foto no válida)
+  ok - Selfie: E2 no ve la foto de E1
+  ok - Selfie: el manager de E1 sí
+  ok - E2: no ve fichajes de E1
+  ok - E2: ni sus incidencias
+  ok - E2: ve sus jornadas
+  ok - MGR: ve fichajes de quien supervisa y no de los demás
+  ok - HRW: solo ve jornadas de su centro
+  ok - AUD: ve los registros de la empresa
+  ok - CB: no ve registros de otra empresa
+  ok - CB: no ficha en otra empresa (No tienes ficha de empleado en esta empresa)
+  ok - EXP: con la membresía caducada no ve registros
+  ok - EXP: ni ficha (No tienes ficha de empleado en esta empresa)
+  ok - Accesos: RR. HH. de centro gestiona el control horario solo de su centro
+  ok - Accesos: un empleado no gestiona
+  ok - Nadie lee los PIN desde la API (permission denied for table kiosk_pins)
+  ok - Ni los intentos del terminal (permission denied for table kiosk_attempts)
+  ok - PIN: se rechazan secuencias (Elige un PIN menos predecible (sin cifras repetidas ni consecutivas))
+  ok - PIN: y repeticiones (Elige un PIN menos predecible (sin cifras repetidas ni consecutivas))
+  ok - PIN: 6 cifras (El PIN debe tener 6 cifras)
+  ok - PIN: la persona define el suyo
+  ok - Terminal: un empleado no da de alta terminales (Centro no encontrado)
+  ok - Terminal: el hash del token no se expone (permission denied for table kiosk_devices)
+  ok - Terminal: RR. HH. lo ve en su lista
+  ok - Terminal: RR. HH. de centro no da de alta terminales de otro centro (Centro no encontrado)
+  ok - Terminal: ni otra empresa (Centro no encontrado)
+  ok - Terminal: el token activa el dispositivo sin sesión
+  ok - Terminal: token falso no
+  ok - Anónimo: no lee fichajes (permission denied for table punches)
+  ok - Anónimo: no usa el fichaje de la aplicación (permission denied for function record_punch)
+  ok - Terminal: sin token válido no ficha
+  ok - Terminal: PIN incorrecto
+  ok - Terminal: un código inexistente da el mismo mensaje
+  ok - Terminal: no sirve para personas de otra empresa
+  ok - Terminal: código (sin distinguir mayúsculas) y PIN correctos registran el fichaje
+  ok - Terminal: un reintento con la misma clave no duplica
+  ok - Terminal: la respuesta no contiene datos de la persona
+  ok - Terminal: una transición imposible se rechaza
+  ok - Terminal: 5 fallos seguidos bloquean a la persona aunque luego acierte
+  ok - Terminal: pasado el bloqueo vuelve a funcionar
+  ok - Terminal: demasiados fallos en el dispositivo lo bloquean temporalmente
+  ok - Terminal: el fichaje queda con su origen y terminal
+  ok - Corrección: nadie aprueba la suya (Solicitud no encontrada)
+  ok - Corrección: no se solicita para otra persona (Empleado no encontrado)
+  ok - Corrección: no se proponen horas futuras (No se pueden proponer horas futuras)
+  ok - E2: no ve correcciones de E1
+  ok - MGR: ve la solicitud de quien supervisa
+  ok - MGR: como aprobador de correcciones, la aprueba
+  ok - Corrección: el fichaje original no cambia
+  ok - Corrección: el ajuste conserva antes, después, motivo y autores
+  ok - Corrección: la jornada se recalcula con el valor corregido
+  ok - Corrección: la incidencia de tolerancia se resuelve sola al recalcular
+  ok - Corrección: no se decide dos veces (La solicitud ya está decidida)
+  ok - Corrección imposible: se rechaza (Secuencia de fichajes imposible: end no puede ir después del estado anterior)
+  ok - Corrección imposible: ni la jornada ni la solicitud se corrompen
+  ok - Corrección: el rechazo queda registrado con su autor
+  ok - Corrección: quien la solicita no la aprueba (Quien solicita una corrección no puede aprobarla)
+  ok - Corrección: crea la jornada olvidada, incompleta hasta añadir la salida
+  ok - Ajustes: sin modificación desde la API (permission denied for table time_adjustments)
+  ok - Ajustes: inmutables incluso como servicio (Los ajustes son inmutables)
+  ok - Registros: ni coordenadas ni fichajes en audit_log
+  ok - Auditoría: los ajustes quedan en audit_log
+  ok - Incidencias: la persona no resuelve las suyas (Incidencia no encontrada)
+  ok - Incidencias: se exige una nota (Explica brevemente la resolución)
+  ok - Incidencias: el manager las revisa
+  ok - Recordatorios: solo la tarea programada (permission denied for function generate_time_reminders)
+  ok - Recordatorios: jornada abierta demasiado tiempo
+  ok - Recordatorios: no se duplican
+  ok - Recordatorios: quedan como eventos de trabajo pendientes
+  ok - Avisos: la decisión de una corrección genera un evento
+  ok - Avisos: cada persona ve solo los suyos
+Pruebas de control horario superadas.
+> Pruebas 70_ausencias
+  ok - Asignación: no empieza en el pasado (Una asignación de política empieza hoy o en una fecha futura)
+  ok - Asignación: una sola política de empresa por tipo en las mismas fechas (conflicting key value violates exclusion constraint "policy_assignments_excl")
+  ok - Precedencia: la política de la persona gana a la de empresa
+  ok - Precedencia: sin política propia aplica la de empresa
+  ok - Tipo: sin aprobación exige la referencia de la regla aprobada (new row for relation "absence_types" violates check constraint "absence_types_exemption_check")
+  ok - Redondeo con enteros: abajo, arriba, al más cercano y a múltiplos
+  ok - Prorrateo: alta el 1 de junio -> 214/365 de 44 medios días = 26
+  ok - Saldo: 44 de apertura menos 30 usados
+  ok - Cambio de año: el periodo anterior se cierra
+  ok - Arrastre: de 14 sobrantes pasan 10 (máximo) y 4 se pierden al cerrar
+  ok - Arrastre: entra en el periodo nuevo con su fecha de caducidad
+  ok - Caducidad: lo arrastrado sin usar antes del 1 de abril caduca
+  ok - Saldo 2026: 44 de apertura + 10 arrastrados - 10 caducados
+  ok - Arrastre sin caducidad: 44 + 6 arrastrados se mantienen
+  ok - Devengo mensual: un asiento por mes cerrado, acumulado sin decimales e idempotente
+  ok - Libro: los movimientos no se modifican (La tabla balance_movements es inmutable: no se permite UPDATE)
+  ok - Libro: ni se borran (La tabla balance_movements es inmutable: no se permite DELETE)
+  ok - Cómputo: de lunes a domingo con un festivo son 4 días laborables (8 medios días)
+  ok - Cómputo: medio día
+  ok - Cómputo: un fin de semana no consume vacaciones
+  ok - Unidad: las vacaciones no se piden por horas
+  ok - Unidad: horas propias en minutos enteros
+  ok - Fechas pasadas: no para vacaciones
+  ok - Saldo: no se permite quedar en negativo sin política que lo autorice
+  ok - Aprobación: la instancia se crea con el manager vigente
+  ok - Idempotencia: la misma clave no duplica la solicitud
+  ok - Reserva: el saldo disponible baja al enviar
+  ok - Aprobación: aprobador = MGR
+  ok - Solapes: no se piden dos ausencias a la vez (Se solapa con otra solicitud tuya pendiente o aprobada)
+  ok - Autoaprobación: nadie decide sus propias solicitudes (Solicitud no encontrada)
+  ok - E1: no crea solicitudes sin pasar por las validaciones (permission denied for table absence_requests)
+  ok - E1: no ajusta su saldo (Empleado no encontrado)
+  ok - E2: no ve solicitudes de E1
+  ok - E2: ni su saldo
+  ok - CB: no ve solicitudes de otra empresa
+  ok - EXP: con la membresía caducada no ve nada
+  ok - MOLD: un manager caducado no ve solicitudes
+  ok - MGR: ve la solicitud de quien supervisa
+  ok - Rechazo: exige motivo (Indica el motivo del rechazo)
+  ok - Información: la solicitud queda a la espera de respuesta (y conserva la reserva)
+  ok - Aprobación: queda registrada con su autor
+  ok - Aprobar confirma la reserva como uso
+  ok - Decisión: una solicitud decidida no se vuelve a decidir (La solicitud no está pendiente de decisión)
+  ok - Integración: la ausencia aprobada llega al horario planificado
+  ok - Cancelar: una solicitud pendiente se cancela
+  ok - Rechazar y cancelar liberan todo lo reservado
+  ok - Retirar: una aprobada que no ha empezado se retira
+  ok - Retirar: el uso se revierte (vuelven los 8 medios días)
+  ok - Retirar: deja de aparecer como ausencia en el horario
+  ok - Retirar: una ausencia ya iniciada no se retira (Una ausencia ya iniciada no se retira: solicita a RR. HH. un ajuste)
+  ok - Regla expresa: el tipo exento se aprueba solo
+  ok - Regla expresa: queda constancia de la regla aplicada
+  ok - Sin aprobador: la solicitud va a RR. HH.
+  ok - Saldo negativo: solo con política explícita y avisándolo
+  ok - Saldo negativo: dentro del límite autorizado
+  ok - Saldo negativo: nunca más allá del límite (-6 con límite -4) (Saldo insuficiente: disponible -2, solicitado 4 (medios días))
+  ok - MGR: no decide solicitudes de quien no supervisa (Solicitud no encontrada)
+  ok - HRW: RR. HH. de su centro resuelve las escaladas
+  ok - Justificante: nadie sube en la ruta de otra persona (new row violates row-level security policy for table "objects")
+  ok - Justificante: la persona lo ve
+  ok - MGR: sabe que hay justificante
+  ok - MGR: no abre un justificante sensible
+  ok - CA: la administración de empresa no abre justificantes sensibles
+  ok - CA: tampoco obtiene la ruta para firmarla (Justificante no encontrado)
+  ok - HR: RR. HH. con permiso de justificantes lo abre
+  ok - HR: obtiene la ruta del justificante para firmarla
+  ok - Justificante: cada apertura queda auditada (quién y cuándo)
+  ok - CB: ni metadatos ni archivo de otra empresa
+  ok - MGR: abre solo el justificante no sensible, necesario para decidir
+  ok - Calendario: un compañero solo ve "Ausente"
+  ok - Calendario: los compañeros no ven solicitudes pendientes
+  ok - Calendario: al manager, un tipo reservado se le muestra como "Ausencia"
+  ok - Calendario: RR. HH. ve el tipo
+  ok - Calendario: rango máximo de 62 días (Rango de fechas no válido (máximo 62 días))
+  ok - Avisos: el tipo reservado no aparece en el aviso
+  ok - Política: no se publica con efecto en el pasado (Una versión se publica con efecto desde hoy o una fecha futura)
+  ok - Política: RR. HH. no modifica una versión publicada
+  ok - Política: ni siquiera como servicio (Una versión publicada no se modifica: crea una versión nueva)
+  ok - Cambio de política: el periodo ya abierto no se recalcula
+  ok - Cambio de política: el periodo siguiente usa la versión vigente en su inicio
+  ok - Cambio de año: un periodo que no ha terminado no se cierra
+  ok - Auditoría: los ajustes manuales quedan en audit_log
+  ok - Privacidad: ni solicitudes ni sus comentarios van a audit_log
+  ok - Auditoría: la configuración de políticas queda en audit_log
+Pruebas de ausencias superadas.
+> Pruebas 80_gastos
+  ok - CA: configura la política y las categorías
+  ok - GA: la administración del grupo configura categorías
+  ok - HR: RR. HH. no configura gastos (new row violates row-level security policy for table "expense_categories")
+  ok - ACC: Contabilidad no configura gastos (new row violates row-level security policy for table "expense_categories")
+  ok - E1: la persona no configura gastos (new row violates row-level security policy for table "expense_categories")
+  ok - E1: ve las categorías de su empresa
+  ok - CB: no ve las categorías de otra empresa
+  ok - CB: no configura otra empresa (new row violates row-level security policy for table "expense_categories")
+  ok - Storage: nadie sube en la carpeta de otra persona (new row violates row-level security policy for table "objects")
+  ok - Storage: nadie sube en otra empresa (new row violates row-level security policy for table "objects")
+  ok - Storage: la ruta exige año y mes (new row violates row-level security policy for table "objects")
+  ok - Registro: el archivo tiene que estar subido (El archivo no se ha subido)
+  ok - Registro: crea el gasto en borrador y encola el OCR
+  ok - Reintento: la misma clave no duplica el gasto ni el trabajo
+  ok - Duplicado exacto propio: devuelve el gasto existente
+  ok - Duplicado: la comprobación previa reconoce el ticket propio
+  ok - Registro: la extensión y el tipo deben coincidir (Archivo no válido)
+  ok - Registro: una imagen demasiado pequeña no es legible (Archivo no válido)
+  ok - Registro: tamaño máximo (Archivo no válido)
+  ok - Registro: la carpeta de un mes antiguo no se acepta (Archivo no válido)
+  ok - Duplicado de otra persona: se avisa sin revelar su gasto
+  ok - Duplicado exacto de otra persona: se bloquea (Este ticket ya está registrado en tu empresa)
+  ok - E2: registra su propio ticket en PDF
+  ok - Cola: nadie reclama el trabajo de otra persona (Trabajo no encontrado)
+  ok - Cola: primer intento
+  ok - Cola: un trabajo en curso no se reclama dos veces
+  ok - OCR caído: la ejecución queda fallida
+  ok - OCR caído: el trabajo vuelve a la cola con espera
+  ok - Reintento: no se reclama antes de que pase la espera
+  ok - OCR: cerrar otra vez una ejecución terminada no la cambia ni gasta intentos (idempotente)
+  ok - Reintento: segundo intento
+  ok - Reintentos limitados: tras 3 intentos el trabajo queda fallido
+  ok - Reintentos limitados: un trabajo fallido no se vuelve a ejecutar solo
+  ok - Releer: la persona puede volver a pedir la lectura
+  ok - OCR: el texto completo del ticket no se acepta en el resultado (Resultado de OCR no válido)
+  ok - OCR: con un campo de baja confianza queda pendiente de revisión
+  ok - OCR: el trabajo termina y cada intento queda registrado
+  ok - OCR: la propuesta no se copia sola al gasto
+  ok - Confirmación: la categoría exige proyecto (Esta categoría exige indicar el proyecto)
+  ok - Baja confianza: no se confirma sin revisar la fecha (Confirma que has revisado: fecha)
+  ok - Reglas: fecha futura (La fecha del gasto no puede ser futura)
+  ok - Reglas: más antiguo de lo que admite la política (El gasto tiene más de 60 días: la política no admite gastos tan antiguos)
+  ok - Reglas: base más impuestos debe dar el total (La base más los impuestos no coincide con el total)
+  ok - Reglas: moneda no admitida (Moneda no admitida por la política de gastos)
+  ok - Desviación: superar el límite exige justificarlo (El importe supera el límite de la categoría: explica el motivo en las notas)
+  ok - Confirmación: queda lista con las desviaciones registradas
+  ok - Confirmación: el gasto queda listo con su autor
+  ok - Listo: ya no se edita sin reabrirlo
+  ok - Corrección: se reabre, se corrige y se vuelve a confirmar
+  ok - Corrección: el ticket original se conserva
+  ok - Similitud: un posible duplicado pide confirmación expresa (Hay otro gasto con el mismo proveedor, fecha, total y moneda: compruébalo y confirma que no es un duplicado)
+  ok - Similitud: no bloquea si la persona confirma que no es un duplicado
+  ok - Manual: la misma clave devuelve el mismo gasto
+  ok - Política: exige ticket (La política de gastos exige adjuntar el ticket)
+  ok - Descartar un borrador
+  ok - Recuperar un descartado
+  ok - Kilometraje: sin precio por km configurado no se confirma (Tu empresa no ha configurado el precio por kilómetro)
+  ok - Kilometraje: 12,5 km a 0,26 €/km = 3,25 €, con la tarifa aplicada guardada
+  ok - Gastos: nadie los borra (permission denied for table expenses)
+  ok - Gastos: el estado no se cambia directamente (permission denied for table expenses)
+  ok - Gastos: no se cambia de dueño (permission denied for table expenses)
+  ok - E1: abre su ticket
+  ok - E2: no ve gastos ni OCR de otra persona
+  ok - E2: no abre tickets de otra persona
+  ok - E2: no edita gastos de otra persona
+  ok - MGR: ve solo los gastos de quien supervisa
+  ok - MGR: abre los tickets de su equipo y no los de otros
+  ok - MGR: no modifica gastos de su equipo
+  ok - ACC: Contabilidad ve gastos y tickets de su empresa
+  ok - HR: RR. HH. no ve gastos ni tickets
+  ok - GA: la administración del grupo no ve tickets
+  ok - CB: nada de otra empresa
+  ok - CB: no consulta duplicados de otra empresa (No tienes ficha de empleado en esta empresa)
+  ok - EXP: membresía caducada, nada
+  ok - EXP: con la membresía caducada no sube tickets (new row violates row-level security policy for table "objects")
+  ok - EXP: con la membresía caducada no crea gastos (No tienes ficha de empleado en esta empresa)
+  ok - Ticket: ni siquiera el servicio lo modifica (La tabla expense_receipts es inmutable: no se permite UPDATE)
+  ok - Historial: no se borra (La tabla expense_events es inmutable: no se permite DELETE)
+  ok - Auditoría: los cambios del gasto quedan en audit_log
+  ok - Privacidad: el OCR no va a audit_log y el historial no lleva datos del ticket
+  ok - Historial: cada intento de OCR queda registrado
+Pruebas de gastos superadas.
+> Pruebas 90_liquidacion
+  ok - Envío: incluye solo los gastos listos del mes (ni borradores ni de otro mes)
+  ok - Envío: reintentar con la misma clave devuelve el mismo informe
+  ok - Envío: no hay dos informes del mismo mes en revisión (Ya tienes un informe de este mes en revisión)
+  ok - Envío: no se envía un mes futuro (Elige un mes que ya haya empezado)
+  ok - Envío: sin gastos listos no hay informe (No hay gastos listos de ese mes pendientes de enviar)
+  ok - Aprobación: paso del manager vigente y paso adicional por la regla de importe
+  ok - Bloqueo: un gasto enviado no se reabre (El gasto está en un informe enviado: solo se corrige si te lo devuelven)
+  ok - Bloqueo: un gasto enviado no se edita
+  ok - Snapshot: la copia del gasto en el informe es inmutable (ni como servicio) (La copia del gasto en el informe es inmutable)
+  ok - Snapshot: guarda los datos y su huella
+  ok - Autoaprobación: nadie decide sus propios gastos (Línea no encontrada)
+  ok - E2: no ve informes de otra persona
+  ok - HR: RR. HH. no ve informes de gastos
+  ok - CB: nada de otra empresa
+  ok - EXP: membresía caducada, nada
+  ok - ACC: Contabilidad ve los informes
+  ok - Bandeja: Contabilidad no tiene informes que aprobar
+  ok - ACC: Contabilidad no decide en el paso del manager (Línea no encontrada)
+  ok - CA: no decide en el paso de otro manager (Línea no encontrada)
+  ok - Bandeja: el manager tiene el informe pendiente
+  ok - Líneas: rechazar exige motivo (Explica el motivo para rechazar o devolver la línea)
+  ok - Revisión: no termina con líneas sin decidir (Decide todas las líneas antes de terminar la revisión)
+  ok - Estados: submitted -> in_review al decidir
+  ok - Devolución: una línea devuelta devuelve el informe
+  ok - Devolución: los pasos siguientes se omiten
+  ok - Versión devuelta: sus decisiones ya no cambian (El informe no está en revisión)
+  ok - Rechazo: un gasto rechazado no se reabre (El gasto está en un informe enviado: solo se corrige si te lo devuelven)
+  ok - Nueva versión: enlazada a la devuelta
+  ok - Nueva versión: sin la línea rechazada
+  ok - Nueva versión: conserva lo aprobado sin cambios y pide revisar lo corregido
+  ok - Versión anterior: queda intacta
+  ok - Delegación: el paso va a la suplente y lo registra
+  ok - Pasos: tras el manager pasa al paso adicional
+  ok - Delegación: actuó la suplente y queda registrado
+  ok - Segregación: quien actuó no aprueba otro paso (Informe no encontrado)
+  ok - Paso adicional: devolver exige motivo (Explica el motivo de la devolución)
+  ok - Paso adicional: la administración aprueba y el informe queda aprobado
+  ok - Sin aprobador: el paso va a la administración con permiso de aprobación
+  ok - Segregación: la misma persona no aprueba los dos pasos (Informe no encontrado)
+  ok - Transiciones: approved -> submitted no está permitida (Transición de informe no permitida: approved -> submitted)
+  ok - Cierre: la administración no cierra (solo Contabilidad) (Solo Contabilidad puede cerrar periodos)
+  ok - Cierre: el manager no cierra (Solo Contabilidad puede cerrar periodos)
+  ok - Consola: el informe pendiente aparece como bloqueo
+  ok - Cierre: no se cierra con informes pendientes (Hay 1 informes pendientes en este periodo: termina su revisión o exclúyelos con un motivo)
+  ok - Exclusión: exige un motivo (Explica por qué se excluyen informes pendientes (mínimo 10 caracteres))
+  ok - Cierre: lote 1 de la empresa
+  ok - Cierre: reintentar con la misma clave devuelve el mismo lote
+  ok - Cierre: el reintento no crea otro lote
+  ok - Doble cierre: otro intento del mismo periodo se rechaza (Este periodo ya está cerrado (lote 1): para ajustes crea un lote corrector)
+  ok - Cierre: el informe aprobado pasa al lote; el excluido sigue pendiente
+  ok - Exclusión: queda registrada con su autor
+  ok - Lote: una línea por gasto aprobado
+  ok - Totales: 12,34 + 30,00 + 0,10 + 0,20 = 42,64 EUR exactos y 19,99 USD aparte
+  ok - Totales por cuenta: mapeo por categoría y cuenta por defecto
+  ok - Totales: cada dimensión suma lo mismo que el total
+  ok - Lote: numeración de líneas determinista
+  ok - Lote: sus líneas son inmutables (La tabla accounting_batch_lines es inmutable: no se permite UPDATE)
+  ok - Lote: un cierre no se sobrescribe (Un lote cerrado no se modifica: crea un lote corrector)
+  ok - Corrector: la categoría debe ser de la empresa (Ajuste con persona o categoría no válida)
+  ok - Corrector: lote 2 que corrige el 1
+  ok - Corrector: idempotente
+  ok - Corrector: el lote original no cambia
+  ok - Exportación: se registra con su huella
+  ok - Reexportación: el mismo archivo devuelve el registro
+  ok - Reexportación: un archivo distinto para el mismo lote se rechaza (El archivo generado no coincide con el ya registrado)
+  ok - Descarga: Contabilidad descarga
+  ok - Registro: generación y descarga
+  ok - Descarga: la administración no descarga el paquete (Archivo no encontrado)
+  ok - Storage: la administración no abre el paquete
+  ok - Storage: solo Contabilidad sube paquetes (new row violates row-level security policy for table "objects")
+  ok - MGR: no ve lotes contables
+  ok - CB: nada contable de otra empresa
+  ok - ACC: abre el paquete
+  ok - Contabilizado: el lote y sus informes (idempotente)
+  ok - Contabilizado: el gasto ya no se reabre (El gasto está en un informe enviado: solo se corrige si te lo devuelven)
+  ok - Auditoría: exclusiones, pasos y cierres
+Pruebas de liquidación superadas.
+> Pruebas 94_observabilidad
+  ok - ops_metrics: solo service_role puede ejecutarla
+  ok - ops_metrics: la administración de plataforma con sesión no la ejecuta (permission denied for function ops_metrics)
+  ok - ops_metrics: incluye todas las secciones
+  ok - ops_metrics: sin ejecuciones de tareas, la antigüedad es -1 (nunca ha corrido)
+  ok - ops_metrics: cuenta los avisos pendientes del outbox
+  ok - ops_metrics: cuenta las ejecuciones fallidas y la antigüedad de la última
+  ok - ops_metrics: la antigüedad del pendiente más viejo se mide desde p_now
+  ok - ops_metrics: la salida no contiene identificadores ni correos
+> Pruebas 95_avisos
+  ok - Outbox: la solicitud deja un evento y no envía nada en su transacción
+  ok - Proceso: el evento se procesa
+  ok - Aviso: al aprobador, con enlace a su bandeja
+  ok - Correo: queda en cola para el aprobador
+  ok - Contenido mínimo: empresa y fecha, sin el tipo de ausencia
+  ok - Duplicados: el mismo evento no entra dos veces en el outbox
+  ok - Duplicados: un evento, un aviso y un correo por destinatario
+  ok - Bandeja: contador de no leídos
+  ok - Outbox: no es visible para los usuarios (permission denied for table notification_outbox)
+  ok - Aviso: no se modifica (permission denied for table notifications)
+  ok - Proceso: solo con la clave de servicio (permission denied for function process_notification_outbox)
+  ok - Abrir: con permiso vigente lleva al objeto
+  ok - Abrir: marca el aviso como leído
+  ok - Aislamiento: nadie ve avisos de otra persona
+  ok - Aislamiento: nadie abre el aviso de otra persona (Aviso no encontrado)
+  ok - CB: nada de otra empresa
+  ok - MGR: no ve la consola de entregas
+  ok - AUD: la auditoría ve el estado de las entregas
+  ok - Soporte: resumen por estado para la administración
+  ok - Soporte: no para empleados (No tienes permiso)
+  ok - Preferencias: un aviso obligatorio no se desactiva (new row for relation "notification_preferences" violates check constraint "notification_preferences_optional")
+  ok - Preferencias: nadie cambia las de otra persona (new row violates row-level security policy for table "notification_preferences")
+  ok - Preferencias: aviso en la bandeja y sin correo, como eligió la persona
+  ok - Abrir: si ya no tiene permiso sobre el objeto, no se le lleva a él
+  ok - Envío: se toma la entrega con la dirección del destinatario
+  ok - Fallo temporal: vuelve a la cola
+  ok - Fallo temporal: con espera antes del reintento
+  ok - Reintento: no antes de que pase la espera
+  ok - Reintento: segundo intento
+  ok - Envío: enviado con su id externo
+  ok - Envío: un resultado repetido no cambia una entrega enviada
+  ok - Webhook: entrega confirmada
+  ok - Webhook: el mismo evento externo no se aplica dos veces
+  ok - Webhook: estado entregado
+  ok - Webhook: un id externo desconocido se ignora
+  ok - Dead-letter: sin intentos restantes queda fallida
+  ok - Soporte: un manager no reintenta entregas (Entrega no encontrada)
+  ok - Soporte: la administración la reintenta
+  ok - Rebote: queda registrado
+  ok - Rebote: no se insiste en una dirección que rebota
+  ok - Rebote: el aviso interno llega igual
+  ok - Frecuencia: el cuarto recordatorio del día no se envía por correo
+  ok - Zona horaria: a las 08:30 UTC ya es horario laboral en Madrid
+  ok - Recordatorio: aprobación vencida para el aprobador
+  ok - Frecuencia: un recordatorio por aprobador y día
+  ok - Zona horaria: a las 06:30 UTC aún no es horario laboral en Madrid
+  ok - Días laborables: el sábado no hay recordatorios
+  ok - Recordatorio: al día laborable siguiente, otro
+  ok - Recordatorio: con el recuento pendiente y enlace a la bandeja
+  ok - Turnos: aviso con enlace al horario
+  ok - EXP: con la membresía caducada no recibe avisos
+  ok - Tareas: la plataforma ve las ejecuciones
+  ok - Tareas: la administración de empresa no (No tienes permiso)
+Pruebas de avisos superadas.
+> Pruebas 96_informes
+  ok - Empleado: solo ve sus jornadas
+  ok - Empleado: el total de filas no revela más jornadas
+  ok - Manager: solo las personas que supervisa hoy
+  ok - Manager: en la otra empresa solo a quien supervisa allí
+  ok - RR. HH. de empresa: toda la empresa
+  ok - RR. HH.: no ve gastos
+  ok - RR. HH. de centro: solo su centro
+  ok - Auditor: lee el registro horario de la empresa
+  ok - Contabilidad: no ve jornadas ni ausencias
+  ok - Contabilidad: ve los gastos confirmados de la empresa
+  ok - Equivalencia con RLS: usuario 3
+  ok - Equivalencia con RLS: usuario 4
+  ok - Equivalencia con RLS: usuario 5
+  ok - Equivalencia con RLS: usuario 6
+  ok - Equivalencia con RLS: usuario 7
+  ok - Equivalencia con RLS: usuario 8
+  ok - Equivalencia con RLS: usuario 9
+  ok - Equivalencia con RLS: usuario 10
+  ok - Equivalencia con RLS: usuario 12
+  ok - Equivalencia con RLS: usuario 14
+  ok - Equivalencia con RLS: usuario 17
+  ok - Equivalencia con RLS: usuario 2
+  ok - Otra empresa: cero filas en detalle y agregados
+  ok - Otra empresa: los recuentos de aprobaciones son cero
+  ok - Administración de B: solo sus importes
+  ok - Membresía caducada: cero filas
+  ok - Membresía caducada: no exporta (No perteneces a esta empresa)
+  ok - Conciliación: horas, descansos y días del resumen = jornadas base
+  ok - Conciliación: gastos por proyecto y moneda = gastos confirmados, sin mezclar monedas ni borradores
+  ok - Filtro de cliente
+  ok - Filtro de equipo
+  ok - Filtro de centro
+  ok - Aprobaciones: RR. HH. ve las solicitudes pendientes
+  ok - Aprobaciones: el empleado solo cuenta lo suyo
+  ok - Registro: inicio, pausas y fin
+  ok - Registro: sin coordenadas ni selfies
+  ok - Ausencias: el tipo reservado no aparece en informes generales
+  ok - Límite: periodo máximo (El periodo máximo es de 92 días)
+  ok - Límite: 500 filas por página (Paginación no válida)
+  ok - Agrupación no permitida (proveedor) (Agrupación no válida)
+  ok - Paginación estable
+  ok - Anónimo: sin acceso a informes (permission denied for function report_time_daily)
+  ok - Auditoría: alta de solicitudes por objeto y acción
+  ok - Auditoría: cambios mínimos (solo el estado, sin notas)
+  ok - Auditoría: búsqueda por actor
+  ok - Auditoría: el empleado no la ve
+  ok - Auditoría: RR. HH. no la ve
+  ok - Auditoría: textos libres, proveedores y ubicación se enmascaran
+  ok - Auditoría: append-only (La tabla audit_events es inmutable: no se permite UPDATE)
+  ok - Exportar auditoría exige permiso (No tienes permiso para exportar la auditoría)
+  ok - Exportar: idempotente por clave
+  ok - Exportar: filtros acotados (new row for relation "report_exports" violates check constraint "report_exports_filters_check")
+  ok - Exportar: como mucho 3 en curso por persona (Tienes 3 exportaciones en curso: espera a que terminen)
+  ok - Exportar: nadie cambia el registro (permission denied for table report_exports)
+  ok - Exportar: solicitante y request_id
+  ok - Exportar: empieza la generación
+  ok - Exportar: no se genera dos veces
+  ok - Exportar: ruta fuera de su carpeta (Archivo no válido)
+  ok - Storage: nadie escribe en la carpeta de otra persona (new row violates row-level security policy for table "objects")
+  ok - Exportar: lista con huella y caducidad de 7 días
+  ok - Descarga: devuelve la ruta para firmar
+  ok - Storage: el solicitante lee su archivo
+  ok - Descarga: nadie descarga la exportación de otra persona (Exportación no disponible)
+  ok - Storage: otra persona no lee el archivo
+  ok - Auditor: ve el registro de exportaciones y descargas
+  ok - Auditor: no lee los archivos
+  ok - Auditoría: solicitud y descarga con request_id
+  ok - Auditoría: guarda qué filtros se usaron, no sus valores
+  ok - Otra empresa: no ve exportaciones
+  ok - Caducidad: la tarea devuelve el archivo para borrarlo
+  ok - Caducidad: también devuelve los archivos huérfanos de una generación fallida
+  ok - Caducidad: ya no se descarga (Exportación no disponible)
+  ok - Caducidad: solo con la clave de servicio (permission denied for function expire_report_exports)
+  ok - Exportar: una caducada no vuelve a estar lista (Una exportación no se modifica)
+  ok - Descargas: no se borran (La tabla report_export_downloads es inmutable: no se permite DELETE)
+> Pruebas 97_seguridad_catalogo
+  ok - Toda tabla de public tiene RLS activada
+  ok - Toda tabla de public lleva company_id o group_id (salvo groups, platform_admins y profiles)
+  ok - anon no tiene privilegios sobre ninguna tabla ni columna
+  ok - authenticated no puede borrar, vaciar, referenciar ni crear triggers en ninguna tabla
+  ok - authenticated no tiene INSERT ni UPDATE a nivel de tabla (solo por columna)
+  ok - Ninguna clave (id, company_id, group_id) es modificable por authenticated (al insertar, RLS la comprueba)
+  ok - Las tablas de private no son accesibles desde la API
+  ok - anon no tiene acceso al esquema private
+  ok - Las secuencias no son legibles desde la API (no revelan recuentos globales)
+  ok - Toda función de public y private fija search_path
+  ok - anon solo ejecuta las funciones del terminal (token de dispositivo y PIN, ADR-036)
+  ok - Las funciones de tareas programadas solo las ejecuta service_role (el OCR corre con la sesión de la persona, ADR-043)
+  ok - Ninguna vista elude RLS (no hay vistas o todas son security_invoker)
+  ok - Todos los buckets son privados, con tamaño máximo y tipos permitidos
+  ok - Ningún bucket admite SVG ni HTML (contenido activo)
+  ok - Ninguna política lee metadatos o claims del JWT (los permisos viven en tablas)
+  ok - Ninguna función decide permisos con user_metadata/app_metadata (handle_new_user solo copia el nombre)
+  ok - Ninguna política se aplica a anon o public
+  ok - Ninguna política concede acceso incondicional
+  ok - Solo los logotipos admiten reemplazo o borrado desde la API; tickets, justificantes, selfies y exportaciones no
+  ok - Coordenadas y selfies de fichajes no son legibles por la API general
+  ok - Auditoría, descargas, accesos de soporte, retenciones, solicitudes y tickets no se borran (trigger)
+  ok - MFA obligatorio para administración, RR. HH., contabilidad y auditoría
+  ok - MFA activado en la plataforma (degradación solo por procedimiento documentado)
+Escáner de catálogo de seguridad sin hallazgos.
+> Pruebas 98_privacidad
+  ok - MFA: RR. HH. sin segundo factor queda pendiente
+  ok - MFA: sin segundo factor, RR. HH. solo ve su propia ficha
+  ok - MFA: sin segundo factor no tiene permisos de gestión
+  ok - MFA: sin segundo factor los informes no muestran datos de otras personas
+  ok - MFA: con segundo factor recupera su ámbito
+  ok - MFA: la administración sin segundo factor no modifica la organización (new row violates row-level security policy for table "work_centers")
+  ok - MFA: contabilidad sin segundo factor no ve ni cierra
+  ok - MFA: auditoría sin segundo factor no ve eventos
+  ok - MFA: la administración de grupo exige segundo factor
+  ok - MFA: la administración de plataforma exige segundo factor
+  ok - MFA: una persona empleada no lo necesita para lo suyo
+  ok - MFA: la supervisión directa (manager) no depende del rol
+  ok - MFA: degradación de plataforma (sin MFA disponible) restablece el acceso
+  ok - MFA: nadie lo cambia desde la API (permission denied for table security_settings)
+  ok - Soporte: sin acceso concedido, la plataforma no ve personas
+  ok - Soporte: la plataforma solo ve perfiles de administración (plataforma y grupos), no toda la base
+  ok - Soporte: una persona empleada no ve quién es soporte
+  ok - Soporte: la administración ve a quién puede conceder acceso (solo nombre)
+  ok - Soporte: RR. HH. no concede accesos (solo la administración) (Solo la administración de la empresa concede acceso de soporte)
+  ok - Soporte: conceder exige segundo factor (Solo la administración de la empresa concede acceso de soporte)
+  ok - Soporte: solo a personas de la plataforma (El acceso de soporte solo se concede a personas de la plataforma)
+  ok - Soporte: como mucho 24 horas (La duración es de 1 a 24 horas)
+  ok - Soporte: exige un motivo (new row for relation "support_access_grants" violates check constraint "support_access_grants_reason_check")
+  ok - Soporte: con acceso vigente ve personas de esa empresa y de ninguna otra
+  ok - Soporte: puede consultar la auditoría de la empresa
+  ok - Soporte: solo lectura (no modifica personas)
+  ok - Soporte: no ve jornadas ni gastos
+  ok - Soporte: sin segundo factor no usa el acceso
+  ok - Soporte: otra empresa no ve los accesos de A
+  ok - Soporte: auditoría ve los accesos concedidos
+  ok - Soporte: la concesión queda auditada, sin el motivo literal
+  ok - Soporte: revocado, deja de ver
+  ok - Soporte: la revocación queda auditada (y revocar dos veces no hace nada)
+  ok - Soporte: un acceso no se amplía (permission denied for table support_access_grants)
+  ok - Soporte: un acceso caducado no da acceso
+  ok - Evidencias: auditoría ve el fichaje
+  ok - Evidencias: nadie lee coordenadas por la API general (permission denied for table punches)
+  ok - Evidencias: auditoría no ve ubicación ni selfie (Fichaje no encontrado)
+  ok - Evidencias: auditoría no abre la selfie
+  ok - Evidencias: otra persona no las ve (Fichaje no encontrado)
+  ok - Evidencias: otra empresa no las ve (Fichaje no encontrado)
+  ok - Evidencias: el manager las ve
+  ok - Evidencias: el manager abre la selfie
+  ok - Evidencias: la persona ve las suyas
+  ok - Evidencias: RR. HH. con gestión las ve
+  ok - Evidencias: cada consulta queda auditada (quién y cuándo)
+  ok - Frecuencia: se corta al superar el límite (Demasiadas solicitudes seguidas: espera unos minutos y vuelve a intentarlo)
+  ok - Frecuencia: el límite es por persona
+  ok - Frecuencia: acción desconocida (Acción no válida)
+  ok - Frecuencia: los contadores no son visibles (permission denied for table rate_limit_hits)
+  ok - Retención (simulación): avisos leídos de más de 12 meses, OCR de más de 90 días e intentos de más de 90 días
+  ok - Retención (simulación): no cambia nada
+  ok - Retención (ejecución): borra avisos leídos antiguos con sus entregas, intentos antiguos y deja del OCR solo las confianzas
+  ok - Retención (ejecución): conserva los avisos no leídos y los recientes
+  ok - Retención: deshecha la transacción, todo vuelve (simulación reversible)
+  ok - Retención legal: una persona empleada no la crea (No tienes permiso para gestionar retenciones legales)
+  ok - Retención legal: RR. HH. de centro no la crea (ámbito de empresa) (No tienes permiso para gestionar retenciones legales)
+  ok - Retención legal: con membresía caducada, no (No tienes permiso para gestionar retenciones legales)
+  ok - Retención legal: otra empresa no la ve
+  ok - Retención legal: los avisos de A quedan retenidos; los de B se borran
+  ok - Retención legal: respetada en la ejecución
+  ok - Retención legal: no se modifica (permission denied for table legal_holds)
+  ok - Retención legal: ni siquiera desde el servidor, una vez levantada (Una retención legal no se modifica; solo se levanta)
+  ok - Retención: fuera de una ejecución, los avisos no se borran (La tabla notifications es inmutable: no se permite DELETE)
+  ok - Retención: la auditoría nunca se borra (La tabla audit_events es inmutable: no se permite DELETE)
+  ok - Retención: solo la tarea programada la ejecuta (permission denied for function run_retention)
+  ok - Retención: la administración de empresa no ve recuentos globales
+  ok - Retención: la plataforma ve las ejecuciones (simulación y ejecución)
+  ok - Retención: el registro de jornada nunca se borra automáticamente
+  ok - Derechos: sin ficha en la empresa no se presenta (Solo puedes presentar solicitudes sobre tus propios datos)
+  ok - Derechos: presentar es idempotente
+  ok - Derechos: nadie resuelve sus propias solicitudes (Solicitud no encontrada)
+  ok - Derechos: otra persona no ve las solicitudes
+  ok - Derechos: el manager no las ve
+  ok - Derechos: RR. HH. de centro no las ve
+  ok - Derechos: otra empresa no las ve
+  ok - Derechos: RR. HH. sin segundo factor no las ve
+  ok - Derechos: RR. HH. de empresa ve todas
+  ok - Derechos: la copia exige una decisión previa (La copia de datos solo se genera para una solicitud de acceso o portabilidad aprobada)
+  ok - Derechos: la decisión se motiva (Explica la decisión (mínimo 5 caracteres))
+  ok - Derechos: la copia contiene los datos de la persona, sin datos de terceros ni archivos
+  ok - Derechos: la entrega de la copia queda auditada
+  ok - Derechos: no se aprueba una supresión con obligaciones de conservación (Hay obligaciones de conservación: solo cabe una aprobación parcial)
+  ok - Derechos: quedan registradas las obligaciones que impiden suprimir
+  ok - Derechos: aprobar no borra nada automáticamente
+  ok - Derechos: una solicitud completada no se reabre (La solicitud ya está resuelta)
+  ok - Derechos: la persona ve el estado de su solicitud
+  ok - Derechos: la persona no genera la copia por su cuenta (revisión humana) (Solicitud no encontrada)
+  ok - Derechos: la auditoría guarda el estado, no lo que escribió la persona
+  ok - Derechos: límite de solicitudes por día (Demasiadas solicitudes seguidas: espera unos minutos y vuelve a intentarlo)
+  ok - Derechos: una solicitud resuelta no se modifica (Una solicitud resuelta no se modifica)
+  ok - Derechos: las solicitudes no se borran (La tabla data_subject_requests es inmutable: no se permite DELETE)
+Pruebas de seguridad y privacidad superadas.
+> Pruebas 99_rendimiento
+  ok - Volumen: zona horaria válida
+  ok - Índice: jornadas por empresa y fecha
+  ok - Índice: fichajes por jornada (sin N+1: una búsqueda indexada por fila de la página)
+  ok - Índice: gastos por empresa y fecha
+  ok - Índice: auditoría por empresa y fecha
+  ok - Índice: auditoría por actor
+  ok - Índice: auditoría por objeto
+  medida - report_time_daily (31 días, 6 200 jornadas, página de 100): 42.3 ms
+  ok - Rendimiento: jornada diaria por debajo del umbral
+  medida - report_time_summary (60 días, 12 000 jornadas, 200 personas): 10.6 ms
+  ok - Rendimiento: resumen de horas por debajo del umbral
+  medida - report_time_register (31 días, página de 100 con fichajes): 44.2 ms
+  ok - Rendimiento: registro horario por debajo del umbral
+  medida - report_expenses (60 días, 6 000 gastos, por proyecto): 4.3 ms
+  ok - Rendimiento: gastos agrupados por debajo del umbral
+  medida - report_audit (62 días, ~40 000 eventos de A, página de 50): 17.1 ms
+  ok - Rendimiento: auditoría por debajo del umbral
+  medida - report_audit por actor: 4.7 ms
+  ok - Rendimiento: auditoría por actor por debajo del umbral
+  ok - Volumen: el auditor de A cuenta solo los eventos de A
+> Pruebas de concurrencia (dos sesiones simultáneas)
+  ok - Misma clave en dos sesiones simultáneas: un solo fichaje; la segunda recibe el duplicado
+  ok - Doble toque en dos sesiones: una entrada registrada, la otra rechazada, una sola jornada
+  ok - Aplicación y terminal a la vez: una pausa registrada y la otra rechazada
+  ok - Dos solicitudes simultáneas: una reserva el saldo y la otra se rechaza por saldo insuficiente
+  ok - Mismo ticket registrado a la vez: un solo gasto y un solo trabajo de OCR
+  ok - Dos sesiones reclaman el mismo trabajo de OCR: una sola ejecución
+  ok - Mismo cierre en dos sesiones simultáneas: un solo lote y la segunda recibe el mismo
+  ok - Doble cierre con otra clave: rechazado, sigue habiendo un solo lote
+  ok - Dos trabajadores de avisos a la vez: un aviso, un correo y una sola toma de la entrega
+> Reversibilidad de migraciones
+psql:/home/user/supabase/migrations/20261025100000_control_horario.sql:20: NOTICE:  extension "pgcrypto" already exists, skipping
+  ok - 20261101100000_observabilidad.down.sql restaura el esquema anterior
+  ok - 20261031100000_seguridad.down.sql restaura el esquema anterior
+  ok - 20261030100000_informes.down.sql restaura el esquema anterior
+  ok - 20261029100000_avisos.down.sql restaura el esquema anterior
+  ok - 20261028100000_informes_gastos.down.sql restaura el esquema anterior
+  ok - 20261027100000_gastos.down.sql restaura el esquema anterior
+  ok - 20261026100000_ausencias.down.sql restaura el esquema anterior
+  ok - 20261025100000_control_horario.down.sql restaura el esquema anterior
+  ok - 20261024100000_calendarios_turnos.down.sql restaura el esquema anterior
+  ok - 20261023100000_administracion.down.sql restaura el esquema anterior
+  ok - 20261022100100_empleados.down.sql restaura el esquema anterior
+  ok - 20261022100000_modelo_multiempresa.down.sql restaura el esquema anterior
+psql:/home/user/supabase/migrations/20261022100100_empleados.sql:14: NOTICE:  extension "btree_gist" already exists, skipping
+psql:/home/user/supabase/migrations/20261025100000_control_horario.sql:20: NOTICE:  extension "pgcrypto" already exists, skipping
+  ok - reaplicar tras revertir reproduce el esquema completo
+  ok - 20261101100000_observabilidad.down.sql no pierde datos (solo funciones o permisos)
+  ok - 20261031100000_seguridad.down.sql exige autorización para perder datos
+  ok - 20261030100000_informes.down.sql exige autorización para perder datos
+  ok - 20261029100000_avisos.down.sql exige autorización para perder datos
+  ok - 20261028100000_informes_gastos.down.sql exige autorización para perder datos
+  ok - 20261027100000_gastos.down.sql exige autorización para perder datos
+  ok - 20261026100000_ausencias.down.sql exige autorización para perder datos
+  ok - 20261025100000_control_horario.down.sql exige autorización para perder datos
+  ok - 20261024100000_calendarios_turnos.down.sql exige autorización para perder datos
+  ok - 20261023100000_administracion.down.sql exige autorización para perder datos
+  ok - 20261022100100_empleados.down.sql exige autorización para perder datos
+  ok - 20261022100000_modelo_multiempresa.down.sql exige autorización para perder datos
+Todas las pruebas de base de datos han pasado.
+exit=0

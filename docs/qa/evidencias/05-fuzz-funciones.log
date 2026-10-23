@@ -1,0 +1,87 @@
+                               ?column?                                
+-----------------------------------------------------------------------
+ llamadas de atacantes=3794 rechazadas=3570 devueltas=224 funciones=87
+(1 row)
+
+          ?column?          
+----------------------------
+ huella A sin cambios: true
+(1 row)
+
+      fn       | detail | veces |                                                              atacantes                                                              
+---------------+--------+-------+-------------------------------------------------------------------------------------------------------------------------------------
+ my_mfa_status | 1      |     7 | CB admin de B, CC admin de C, EB empleado de B, EXP membresía caducada, MOUT manager en C, RREV hr revocado en A, X sin membresía
+ support_staff | 1      |     2 | CB admin de B, CC admin de C
+(2 rows)
+
+                             ?column?                             
+------------------------------------------------------------------
+ control positivo: funciones con contenido para RR. HH. de A = 20
+(1 row)
+
+               fn                |                                                 motivos                                                 
+---------------------------------+---------------------------------------------------------------------------------------------------------
+ accounting_close_blockers       | 42501:No tienes permiso
+ add_absence_attachment          | P0002:Solicitud no encontrada
+ adjust_vacation_balance         | P0002:Empleado no encontrado
+ cancel_absence_request          | P0002:Solicitud no encontrada
+ cancel_time_correction          | P0002:Solicitud no encontrada o ya decidida
+ check_rate_limit                | 22023:Acción no válida
+ claim_ocr_job                   | P0002:Trabajo no encontrado
+ close_accounting_period         | 42501:Solo Contabilidad puede cerrar periodos
+ close_shift_assignment          | P0002:Asignación no encontrada
+ complete_data_request           | P0002:Solicitud no encontrada
+ complete_report_export          | P0002:Exportación no encontrada
+ complete_report_step            | P0002:Informe no encontrado
+ confirm_expense                 | P0002:Gasto no encontrado
+ create_corrective_batch         | P0002:Lote no encontrado
+ create_expense                  | P0002:No tienes ficha de empleado en esta empresa
+ decide_absence_request          | P0002:Solicitud no encontrada
+ decide_report_line              | P0002:Línea no encontrada
+ decide_time_correction          | P0002:Solicitud no encontrada
+ find_receipt_duplicate          | P0002:No tienes ficha de empleado en esta empresa
+ finish_ocr_run                  | P0002:Ejecución no encontrada
+ grant_support_access            | 42501:Solo la administración de la empresa concede acceso de sopo
+ log_admin_event                 | 22023:Evento no admitido
+ log_export_download             | P0002:Archivo no encontrado
+ log_report_download             | P0002:Exportación no disponible
+ mark_batch_accounted            | P0002:Lote no encontrado
+ notification_support_summary    | 42501:No tienes permiso
+ open_absence_attachment         | P0002:Justificante no encontrado
+ open_notification               | P0002:Aviso no encontrado
+ place_legal_hold                | 42501:No tienes permiso para gestionar retenciones legales
+ publish_shift_assignment        | P0002:Asignación no encontrada
+ publish_shift_template_version  | P0002:Versión no encontrada
+ publish_vacation_policy_version | P0002:Versión no encontrada
+ punch_evidence                  | P0002:Fichaje no encontrado
+ quote_absence_request           | P0002:No tienes ficha de empleado en esta empresa
+ reactivate_employee             | P0002:Empleado no encontrado
+ recent_job_runs                 | 42501:No tienes permiso
+ record_punch                    | P0002:No tienes ficha de empleado en esta empresa
+ register_accounting_export      | P0002:Lote no encontrado
+ register_expense_receipt        | P0002:No tienes ficha de empleado en esta empresa
+ register_kiosk_device           | P0002:Centro no encontrado
+ release_legal_hold              | P0002:Retención no encontrada
+ reopen_expense                  | P0002:Gasto no encontrado
+ request_report_export           | 23502:null value in column "idempotency_key" of relation "report_e | 42501:No perteneces a esta empresa
+ request_time_correction         | P0002:Empleado no encontrado
+ requeue_receipt_ocr             | P0002:Gasto no encontrado
+ reset_kiosk_pin                 | P0002:Empleado no encontrado
+ resolve_approver                | P0002:Empleado no encontrado
+ resolve_time_incident           | P0002:Incidencia no encontrada
+ respond_absence_info            | P0002:Solicitud no encontrada o sin información pendiente
+ retry_email_delivery            | P0002:Entrega no encontrada
+ review_data_request             | P0002:Solicitud no encontrada
+ revoke_support_access           | P0002:Acceso de soporte no encontrado
+ save_shift_assignment           | P0002:No encontrado o sin permiso
+ save_shift_template_draft       | P0002:Plantilla no encontrada
+ set_expense_discarded           | P0002:Gasto no encontrado
+ set_my_kiosk_pin                | P0002:No tienes ficha de empleado en esta empresa
+ shift_assignment_conflicts      | P0002:Asignación no encontrada
+ subject_access_package          | P0002:Solicitud no encontrada
+ submit_absence_request          | P0002:No tienes ficha de empleado en esta empresa
+ submit_data_request             | 42501:Solo puedes presentar solicitudes sobre tus propios datos
+ submit_expense_report           | P0002:No tienes ficha de empleado en esta empresa
+ terminate_employee              | P0002:Empleado no encontrado
+(62 rows)
+
